@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIFA World Cup 2026 - Calendário</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .hero {
+            background-color: #1A202C;
+            color: white;
+            text-align: center;
+            padding: 4rem 2rem;
+            margin-bottom: 2rem;
+        }
+        .hero img { width: 60px; margin-bottom: 1rem; }
+        .hero h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .hero p { color: #A0AEC0; font-size: 1.1rem; }
+
+        .filters {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+        }
+        .filter-pill {
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            border: 1px solid #E2E8F0;
+            background: white;
+            cursor: pointer;
+            font-weight: 600;
+            color: #4A5568;
+        }
+        .filter-pill.active {
+            background: #00D26A;
+            color: white;
+            border-color: #00D26A;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 1rem; }
+
+        .match-table-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid #E2E8F0;
+            overflow: hidden;
+        }
+        .table-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #E2E8F0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 700;
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 1rem 1.5rem; color: #718096; font-size: 0.75rem; text-transform: uppercase; background: #F7FAFC; }
+        td { padding: 1.2rem 1.5rem; border-bottom: 1px solid #EDF2F7; font-size: 0.9rem; }
+
+        .btn-buy {
+            background: #00D26A;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            font-size: 0.8rem;
+        }
+        .phase-badge {
+            background: #EBF4FF;
+            color: #3182CE;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body style="display: block; background-color: #F8F9FA;">
+
+    <header class="hero">
+        <div style="background: #00D26A; width: 50px; height: 50px; border-radius: 12px; margin: 0 auto 1.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">🌐</div>
+        <h1>FIFA World Cup 2026</h1>
+        <p>Calendário de Jogos & Bilhetes</p>
+    </header>
+
+    <div class="container">
+        <div class="filters" id="phase-filters">
+            <button class="filter-pill active" data-phase="Todos">Todos</button>
+            <button class="filter-pill" data-phase="Grupos">Grupos</button>
+            <button class="filter-pill" data-phase="Oitavos">Oitavos</button>
+            <button class="filter-pill" data-phase="Quartos">Quartos</button>
+            <button class="filter-pill" data-phase="Meias-Finais">Meias-Finais</button>
+            <button class="filter-pill" data-phase="Final">Final</button>
+        </div>
+
+        <div class="match-table-card">
+            <div class="table-header" style="justify-content: space-between;">
+                <div><span>🗓️</span> Calendário de Jogos</div>
+
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Hora</th>
+                        <th>Jogo</th>
+                        <th>Estádio</th>
+                        <th>Fase</th>
+                        <th>Bilhetes</th>
+                    </tr>
+                </thead>
+                <tbody id="public-matches-body">
+                    <!-- Dinâmico -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        let currentFilter = 'Todos';
+
+        function renderPublicMatches() {
+            const data = getData();
+            const body = document.getElementById('public-matches-body');
+            body.innerHTML = '';
+
+            const filteredMatches = data.matches.filter(m => {
+                if (currentFilter === 'Todos') return true;
+                return m.phase.includes(currentFilter);
+            });
+
+            filteredMatches.forEach(match => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight: 600;">${match.date}</td>
+                    <td>${match.time}</td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-weight: 700;">${match.homeTeam}</span>
+                            <span style="color: #A0AEC0;">vs</span>
+                            <span style="font-weight: 700;">${match.awayTeam}</span>
+                        </div>
+                    </td>
+                    <td style="color: #718096;">${match.stadium}</td>
+                    <td><span class="phase-badge">${match.phase}</span></td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <span style="font-size: 0.8rem; color: #718096;">+351 210 000 001</span>
+                            <a href="#" class="btn-buy" onclick="alert('Redirecionando para TicketMaster...')">
+                                Comprar ↗
+                            </a>
+                        </div>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        // Lógica de Filtros
+        document.getElementById('phase-filters').addEventListener('click', (e) => {
+            if (e.target.classList.contains('filter-pill')) {
+                // Remover active de todos
+                document.querySelectorAll('.filter-pill').forEach(btn => btn.classList.remove('active'));
+                // Adicionar active ao clicado
+                e.target.classList.add('active');
+                
+                currentFilter = e.target.getAttribute('data-phase');
+                renderPublicMatches();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', renderPublicMatches);
+    </script>
+</body>
+</html>

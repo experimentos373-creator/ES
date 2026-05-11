@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - FIFA World Cup Management</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body style="display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background-color: #F3F4F6;">
+
+    <div class="card" style="width: 100%; max-width: 400px; padding: 3rem;">
+        <div class="logo" style="justify-content: center; font-size: 2rem;">
+            <span>⚽</span> WorldCup 2026
+        </div>
+        <p style="text-align: center; color: var(--text-muted); margin-bottom: 2rem;">Gestão Interna de Operações</p>
+
+        <form id="login-form">
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Email</label>
+                <input type="email" id="email" class="btn-outline" style="width: 100%; padding: 0.8rem; border-radius: 8px;" placeholder="ex: admin@fifa.com" required>
+            </div>
+            <div style="margin-bottom: 2rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Palavra-passe</label>
+                <input type="password" class="btn-outline" style="width: 100%; padding: 0.8rem; border-radius: 8px;" placeholder="••••••••" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem; font-size: 1rem;">Entrar</button>
+        </form>
+
+        <div style="margin-top: 2rem; text-align: center; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+            <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1rem;">Apenas visualizar calendário?</p>
+            <a href="publico.html" class="btn btn-outline" style="display: block; text-decoration: none; color: var(--text-color);">Entrar como Público</a>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            if (login(email)) {
+                const user = getCurrentUser();
+                alert('Bem-vindo, ' + user.name + ' (' + user.role + ')');
+                
+                const routes = {
+                    'Árbitro': 'arbitro.html',
+                    'Gestor de Arbitragem': 'gestor_arbitragem.html',
+                    'Gestor de Equipa': 'gestor_equipa.html',
+                    'Gestor de Logística': 'gestor_logistica.html',
+                    'Administrador': 'admin.html'
+                };
+                window.location.href = routes[user.role] || 'publico.html';
+            } else {
+                alert('Utilizador não encontrado. Tente: admin@fifa.com');
+            }
+        });
+    </script>
+</body>
+</html>
