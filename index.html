@@ -3,57 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - FIFA World Cup Management</title>
+    <title>FIFA World Cup 2026 - Portal</title>
     <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;800&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            background: linear-gradient(135deg, #1A202C 0%, #2D3748 100%); 
+            color: white; 
+            text-align: center; 
+            margin: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+        .portal-card { 
+            background: white; 
+            color: #333; 
+            padding: 3.5rem; 
+            border-radius: 32px; 
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); 
+            max-width: 450px; 
+            width: 90%;
+        }
+        h1 { margin-bottom: 0.5rem; font-weight: 800; color: #1A202C; font-size: 2rem; }
+        p { color: #666; margin-bottom: 2.5rem; }
+        .btn-portal { 
+            display: block; 
+            width: 100%; 
+            padding: 1.2rem; 
+            margin-top: 1rem; 
+            background: #00D26A; 
+            color: white; 
+            border-radius: 16px; 
+            text-decoration: none; 
+            font-weight: 700; 
+            transition: all 0.2s; 
+            box-shadow: 0 4px 6px rgba(0, 210, 106, 0.2);
+        }
+        .btn-portal:hover { transform: translateY(-2px); background: #00B95D; box-shadow: 0 10px 15px rgba(0, 210, 106, 0.3); }
+        .btn-secondary { background: #2D3748; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+        .btn-secondary:hover { background: #1A202C; box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2); }
+    </style>
 </head>
-<body style="display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background-color: #F3F4F6;">
-
-    <div class="card" style="width: 100%; max-width: 400px; padding: 3rem;">
-        <div class="logo" style="justify-content: center; font-size: 2rem;">
-            <span>⚽</span> WorldCup 2026
-        </div>
-        <p style="text-align: center; color: var(--text-muted); margin-bottom: 2rem;">Gestão Interna de Operações</p>
-
-        <form id="login-form">
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Email</label>
-                <input type="email" id="email" class="btn-outline" style="width: 100%; padding: 0.8rem; border-radius: 8px;" placeholder="ex: admin@fifa.com" required>
-            </div>
-            <div style="margin-bottom: 2rem;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Palavra-passe</label>
-                <input type="password" class="btn-outline" style="width: 100%; padding: 0.8rem; border-radius: 8px;" placeholder="••••••••" required>
-            </div>
-
-            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem; font-size: 1rem;">Entrar</button>
-        </form>
-
-        <div style="margin-top: 2rem; text-align: center; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
-            <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1rem;">Apenas visualizar calendário?</p>
-            <a href="publico.html" class="btn btn-outline" style="display: block; text-decoration: none; color: var(--text-color);">Entrar como Público</a>
+<body>
+    <div class="portal-card">
+        <div style="font-size: 4rem; margin-bottom: 1.5rem;">🏆</div>
+        <h1>World Cup 2026</h1>
+        <p>Bem-vindo ao Portal de Gestão e Consulta</p>
+        
+        <a href="publico.html" class="btn-portal">Vista Pública (Calendário)</a>
+        <a href="gestor_arbitragem.html" class="btn-portal btn-secondary">Gestor de Arbitragem</a>
+        
+        <div style="margin-top: 2rem; font-size: 0.8rem; color: #999; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
+            FIFA Official Partner
         </div>
     </div>
-
     <script src="app.js"></script>
-    <script>
-        document.getElementById('login-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            if (login(email)) {
-                const user = getCurrentUser();
-                alert('Bem-vindo, ' + user.name + ' (' + user.role + ')');
-                
-                const routes = {
-                    'Árbitro': 'arbitro.html',
-                    'Gestor de Arbitragem': 'gestor_arbitragem.html',
-                    'Gestor de Equipa': 'gestor_equipa.html',
-                    'Gestor de Logística': 'gestor_logistica.html',
-                    'Administrador': 'admin.html'
-                };
-                window.location.href = routes[user.role] || 'publico.html';
-            } else {
-                alert('Utilizador não encontrado. Tente: admin@fifa.com');
-            }
-        });
-    </script>
 </body>
 </html>

@@ -3,183 +3,393 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FIFA World Cup 2026 - Calendário</title>
+    <title>Mundial 2026 - Portal Público</title>
     <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-color: #F8F9FA;
+            --primary: #00D26A;
+            --primary-hover: #00B95D;
+            --dark: #1A202C;
+            --text: #1A202C;
+            --text-muted: #718096;
+            --border: #E2E8F0;
+            --card-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.01);
+        }
+
+        * { box-sizing: border-box; }
+        body { font-family: 'Outfit', sans-serif; background-color: var(--bg-color); margin: 0; color: var(--text); line-height: 1.5; }
+
         .hero {
-            background-color: #1A202C;
+            background: linear-gradient(135deg, #1A202C 0%, #2D3748 100%);
             color: white;
             text-align: center;
-            padding: 4rem 2rem;
-            margin-bottom: 2rem;
-        }
-        .hero img { width: 60px; margin-bottom: 1rem; }
-        .hero h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
-        .hero p { color: #A0AEC0; font-size: 1.1rem; }
-
-        .filters {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            margin-bottom: 3rem;
-            flex-wrap: wrap;
-        }
-        .filter-pill {
-            padding: 0.5rem 1.5rem;
-            border-radius: 50px;
-            border: 1px solid #E2E8F0;
-            background: white;
-            cursor: pointer;
-            font-weight: 600;
-            color: #4A5568;
-        }
-        .filter-pill.active {
-            background: #00D26A;
-            color: white;
-            border-color: #00D26A;
-        }
-
-        .container { max-width: 1100px; margin: 0 auto; padding: 0 1rem; }
-
-        .match-table-card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            border: 1px solid #E2E8F0;
+            padding: 5rem 2rem;
+            position: relative;
             overflow: hidden;
         }
-        .table-header {
+        .hero::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(0,210,106,0.1) 0%, transparent 70%);
+            animation: pulse 10s infinite linear;
+        }
+        @keyframes pulse { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .hero h1 { font-size: 3.5rem; margin-bottom: 0.5rem; font-weight: 800; letter-spacing: -0.04em; position: relative; }
+        .hero p { color: #A0AEC0; font-size: 1.25rem; font-weight: 500; position: relative; }
+
+        .container { max-width: 95%; margin: 0 auto; padding: 0 1.5rem; }
+
+        .premium-card {
+            background: white;
+            border-radius: 32px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border);
+            margin-bottom: 2.5rem;
+            overflow: hidden;
+        }
+        .bracket-section { margin-top: -3rem; position: relative; z-index: 10; }
+        .section-header { 
+            padding: 1.5rem 2.5rem; 
+            border-bottom: 1px solid var(--border); 
+            background: #F9FAFB; 
+            font-weight: 800; 
+            font-size: 1.25rem; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px;
+            color: var(--dark);
+        }
+
+        /* FILTERS */
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.5rem;
+            padding: 2rem 2.5rem;
+        }
+        .filter-group { display: flex; flex-direction: column; gap: 0.6rem; }
+        .filter-group label { font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+        .filter-input {
+            padding: 0.9rem 1.2rem;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: #F9FAFB;
+            font-size: 0.95rem;
+            font-weight: 600;
+            outline: none;
+            transition: 0.2s;
+            font-family: inherit;
+            color: var(--dark);
+        }
+        .filter-input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(0, 210, 106, 0.1); }
+        
+        .pill-container { display: flex; gap: 0.8rem; flex-wrap: wrap; padding: 0 2.5rem 2rem; justify-content: center; }
+        .filter-pill {
+            padding: 0.7rem 1.4rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: white;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.85rem;
+            transition: 0.2s;
+            color: var(--text-muted);
+        }
+        .filter-pill.active { background: var(--dark); color: white; border-color: var(--dark); }
+        .filter-pill:hover:not(.active) { border-color: var(--primary); color: var(--primary); }
+
+        .btn-reset { margin-top: 1.8rem; padding: 0.9rem; border-radius: 14px; border: none; background: #EF4444; color: white; font-weight: 800; cursor: pointer; transition: 0.2s; }
+        .btn-reset:hover { background: #DC2626; }
+
+        /* MATCH CARDS */
+        .matches-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+            padding: 2.5rem;
+            background: #F8F9FA;
+        }
+        .match-card {
+            background: white;
+            border-radius: 24px;
             padding: 1.5rem;
-            border-bottom: 1px solid #E2E8F0;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+            transition: 0.3s;
             display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-weight: 700;
+            flex-direction: column;
+            position: relative;
         }
+        .match-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); border-color: var(--primary); }
+        .match-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; font-size: 0.8rem; font-weight: 800; color: var(--text-muted); }
+        .phase-badge { background: #F3F4F6; color: #4B5563; padding: 0.4rem 0.8rem; border-radius: 8px; text-transform: uppercase; }
+        .match-status { padding: 0.4rem 0.8rem; border-radius: 8px; font-weight: 800; text-transform: uppercase; }
+        .status-agendado { background: #E0E7FF; color: #4338CA; }
+        .status-aovivo { background: #FEE2E2; color: #DC2626; animation: pulse-live 2s infinite; }
+        .status-finalizado { background: #F3F4F6; color: #9CA3AF; }
+        @keyframes pulse-live { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 1rem 1.5rem; color: #718096; font-size: 0.75rem; text-transform: uppercase; background: #F7FAFC; }
-        td { padding: 1.2rem 1.5rem; border-bottom: 1px solid #EDF2F7; font-size: 0.9rem; }
+        .teams-container { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+        .team { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; }
+        .team-flag { font-size: 2.5rem; }
+        .team-name { font-weight: 800; font-size: 1.1rem; text-align: center; }
+        .vs-badge { font-weight: 900; color: #CBD5E0; font-size: 1.2rem; }
 
-        .btn-buy {
-            background: #00D26A;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            text-decoration: none;
-            font-size: 0.8rem;
+        .match-footer { padding-top: 1.5rem; border-top: 1px dashed var(--border); display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); }
+        
+        .btn-buy { 
+            margin-top: 1rem; background: var(--primary); color: white; padding: 0.9rem; border-radius: 12px; 
+            font-weight: 800; text-align: center; border: none; cursor: pointer; transition: 0.3s; width: 100%;
         }
-        .phase-badge {
-            background: #EBF4FF;
-            color: #3182CE;
-            padding: 0.25rem 0.75rem;
-            border-radius: 50px;
-            font-size: 0.75rem;
-            font-weight: 700;
-        }
+        .btn-buy.sold-out { background: #E2E8F0; color: #94A3B8; cursor: not-allowed; }
+        .btn-buy.last-tickets { background: #F59E0B; }
+        .btn-buy:hover:not(.sold-out) { background: var(--primary-hover); transform: translateY(-2px); }
+
+        #bracket-container { display: flex; align-items: stretch; gap: 0; min-width: 1000px; padding: 1rem; }
     </style>
 </head>
-<body style="display: block; background-color: #F8F9FA;">
+<body>
 
     <header class="hero">
-        <div style="background: #00D26A; width: 50px; height: 50px; border-radius: 12px; margin: 0 auto 1.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">🌐</div>
+        <div style="background: var(--primary); width: 70px; height: 70px; border-radius: 20px; margin: 0 auto 2rem; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; box-shadow: 0 20px 40px rgba(0,210,106,0.3);">🏆</div>
         <h1>FIFA World Cup 2026</h1>
-        <p>Calendário de Jogos & Bilhetes</p>
+        <p>Explora os jogos, filtra por equipas e acompanha o torneio em tempo real.</p>
     </header>
 
     <div class="container">
-        <div class="filters" id="phase-filters">
-            <button class="filter-pill active" data-phase="Todos">Todos</button>
-            <button class="filter-pill" data-phase="Grupos">Grupos</button>
-            <button class="filter-pill" data-phase="Oitavos">Oitavos</button>
-            <button class="filter-pill" data-phase="Quartos">Quartos</button>
-            <button class="filter-pill" data-phase="Meias-Finais">Meias-Finais</button>
-            <button class="filter-pill" data-phase="Final">Final</button>
-        </div>
-
-        <div class="match-table-card">
-            <div class="table-header" style="justify-content: space-between;">
-                <div><span>🗓️</span> Calendário de Jogos</div>
-
+        
+        <!-- BRACKET -->
+        <div class="premium-card bracket-section">
+            <div class="section-header"><span>📊</span> Árvore do Torneio</div>
+            <div style="padding: 2rem; overflow-x: auto; background: white;">
+                <div id="bracket-container"></div>
             </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Data</th>
-                        <th>Hora</th>
-                        <th>Jogo</th>
-                        <th>Estádio</th>
-                        <th>Fase</th>
-                        <th>Bilhetes</th>
-                    </tr>
-                </thead>
-                <tbody id="public-matches-body">
-                    <!-- Dinâmico -->
-                </tbody>
-            </table>
         </div>
+
+        <!-- FILTERS -->
+        <div class="premium-card">
+            <div class="section-header"><span>🔍</span> Pesquisa Avançada</div>
+            <div class="filter-grid">
+                <div class="filter-group"><label>Pesquisa Livre</label><input type="text" id="search-input" class="filter-input" placeholder="Equipa, Estádio..."></div>
+                <div class="filter-group"><label>Equipa</label><select id="team-filter" class="filter-input"><option value="Todos">🌍 Todas as Equipas</option></select></div>
+                <div class="filter-group"><label>Grupo</label><select id="group-filter" class="filter-input">
+                    <option value="Todos">Todos os Grupos</option><option value="Grupo A">Grupo A</option><option value="Grupo B">Grupo B</option>
+                    <option value="Grupo C">Grupo C</option><option value="Grupo D">Grupo D</option><option value="Grupo E">Grupo E</option>
+                    <option value="Grupo F">Grupo F</option><option value="Grupo G">Grupo G</option><option value="Grupo H">Grupo H</option>
+                </select></div>
+                <div class="filter-group"><label>Estádio</label><select id="stadium-filter" class="filter-input"><option value="Todos">🏟️ Todos os Estádios</option></select></div>
+                <div class="filter-group"><label>Estado</label><select id="status-filter" class="filter-input">
+                    <option value="Todos">Qualquer Estado</option><option value="Agendado">📅 Agendado</option>
+                    <option value="Ao Vivo">🔴 Ao Vivo</option><option value="Finalizado">✅ Finalizado</option>
+                </select></div>
+                <div class="filter-group"><label>Ordenar Por</label><select id="sort-filter" class="filter-input">
+                    <option value="date-asc">Data (Crescente)</option><option value="date-desc">Data (Decrescente)</option>
+                    <option value="team-asc">Equipa (A-Z)</option>
+                </select></div>
+                <button class="btn-reset" onclick="resetFilters()">Limpar Filtros</button>
+            </div>
+            
+            <div class="pill-container" id="phase-filters">
+                <button class="filter-pill active" data-phase="Todos">Todos os Jogos</button>
+                <button class="filter-pill" data-phase="Grupos">Fase de Grupos</button>
+                <button class="filter-pill" data-phase="Oitavos">Oitavos</button>
+                <button class="filter-pill" data-phase="Quartos">Quartos</button>
+                <button class="filter-pill" data-phase="Meias-Finais">Meias-Finais</button>
+                <button class="filter-pill" data-phase="Final">Final</button>
+            </div>
+        </div>
+
+        <!-- MATCH RESULTS -->
+        <div class="premium-card">
+            <div class="section-header" style="justify-content: space-between;">
+                <div><span>🗓️</span> Jogos Encontrados</div>
+                <div id="results-count" style="font-size: 0.9rem; color: var(--text-muted);"></div>
+            </div>
+            <div id="matches-grid" class="matches-grid"></div>
+        </div>
+
     </div>
 
     <script src="app.js"></script>
     <script>
-        let currentFilter = 'Todos';
+        let filters = { search: '', team: 'Todos', stadium: 'Todos', group: 'Todos', status: 'Todos', sort: 'date-asc', phase: 'Todos' };
+        const BRACKET_FLAGS = {
+            'Portugal': '🇵🇹', 'Espanha': '🇪🇸', 'Brasil': '🇧🇷', 'França': '🇫🇷',
+            'Argentina': '🇦🇷', 'Inglaterra': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'Alemanha': '🇩🇪', 'México': '🇲🇽',
+            'Cuba': '🇨🇺', 'Marrocos': '🇲🇦', 'Itália': '🇮🇹', 'EUA': '🇺🇸', 'Holanda': '🇳🇱', 'Japão': '🇯🇵'
+        };
 
-        function renderPublicMatches() {
-            const data = getData();
-            const body = document.getElementById('public-matches-body');
-            body.innerHTML = '';
+        function resetFilters() {
+            filters = { search: '', team: 'Todos', stadium: 'Todos', group: 'Todos', status: 'Todos', sort: 'date-asc', phase: 'Todos' };
+            document.getElementById('search-input').value = '';
+            document.getElementById('team-filter').value = 'Todos';
+            document.getElementById('stadium-filter').value = 'Todos';
+            document.getElementById('group-filter').value = 'Todos';
+            document.getElementById('status-filter').value = 'Todos';
+            document.getElementById('sort-filter').value = 'date-asc';
+            document.querySelectorAll('.filter-pill').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.filter-pill[data-phase="Todos"]').classList.add('active');
+            renderMatches();
+        }
 
-            const filteredMatches = data.matches.filter(m => {
-                if (currentFilter === 'Todos') return true;
-                return m.phase.includes(currentFilter);
+        function populateSelects() {
+            const data = getData(); if (!data) return;
+            const teams = new Set(), stadiums = new Set();
+            data.matches.forEach(m => { teams.add(m.homeTeam); teams.add(m.awayTeam); stadiums.add(m.stadium); });
+            
+            const teamSel = document.getElementById('team-filter');
+            [...teams].sort().forEach(t => teamSel.innerHTML += `<option value="${t}">${t}</option>`);
+            
+            const stadiumSel = document.getElementById('stadium-filter');
+            [...stadiums].sort().forEach(s => stadiumSel.innerHTML += `<option value="${s}">${s}</option>`);
+        }
+
+        function getStatusClass(status) {
+            if(status === 'Ao Vivo') return 'status-aovivo';
+            if(status === 'Finalizado') return 'status-finalizado';
+            return 'status-agendado';
+        }
+
+        function renderMatches() {
+            const data = getData(); if (!data) return;
+            let filtered = data.matches.filter(m => {
+                const searchStr = (m.homeTeam + ' ' + m.awayTeam + ' ' + m.stadium).toLowerCase();
+                const matchSearch = filters.search === '' || searchStr.includes(filters.search.toLowerCase());
+                const matchTeam = filters.team === 'Todos' || m.homeTeam === filters.team || m.awayTeam === filters.team;
+                const matchStadium = filters.stadium === 'Todos' || m.stadium === filters.stadium;
+                const matchPhase = filters.phase === 'Todos' || m.phase.includes(filters.phase);
+                const matchGroup = filters.group === 'Todos' || m.group === filters.group;
+                const matchStatus = filters.status === 'Todos' || m.status === filters.status;
+                return matchSearch && matchTeam && matchStadium && matchPhase && matchGroup && matchStatus;
             });
 
-            filteredMatches.forEach(match => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td style="font-weight: 600;">${match.date}</td>
-                    <td>${match.time}</td>
-                    <td>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <span style="font-weight: 700;">${match.homeTeam}</span>
-                            <span style="color: #A0AEC0;">vs</span>
-                            <span style="font-weight: 700;">${match.awayTeam}</span>
+            filtered.sort((a, b) => {
+                if (filters.sort === 'date-asc') return new Date(a.date) - new Date(b.date);
+                if (filters.sort === 'date-desc') return new Date(b.date) - new Date(a.date);
+                if (filters.sort === 'team-asc') return a.homeTeam.localeCompare(b.homeTeam);
+                return 0;
+            });
+
+            const grid = document.getElementById('matches-grid');
+            grid.innerHTML = '';
+            document.getElementById('results-count').textContent = `${filtered.length} jogos encontrados`;
+
+            filtered.forEach(m => {
+                // Bilheteira logic
+                const sold = m.tickets ? m.tickets.reduce((acc, t) => acc + t.sold, 0) : 0;
+                const total = m.tickets ? m.tickets.reduce((acc, t) => acc + t.total, 0) : 0;
+                const occ = total > 0 ? sold / total : 0;
+                let btnClass = "btn-buy", btnText = "Comprar Bilhete";
+                if (total > 0 && sold >= total) { btnClass += " sold-out"; btnText = "Esgotado"; }
+                else if (occ >= 0.99) { btnClass += " last-tickets"; btnText = "Últimos Lugares"; }
+
+                grid.innerHTML += `
+                    <div class="match-card">
+                        <div class="match-header">
+                            <span class="phase-badge">${m.phase} ${m.group ? '- ' + m.group : ''}</span>
+                            <span class="match-status ${getStatusClass(m.status)}">${m.status}</span>
                         </div>
-                    </td>
-                    <td style="color: #718096;">${match.stadium}</td>
-                    <td><span class="phase-badge">${match.phase}</span></td>
-                    <td>
-                        <div style="display: flex; align-items: center; gap: 1rem;">
-                            <span style="font-size: 0.8rem; color: #718096;">+351 210 000 001</span>
-                            <a href="#" class="btn-buy" onclick="alert('Redirecionando para TicketMaster...')">
-                                Comprar ↗
-                            </a>
+                        <div class="teams-container">
+                            <div class="team">
+                                <span class="team-flag">${BRACKET_FLAGS[m.homeTeam] || '🏳️'}</span>
+                                <span class="team-name">${m.homeTeam}</span>
+                            </div>
+                            <div class="vs-badge">VS</div>
+                            <div class="team">
+                                <span class="team-flag">${BRACKET_FLAGS[m.awayTeam] || '🏳️'}</span>
+                                <span class="team-name">${m.awayTeam}</span>
+                            </div>
                         </div>
-                    </td>
+                        <div class="match-footer">
+                            <div>📅 ${m.date} às ${m.time}</div>
+                            <div>📍 ${m.stadium}</div>
+                        </div>
+                        <button class="${btnClass}" onclick="alert('${btnText === 'Esgotado' ? 'Sem lugares' : 'A redirecionar...'}')">${btnText}</button>
+                    </div>
                 `;
-                body.appendChild(tr);
             });
         }
 
-        // Lógica de Filtros
-        document.getElementById('phase-filters').addEventListener('click', (e) => {
-            if (e.target.classList.contains('filter-pill')) {
-                // Remover active de todos
-                document.querySelectorAll('.filter-pill').forEach(btn => btn.classList.remove('active'));
-                // Adicionar active ao clicado
-                e.target.classList.add('active');
-                
-                currentFilter = e.target.getAttribute('data-phase');
-                renderPublicMatches();
+        function renderBracket() {
+            const data = getData(); if (!data) return;
+            const container = document.getElementById('bracket-container');
+            container.innerHTML = '';
+            const SLOT_H = 80, totalH = 8 * SLOT_H;
+            const byPhase = {
+                'Oitavos': data.matches.filter(m => m.phase === 'Oitavos').slice(0, 8),
+                'Quartos': data.matches.filter(m => m.phase === 'Quartos').slice(0, 4),
+                'Meias-Finais': data.matches.filter(m => m.phase === 'Meias-Finais').slice(0, 2),
+                'Final': data.matches.filter(m => m.phase === 'Final'),
+            };
+
+            function matchEl(m, h) {
+                const home = m ? m.homeTeam : '', away = m ? m.awayTeam : '';
+                const div = document.createElement('div');
+                div.style.cssText = `height:${h}px; display:flex; flex-direction:column; justify-content:center; padding:5px 12px;`;
+                div.innerHTML = `
+                    <div style="border:1px solid #E2E8F0; border-radius:10px 10px 0 0; padding:8px 14px; font-size:13px; font-weight:800; background:white; display:flex; align-items:center; gap:10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                        <span style="font-size:1.1rem;">${BRACKET_FLAGS[home] || ''}</span><span>${home || 'A definir'}</span>
+                    </div>
+                    <div style="border:1px solid #E2E8F0; border-top:none; border-radius:0 0 10px 10px; padding:8px 14px; font-size:13px; font-weight:800; background:white; display:flex; align-items:center; gap:10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                        <span style="font-size:1.1rem;">${BRACKET_FLAGS[away] || ''}</span><span>${away || 'A definir'}</span>
+                    </div>`;
+                return div;
             }
+
+            function connector(count, slotH) {
+                const div = document.createElement('div');
+                let paths = '';
+                for (let i = 0; i < count / 2; i++) {
+                    const y1 = slotH * (i * 2) + slotH / 2, y2 = slotH * (i * 2 + 1) + slotH / 2, mid = (y1 + y2) / 2;
+                    paths += `<line x1="0" y1="${y1}" x2="20" y2="${y1}" stroke="#CBD5E0" stroke-width="2"/><line x1="20" y1="${y1}" x2="20" y2="${y2}" stroke="#CBD5E0" stroke-width="2"/><line x1="20" y1="${y2}" x2="0" y2="${y2}" stroke="#CBD5E0" stroke-width="2"/><line x1="20" y1="${mid}" x2="40" y2="${mid}" stroke="#CBD5E0" stroke-width="2"/>`;
+                }
+                div.innerHTML = `<svg width="40" height="${count * slotH}">${paths}</svg>`;
+                return div;
+            }
+
+            function buildCol(label, matches, h, expectedCount) {
+                const col = document.createElement('div');
+                col.style.cssText = 'flex:1; min-width:240px; display:flex; flex-direction:column;';
+                const lbl = document.createElement('div');
+                lbl.style.cssText = 'text-align:center; font-size:0.7rem; font-weight:900; color:#94A3B8; text-transform:uppercase; margin-bottom:15px; letter-spacing:0.1em;';
+                lbl.textContent = label;
+                col.appendChild(lbl);
+                const wrap = document.createElement('div');
+                wrap.style.height = totalH + 'px';
+                wrap.style.display = 'flex'; wrap.style.flexDirection = 'column';
+                for(let i=0; i<expectedCount; i++) {
+                    wrap.appendChild(matchEl(matches[i], h));
+                }
+                col.appendChild(wrap);
+                return col;
+            }
+
+            container.appendChild(buildCol('Oitavos-Finais', byPhase['Oitavos'], SLOT_H, 8));
+            const c1 = document.createElement('div'); c1.style.marginTop = '30px'; c1.appendChild(connector(8, SLOT_H)); container.appendChild(c1);
+            container.appendChild(buildCol('Quartos-Finais', byPhase['Quartos'], SLOT_H * 2, 4));
+            const c2 = document.createElement('div'); c2.style.marginTop = '30px'; c2.appendChild(connector(4, SLOT_H * 2)); container.appendChild(c2);
+            container.appendChild(buildCol('Meias-Finais', byPhase['Meias-Finais'], SLOT_H * 4, 2));
+            const c3 = document.createElement('div'); c3.style.marginTop = '30px'; c3.appendChild(connector(2, SLOT_H * 4)); container.appendChild(c3);
+            const finalCol = buildCol('Final do Mundo', byPhase['Final'], totalH, 1);
+            finalCol.querySelector('div:last-child').innerHTML = `<div style="text-align:center; font-size:2rem; margin-bottom:1rem; height:50px;">👑</div>` + finalCol.querySelector('div:last-child').innerHTML;
+            container.appendChild(finalCol);
+        }
+
+        // Event Listeners for Filters
+        document.getElementById('search-input').addEventListener('input', e => { filters.search = e.target.value; renderMatches(); });
+        ['team', 'stadium', 'group', 'status', 'sort'].forEach(id => {
+            document.getElementById(`${id}-filter`).addEventListener('change', e => { filters[id] = e.target.value; renderMatches(); });
+        });
+        document.getElementById('phase-filters').addEventListener('click', e => {
+            if (!e.target.classList.contains('filter-pill')) return;
+            document.querySelectorAll('.filter-pill').forEach(btn => btn.classList.remove('active'));
+            e.target.classList.add('active');
+            filters.phase = e.target.getAttribute('data-phase');
+            renderMatches();
         });
 
-        document.addEventListener('DOMContentLoaded', renderPublicMatches);
+        document.addEventListener('DOMContentLoaded', () => { populateSelects(); renderBracket(); renderMatches(); });
     </script>
 </body>
 </html>

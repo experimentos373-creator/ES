@@ -3,477 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administrador - FIFA World Cup 2026</title>
+    <title>Painel Administrativo - FIFA World Cup 2026</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #00D26A;
-            --primary-dark: #00A352;
             --dark: #1A202C;
             --darker: #111827;
             --light: #F8F9FA;
             --border: #E5E7EB;
-            --text-main: #1F2937;
             --text-muted: #6B7280;
-            --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            --danger: #EF4444;
         }
 
-        body {
-            font-family: 'Outfit', sans-serif;
-            background-color: var(--light);
-            color: var(--text-main);
-            margin: 0;
-            display: flex;
+        body { font-family: 'Outfit', sans-serif; background-color: var(--light); margin: 0; display: flex; }
+
+        .sidebar { background-color: var(--darker); width: 280px; height: 100vh; position: fixed; color: white; padding: 2rem 1.5rem; z-index: 100; }
+        .logo { font-size: 1.5rem; font-weight: 800; margin-bottom: 3rem; color: var(--primary); display: flex; align-items: center; gap: 10px; }
+        
+        .main-content { margin-left: 280px; padding: 3rem; width: calc(100% - 280px); }
+
+        .admin-header { margin-bottom: 3rem; }
+        .admin-header h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
+
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 3rem; }
+        .stat-card { background: white; padding: 2.5rem; border-radius: 30px; border: 1px solid var(--border); box-shadow: 0 15px 30px rgba(0,0,0,0.03); text-align: center; }
+        .stat-label { font-size: 0.9rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 1rem; letter-spacing: 0.05em; }
+        .stat-val { font-size: 3.5rem; font-weight: 800; color: var(--dark); margin: 0; }
+        .stat-val.profit { color: var(--primary); }
+
+        .module-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; }
+        .module-card { 
+            background: white; padding: 2rem; border-radius: 24px; border: 1px solid var(--border); 
+            text-decoration: none; color: inherit; transition: 0.3s; display: flex; flex-direction: column; align-items: center; text-align: center;
         }
+        .module-card:hover { transform: translateY(-10px); border-color: var(--primary); box-shadow: 0 20px 40px rgba(0,0,0,0.06); }
+        .module-icon { font-size: 2.5rem; margin-bottom: 1rem; background: var(--light); width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; border-radius: 20px; }
+        .module-card h3 { margin: 0; font-size: 1.25rem; font-weight: 800; }
+        .module-card p { color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem; font-weight: 600; }
 
-        /* Sidebar Standardizada */
-        .sidebar {
-            background-color: var(--darker);
-            width: 280px;
-            height: 100vh;
-            position: fixed;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            padding: 2rem 1.5rem;
-            z-index: 100;
+        .btn-logout { 
+            position: absolute; bottom: 2rem; left: 1.5rem; right: 1.5rem; padding: 1rem; background: rgba(255,255,255,0.05); 
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #EF4444; text-align: center; text-decoration: none; font-weight: 700;
         }
-
-        .sidebar .logo {
-            font-size: 1.5rem;
-            font-weight: 800;
-            margin-bottom: 3rem;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: var(--primary);
-        }
-
-        .nav-links {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .nav-links li { margin-bottom: 0.5rem; }
-
-        .nav-links a {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 0.8rem 1rem;
-            color: #D1D5DB;
-            text-decoration: none;
-            border-radius: 12px;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-
-        .nav-links a:hover, .nav-links a.active {
-            background: rgba(0, 210, 106, 0.1);
-            color: var(--primary);
-        }
-
-        /* Main Content */
-        .main-content {
-            margin-left: 280px;
-            padding: 2.5rem;
-            width: 100%;
-            min-height: 100vh;
-            box-sizing: border-box;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .welcome-text h1 { font-size: 2rem; font-weight: 800; margin: 0; }
-        .welcome-text p { color: var(--text-muted); margin: 0.5rem 0 0 0; }
-
-        /* Admin Specific UI */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1.5rem;
-            margin-bottom: 2.5rem;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 20px;
-            border: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            box-shadow: var(--card-shadow);
-        }
-
-        .alert-card {
-            background: #FEF2F2;
-            border-left: 5px solid var(--danger);
-            padding: 1.5rem;
-            border-radius: 16px;
-            margin-bottom: 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .card-container {
-            background: white;
-            border-radius: 24px;
-            padding: 2rem;
-            border: 1px solid var(--border);
-            box-shadow: var(--card-shadow);
-            margin-bottom: 1.5rem;
-        }
-
-        /* Views */
-        .content-view { display: none; }
-        .content-view.active { display: block; }
-
-        .btn-action {
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .log-entry {
-            display: flex;
-            gap: 1rem;
-            padding: 1rem 0;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.85rem;
-        }
-
-        .log-time { color: var(--text-muted); min-width: 80px; }
-        .log-role { font-weight: 700; color: var(--primary); min-width: 120px; }
     </style>
 </head>
 <body>
+
     <aside class="sidebar">
-        <div class="logo">
-            <span>⚽</span> FIFA 2026
-        </div>
-        <ul class="nav-links">
-            <li><a href="#" class="active" onclick="switchView('dashboard', this)"><span>📊</span> Oversight</a></li>
-            <li><a href="#" onclick="switchView('ticketing', this)"><span>🎟️</span> Bilheteira</a></li>
-            <li><a href="#" onclick="switchView('security', this)"><span>🚨</span> Segurança</a></li>
-            <li><a href="#" onclick="switchView('modules', this)"><span>🔗</span> Módulos</a></li>
-        </ul>
-        
-        <div style="margin-top: auto; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1);">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="width: 40px; height: 40px; background: #6366F1; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800;">AD</div>
-                <div>
-                    <p style="margin: 0; font-size: 0.85rem; font-weight: 600;">Super Admin</p>
-                    <p style="margin: 0; font-size: 0.75rem; color: var(--text-muted);">Root Access</p>
-                </div>
-            </div>
-        </div>
+        <div class="logo"><span>🛡️</span> Admin Panel</div>
+        <p style="font-size: 0.85rem; color: #9CA3AF; padding: 0 1rem;">Bem-vindo, Administrador</p>
+        <a href="index.html" class="btn-logout">Sair do Sistema</a>
     </aside>
 
     <main class="main-content">
-        <!-- View: Dashboard Oversight -->
-        <div id="view-dashboard" class="content-view active">
-            <header class="header">
-                <div class="welcome-text">
-                    <h1>System Oversight</h1>
-                    <p>Controlo total de operações e segurança mundial</p>
-                </div>
-            </header>
+        <div class="admin-header">
+            <h1>Visão Geral do Torneio</h1>
+            <p style="color: var(--text-muted); font-weight: 600;">Supervisão financeira e operacional em tempo real.</p>
+        </div>
 
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">Receita Total</p>
-                    <h2 style="margin: 0; font-size: 1.8rem; font-weight: 800;">€4,250,000</h2>
-                    <span style="color: var(--primary); font-size: 0.75rem; font-weight: 700;">↑ 12% vs ontem</span>
-                </div>
-                <div class="stat-card">
-                    <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">Bilhetes Vendidos</p>
-                    <h2 style="margin: 0; font-size: 1.8rem; font-weight: 800;">94,230</h2>
-                    <span style="color: var(--text-muted); font-size: 0.75rem;">85% da capacidade</span>
-                </div>
-                <div class="stat-card">
-                    <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">Hotéis Ocupados</p>
-                    <h2 style="margin: 0; font-size: 1.8rem; font-weight: 800;">28/32</h2>
-                    <span style="color: var(--warning); font-size: 0.75rem; font-weight: 700;">4 bases livres</span>
-                </div>
-                <div class="stat-card">
-                    <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">Alertas Ativos</p>
-                    <h2 style="margin: 0; font-size: 1.8rem; font-weight: 800; color: var(--danger);">3</h2>
-                    <span style="color: var(--danger); font-size: 0.75rem; font-weight: 700;">Ação requerida</span>
-                </div>
+        <!-- FINANCE DASHBOARD -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Bilheteira Vendida</div>
+                <div class="stat-val" id="total-sold">0</div>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 10px; font-weight: 600;">Bilhetes totais emitidos</p>
             </div>
-
-            <div class="alert-card">
-                <div style="display: flex; gap: 1.5rem; align-items: center;">
-                    <div style="font-size: 2rem;">🚨</div>
-                    <div>
-                        <h3 style="margin: 0; color: #991B1B;">Bilhete Fraudulento Detetado</h3>
-                        <p style="margin: 5px 0 0; font-size: 0.85rem; color: #B91C1C;">ID: TKT-2026-003-X9D1 • Portão 4, Estádio da Luz</p>
-                    </div>
-                </div>
-                <div style="display: flex; gap: 10px;">
-                    <button class="btn btn-outline" style="border-color: #FECACA; background: white; color: var(--danger);">Ignorar</button>
-                    <button class="btn btn-primary" style="background: var(--danger); border: none;">Bloquear Entrada</button>
-                </div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
-                <div class="card-container">
-                    <h3 style="margin-top: 0; margin-bottom: 1.5rem;">Logs de Atividade Global</h3>
-                    <div id="logs-container">
-                        <!-- Dynamic Logs -->
-                    </div>
-                </div>
-                <div class="card-container">
-                    <h3 style="margin-top: 0; margin-bottom: 1.5rem;">Estado dos Módulos</h3>
-                    <div style="display: flex; flex-direction: column; gap: 12px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #F0FDF4; border-radius: 10px;">
-                            <span style="font-weight: 600;">Gestão de Equipas</span>
-                            <span style="color: var(--primary); font-size: 0.75rem; font-weight: 800;">ONLINE</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #F0FDF4; border-radius: 10px;">
-                            <span style="font-weight: 600;">Arbitragem</span>
-                            <span style="color: var(--primary); font-size: 0.75rem; font-weight: 800;">ONLINE</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #F0FDF4; border-radius: 10px;">
-                            <span style="font-weight: 600;">Logística</span>
-                            <span style="color: var(--primary); font-size: 0.75rem; font-weight: 800;">ONLINE</span>
-                        </div>
-                    </div>
-                </div>
+            <div class="stat-card">
+                <div class="stat-label">Lucro Acumulado</div>
+                <div class="stat-val profit" id="total-profit">0 €</div>
+                <p style="color: var(--primary); font-size: 0.9rem; margin-top: 10px; font-weight: 700;">Receita bruta confirmada</p>
             </div>
         </div>
 
-        <!-- View: Bilheteira -->
-        <div id="view-ticketing" class="content-view">
-            <header class="header">
-                <div class="welcome-text">
-                    <h1>Gestão de Bilheteira</h1>
-                    <p>Controlo de preços e inventário de vendas</p>
-                </div>
-            </header>
-            <div class="card-container">
-                <table style="width: 100%; border-collapse: collapse;">
-                    <thead>
-                        <tr style="text-align: left; border-bottom: 1px solid var(--border);">
-                            <th style="padding: 1rem;">Categoria</th>
-                            <th style="padding: 1rem;">Preço Base</th>
-                            <th style="padding: 1rem;">Vendas</th>
-                            <th style="padding: 1rem;">Capacidade</th>
-                            <th style="padding: 1rem;">Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr style="border-bottom: 1px solid var(--border);">
-                            <td style="padding: 1.2rem; font-weight: 700;">VIP Hospitality</td>
-                            <td style="padding: 1.2rem;">€1,200</td>
-                            <td style="padding: 1.2rem;">4,500</td>
-                            <td style="padding: 1.2rem;">5,000</td>
-                            <td style="padding: 1.2rem;"><span class="badge badge-disponivel">ABERTO</span></td>
-                        </tr>
-                        <tr style="border-bottom: 1px solid var(--border);">
-                            <td style="padding: 1.2rem; font-weight: 700;">Cat 1 (Central)</td>
-                            <td style="padding: 1.2rem;">€450</td>
-                            <td style="padding: 1.2rem;">25,000</td>
-                            <td style="padding: 1.2rem;">30,000</td>
-                            <td style="padding: 1.2rem;"><span class="badge badge-disponivel">ABERTO</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- View: Segurança -->
-        <div id="view-security" class="content-view">
-            <header class="header">
-                <div class="welcome-text">
-                    <h1>Segurança e Fraude</h1>
-                    <p>Monitorização de integridade do sistema em tempo real</p>
-                </div>
-                <button class="btn btn-primary" style="background: var(--danger); border: none;">LOCKDOWN TOTAL</button>
-            </header>
-
-            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
-                <div class="card-container">
-                    <h3 style="margin-top: 0; color: var(--danger);">🚩 Incidentes Críticos</h3>
-                    <div id="fraud-list">
-                        <!-- Dynamic -->
-                    </div>
-                </div>
-                <div class="card-container">
-                    <h3 style="margin-top: 0;">Status de Estádios</h3>
-                    <div id="stadium-security">
-                        <!-- Dynamic -->
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- View: Módulos (Bridge) -->
-        <div id="view-modules" class="content-view">
-            <header class="header">
-                <div class="welcome-text">
-                    <h1>Bridge System</h1>
-                    <p>Intervenção direta nos módulos de gestão</p>
-                </div>
-            </header>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;">
-                <div class="card-container" style="text-align: center;">
-                    <div style="font-size: 2.5rem; margin-bottom: 1rem;">🏟️</div>
-                    <h3 style="margin: 0;">Equipas</h3>
-                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">Acesso ao plantel e táticas</p>
-                    <button class="btn btn-primary" style="width: 100%; margin-top: 1.5rem;" onclick="location.href='gestor_equipa.html'">Abrir Módulo</button>
-                </div>
-                <div class="card-container" style="text-align: center;">
-                    <div style="font-size: 2.5rem; margin-bottom: 1rem;">⚖️</div>
-                    <h3 style="margin: 0;">Arbitragem</h3>
-                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">Gestão de árbritos e regras</p>
-                    <button class="btn btn-primary" style="width: 100%; margin-top: 1.5rem;" onclick="location.href='gestor_arbitragem.html'">Abrir Módulo</button>
-                </div>
-                <div class="card-container" style="text-align: center;">
-                    <div style="font-size: 2.5rem; margin-bottom: 1rem;">🚚</div>
-                    <h3 style="margin: 0;">Logística</h3>
-                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">Hotéis e Transportes</p>
-                    <button class="btn btn-primary" style="width: 100%; margin-top: 1.5rem;" onclick="location.href='gestor_logistica.html'">Abrir Módulo</button>
-                </div>
-            </div>
+        <h2 style="margin-bottom: 1.5rem; font-weight: 800;">Acesso aos Módulos de Gestão</h2>
+        
+        <div class="module-grid">
+            <a href="gestor_bilheteira.html" class="module-card">
+                <div class="module-icon">🎟️</div>
+                <h3>Bilheteira</h3>
+                <p>Gestão de preços e stock</p>
+            </a>
+            <a href="gestor_arbitragem.html" class="module-card">
+                <div class="module-icon">⚖️</div>
+                <h3>Arbitragem</h3>
+                <p>Supervisão de árbitros</p>
+            </a>
+            <a href="gestor_equipa.html" class="module-card">
+                <div class="module-icon">⚽</div>
+                <h3>Equipas</h3>
+                <p>Plantéis e seleções</p>
+            </a>
+            <a href="gestor_logistica.html" class="module-card">
+                <div class="module-icon">📦</div>
+                <h3>Logística</h3>
+                <p>Segurança e transportes</p>
+            </a>
         </div>
     </main>
 
     <script src="app.js"></script>
     <script>
-        function switchView(viewId, link) {
-            document.querySelectorAll('.content-view').forEach(v => v.classList.remove('active'));
-            document.getElementById('view-' + viewId).classList.add('active');
-            document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
-            if (link) link.classList.add('active');
+        function updateAdminDashboard() {
+            const data = getData();
+            let totalSold = 0;
+            let totalRev = 0;
 
-            if (viewId === 'security') renderSecurity();
-        }
+            data.matches.forEach(m => {
+                if (m.tickets) {
+                    m.tickets.forEach(t => {
+                        totalSold += t.sold;
+                        totalRev += (t.sold * t.price);
+                    });
+                }
+            });
 
-        function ignoreAlert() {
-            const alertCard = document.querySelector('.alert-card');
-            if (alertCard) {
-                alertCard.style.opacity = '0';
-                setTimeout(() => {
-                    alertCard.remove();
-                    addLog('Segurança', 'Alerta de fraude ignorado pelo Administrador.');
-                }, 300);
-            }
-        }
-
-        function blockEntry() {
-            const alertCard = document.querySelector('.alert-card');
-            if (alertCard) {
-                alertCard.innerHTML = `
-                    <div style="display: flex; gap: 1.5rem; align-items: center; width: 100%;">
-                        <div style="font-size: 2rem;">✅</div>
-                        <div>
-                            <h3 style="margin: 0; color: #065F46;">Entrada Bloqueada com Sucesso</h3>
-                            <p style="margin: 5px 0 0; font-size: 0.85rem; color: #059669;">Bilhete TKT-2026-003-X9D1 foi invalidado permanentemente.</p>
-                        </div>
-                    </div>
-                `;
-                alertCard.style.background = '#ECFDF5';
-                alertCard.style.borderLeftColor = '#10B981';
-                setTimeout(() => {
-                    alertCard.style.opacity = '0';
-                    setTimeout(() => {
-                        alertCard.remove();
-                        addLog('Segurança', 'Bilhete fraudulento bloqueado no Estádio da Luz.');
-                    }, 300);
-                }, 2000);
-            }
-        }
-
-        function blockUser(id) {
-            if (confirm(`Tem a certeza que deseja banir o utilizador ${id} permanentemente?`)) {
-                addLog('Sistema', `Utilizador ${id} banido por atividade suspeita.`);
-                renderSecurity();
-            }
-        }
-
-        function lockdownSystem() {
-            const btn = event.target;
-            if (confirm('AVISO: Isto irá suspender todas as vendas de bilhetes globalmente. Confirmar?')) {
-                document.body.style.border = '10px solid var(--danger)';
-                btn.innerText = 'SISTEMA EM LOCKDOWN';
-                btn.style.background = 'black';
-                addLog('SISTEMA', 'LOCKDOWN GLOBAL ATIVADO PELO ADMINISTRADOR');
-                alert('Vendas suspensas em todos os canais oficiais.');
-            }
-        }
-
-        function addLog(role, action) {
-            const container = document.getElementById('logs-container');
-            const now = new Date();
-            const time = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
-            
-            const logEntry = document.createElement('div');
-            logEntry.className = 'log-entry';
-            logEntry.innerHTML = `
-                <span class="log-time">${time}</span>
-                <span class="log-role">${role}</span>
-                <span class="log-action">${action}</span>
-            `;
-            container.prepend(logEntry);
-        }
-
-        function renderSecurity() {
-            const frauds = [
-                { id: 'FRAUD-882', user: 'anonymous_user_4', type: 'Duplicação de QR', stadium: 'Estádio da Luz', time: '12:04' },
-                { id: 'FRAUD-129', user: 'bot_attack_01', type: 'Brute Force Venda', stadium: 'Plataforma Online', time: '11:58' }
-            ];
-
-            const stadiums = [
-                { name: 'Estádio da Luz', status: 'Seguro', alert: 'Verde' },
-                { name: 'Estádio do Dragão', status: 'Atenção (Multidão)', alert: 'Amarelo' },
-                { name: 'Estádio Algarve', status: 'Seguro', alert: 'Verde' }
-            ];
-
-            document.getElementById('fraud-list').innerHTML = frauds.map(f => `
-                <div style="padding: 1.5rem; background: #FFF1F2; border: 1px solid #FECACA; border-radius: 12px; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <p style="margin: 0; font-weight: 800; color: #991B1B;">${f.type} • ${f.id}</p>
-                        <p style="margin: 5px 0 0; font-size: 0.85rem; color: #B91C1C;">Local: ${f.stadium} • Hora: ${f.time}</p>
-                    </div>
-                    <button class="btn btn-primary" style="background: #991B1B; font-size: 0.75rem;" onclick="blockUser('${f.id}')">Bloquear User</button>
-                </div>
-            `).join('');
-
-            document.getElementById('stadium-security').innerHTML = stadiums.map(s => `
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border);">
-                    <span style="font-weight: 600;">${s.name}</span>
-                    <span class="badge" style="background: ${s.alert === 'Verde' ? '#DCFCE7' : '#FEF3C7'}; color: ${s.alert === 'Verde' ? '#166534' : '#92400E'};">
-                        ${s.status}
-                    </span>
-                </div>
-            `).join('');
-        }
-
-        function renderLogs() {
-            addLog('Logística', 'Atribuiu Hotel Pestana Palace a Seleção de Portugal');
-            addLog('Arbitragem', 'Aprovou pedido de descanso: Facundo Tello');
-            addLog('Equipa', 'Atualizou convocatória: Cristiano Ronaldo (Titular)');
-            addLog('Bilheteira', 'Preços dinâmicos atualizados (+5%) para Oitavos de Final');
-            addLog('Segurança', 'Bloqueio de IP suspeito detetado na plataforma de vendas');
+            document.getElementById('total-sold').innerText = totalSold.toLocaleString('pt-PT');
+            document.getElementById('total-profit').innerText = totalRev.toLocaleString('pt-PT') + ' €';
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            renderLogs();
+            updateAdminDashboard();
         });
     </script>
 </body>
