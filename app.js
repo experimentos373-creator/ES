@@ -1,10 +1,10 @@
 const STADIUMS_LIST = ['Estádio da Luz','Estádio Alvalade','Estádio do Dragão','Camp Nou','Wembley','Santiago Bernabéu','Azteca','Rose Bowl'];
 const PHASES_LIST = ['Grupos','Dezasseis-avos','Oitavos','Quartos','Meias-Finais','Final'];
 const DEFAULT_TICKETS = [
-    {category:'Premium',price:200,sold:0,total:500},
-    {category:'Intermediária',price:150,sold:0,total:1000},
-    {category:'Económica',price:100,sold:0,total:5000},
-    {category:'Local',price:50,sold:0,total:10000}
+    {category:'Premium',price:200,sold:120,total:500},
+    {category:'Intermediária',price:150,sold:450,total:1000},
+    {category:'Económica',price:100,sold:1200,total:5000},
+    {category:'Local',price:50,sold:3500,total:10000}
 ];
 
 function addMatch(matchData) {
@@ -168,7 +168,10 @@ const DEFAULT_DATA = {
         { id: 10, email: 'ref10@fifa.com', name: 'Nicolas Danos', nationality: 'França', type: 'Assistente', status: 'Ativo', matchesCount: 0, score: 0, evaluationsCount: 0 }
     ],
     fraudLogs: [],
-    tickets: { sold: 0, available: 0, categories: [] },
+    tickets: { sold: 45000, available: 15000, categories: [
+        { id: 'VIP', price: 500, sold: 1000, capacity: 1200, status: 'Aberto' },
+        { id: 'Geral', price: 80, sold: 44000, capacity: 50000, status: 'Aberto' }
+    ]},
     hotels: [
         { id: 1, name: 'Hotel Mundial', location: 'Lisboa', capacity: 100, team: 'Portugal', status: 'Ocupado' }
     ],
@@ -228,10 +231,30 @@ function initDB() {
     if (!stored) {
         localStorage.setItem('wc_data', JSON.stringify(DEFAULT_DATA));
     } else {
-        const currentData = JSON.parse(stored);
-        if (!currentData.hasOwnProperty('version') || currentData.version !== 10) {
-            localStorage.setItem('wc_data', JSON.stringify(DEFAULT_DATA));
-            console.log('Base de dados resetada para nova estrutura (v10).');
+        let currentData = JSON.parse(stored);
+        let updated = false;
+
+        // Migração: Garante que todos os jogos têm eventos, titulares e tickets
+        currentData.matches.forEach(m => {
+            if (!m.events) { m.events = []; updated = true; }
+            if (!m.titulares) { m.titulares = {}; updated = true; }
+            if (!m.tickets) { m.tickets = JSON.parse(JSON.stringify(DEFAULT_TICKETS)); updated = true; }
+        });
+
+        // Garante que a estrutura global de tickets existe
+        if (!currentData.tickets) {
+            currentData.tickets = DEFAULT_DATA.tickets;
+            updated = true;
+        }
+
+        if (currentData.version !== DEFAULT_DATA.version) {
+            currentData.version = DEFAULT_DATA.version;
+            updated = true;
+        }
+
+        if (updated) {
+            saveData(currentData);
+            console.log('Base de dados migrada com sucesso.');
         }
     }
 }
