@@ -1,5 +1,5 @@
 const STADIUMS_LIST = ['Estádio da Luz','Estádio Alvalade','Estádio do Dragão','Camp Nou','Wembley','Santiago Bernabéu','Azteca','Rose Bowl'];
-const PHASES_LIST = ['Grupos','Oitavos','Quartos','Meias-Finais','Final'];
+const PHASES_LIST = ['Grupos','Dezasseis-avos','Oitavos','Quartos','Meias-Finais','Final'];
 const DEFAULT_TICKETS = [
     {category:'Premium',price:200,sold:0,total:500},
     {category:'Intermediária',price:150,sold:0,total:1000},
@@ -29,7 +29,7 @@ function finalizeMatch(matchId, winnerTeam) {
     if (!match) return false;
     match.status = 'Finalizado';
     match.winner = winnerTeam;
-    const phaseOrder = ['Oitavos','Quartos','Meias-Finais','Final'];
+    const phaseOrder = ['Dezasseis-avos','Oitavos','Quartos','Meias-Finais','Final'];
     const currentIdx = phaseOrder.indexOf(match.phase);
     if (currentIdx < phaseOrder.length - 1) {
         const nextPhase = phaseOrder[currentIdx + 1];
@@ -82,39 +82,78 @@ function deleteMatch(matchId) {
 
 const DEFAULT_DATA = {
     matches: [
-        { id: 1, date: '2026-07-01', time: '18:00', stadium: 'Estádio da Luz', homeTeam: 'Portugal', awayTeam: 'França', phase: 'Oitavos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: [{category: 'Premium', price: 200, sold: 0, total: 500}, {category: 'Intermediária', price: 150, sold: 0, total: 1000}, {category: 'Económica', price: 100, sold: 0, total: 5000}, {category: 'Local', price: 50, sold: 0, total: 10000}] },
-        { id: 2, date: '2026-07-01', time: '21:00', stadium: 'Estádio Alvalade', homeTeam: 'Espanha', awayTeam: 'Brasil', phase: 'Oitavos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: [{category: 'Premium', price: 200, sold: 0, total: 500}, {category: 'Intermediária', price: 150, sold: 0, total: 1000}, {category: 'Económica', price: 100, sold: 0, total: 5000}, {category: 'Local', price: 50, sold: 0, total: 10000}] },
-        { id: 3, date: '2026-07-02', time: '18:00', stadium: 'Estádio do Dragão', homeTeam: 'Argentina', awayTeam: 'Inglaterra', phase: 'Oitavos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: [{category: 'Premium', price: 200, sold: 0, total: 500}, {category: 'Intermediária', price: 150, sold: 0, total: 1000}, {category: 'Económica', price: 100, sold: 0, total: 5000}, {category: 'Local', price: 50, sold: 0, total: 10000}] },
-        { id: 4, date: '2026-07-02', time: '21:00', stadium: 'Camp Nou', homeTeam: 'Alemanha', awayTeam: 'Marrocos', phase: 'Oitavos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: [{category: 'Premium', price: 200, sold: 0, total: 500}, {category: 'Intermediária', price: 150, sold: 0, total: 1000}, {category: 'Económica', price: 100, sold: 0, total: 5000}, {category: 'Local', price: 50, sold: 0, total: 10000}] },
-        { id: 5, date: '2026-07-03', time: '18:00', stadium: 'Wembley', homeTeam: 'México', awayTeam: 'Cuba', phase: 'Oitavos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: [{category: 'Premium', price: 200, sold: 0, total: 500}, {category: 'Intermediária', price: 150, sold: 0, total: 1000}, {category: 'Económica', price: 100, sold: 0, total: 5000}, {category: 'Local', price: 50, sold: 0, total: 10000}] },
-        { id: 6, date: '2026-07-03', time: '21:00', stadium: 'Santiago Bernabéu', homeTeam: 'Itália', awayTeam: 'EUA', phase: 'Oitavos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: [{category: 'Premium', price: 200, sold: 0, total: 500}, {category: 'Intermediária', price: 150, sold: 0, total: 1000}, {category: 'Económica', price: 100, sold: 0, total: 5000}, {category: 'Local', price: 50, sold: 0, total: 10000}] },
-        { id: 7, date: '2026-07-04', time: '18:00', stadium: 'Azteca', homeTeam: 'Holanda', awayTeam: 'Japão', phase: 'Oitavos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: [{category: 'Premium', price: 200, sold: 0, total: 500}, {category: 'Intermediária', price: 150, sold: 0, total: 1000}, {category: 'Económica', price: 100, sold: 0, total: 5000}, {category: 'Local', price: 50, sold: 0, total: 10000}] },
-        { id: 8, date: '2026-07-04', time: '21:00', stadium: 'Rose Bowl', homeTeam: 'Colômbia', awayTeam: 'Senegal', phase: 'Oitavos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: [{category: 'Premium', price: 200, sold: 0, total: 500}, {category: 'Intermediária', price: 150, sold: 0, total: 1000}, {category: 'Económica', price: 100, sold: 0, total: 5000}, {category: 'Local', price: 50, sold: 0, total: 10000}] },
-        { id: 9, date: '2026-07-08', time: '18:00', stadium: 'Estádio da Luz', homeTeam: '', awayTeam: '', phase: 'Quartos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: [{category: 'Premium', price: 200, sold: 0, total: 500}, {category: 'Intermediária', price: 150, sold: 0, total: 1000}, {category: 'Económica', price: 100, sold: 0, total: 5000}, {category: 'Local', price: 50, sold: 0, total: 10000}] },
-        { id: 10, date: '2026-07-08', time: '21:00', stadium: 'Camp Nou', homeTeam: '', awayTeam: '', phase: 'Quartos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: [{category: 'Premium', price: 200, sold: 0, total: 500}, {category: 'Intermediária', price: 150, sold: 0, total: 1000}, {category: 'Económica', price: 100, sold: 0, total: 5000}, {category: 'Local', price: 50, sold: 0, total: 10000}] },
-        { id: 11, date: '2026-07-09', time: '18:00', stadium: 'Wembley', homeTeam: '', awayTeam: '', phase: 'Quartos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: [{category: 'Premium', price: 200, sold: 0, total: 500}, {category: 'Intermediária', price: 150, sold: 0, total: 1000}, {category: 'Económica', price: 100, sold: 0, total: 5000}, {category: 'Local', price: 50, sold: 0, total: 10000}] },
-        { id: 12, date: '2026-07-09', time: '21:00', stadium: 'Santiago Bernabéu', homeTeam: '', awayTeam: '', phase: 'Quartos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: [{category: 'Premium', price: 200, sold: 0, total: 500}, {category: 'Intermediária', price: 150, sold: 0, total: 1000}, {category: 'Económica', price: 100, sold: 0, total: 5000}, {category: 'Local', price: 50, sold: 0, total: 10000}] },
-        { id: 13, date: '2026-07-14', time: '20:00', stadium: 'Estádio da Luz', homeTeam: '', awayTeam: '', phase: 'Meias-Finais', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: [{category: 'Premium', price: 200, sold: 0, total: 500}, {category: 'Intermediária', price: 150, sold: 0, total: 1000}, {category: 'Económica', price: 100, sold: 0, total: 5000}, {category: 'Local', price: 50, sold: 0, total: 10000}] },
-        { id: 14, date: '2026-07-15', time: '20:00', stadium: 'Santiago Bernabéu', homeTeam: '', awayTeam: '', phase: 'Meias-Finais', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: [{category: 'Premium', price: 200, sold: 0, total: 500}, {category: 'Intermediária', price: 150, sold: 0, total: 1000}, {category: 'Económica', price: 100, sold: 0, total: 5000}, {category: 'Local', price: 50, sold: 0, total: 10000}] },
-        { id: 15, date: '2026-07-19', time: '21:00', stadium: 'Santiago Bernabéu', homeTeam: '', awayTeam: '', phase: 'Final', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: [{category: 'Premium', price: 200, sold: 0, total: 500}, {category: 'Intermediária', price: 150, sold: 0, total: 1000}, {category: 'Económica', price: 100, sold: 0, total: 5000}, {category: 'Local', price: 50, sold: 0, total: 10000}] }
+        // Dezasseis-avos (16 jogos - 32 equipas)
+        { id: 1, date: '2026-06-25', time: '15:00', stadium: 'Estádio da Luz', homeTeam: 'Portugal', awayTeam: 'Irão', phase: 'Dezasseis-avos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+        { id: 2, date: '2026-06-25', time: '18:00', stadium: 'Estádio Alvalade', homeTeam: 'França', awayTeam: 'Ucrânia', phase: 'Dezasseis-avos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+        { id: 3, date: '2026-06-25', time: '21:00', stadium: 'Estádio do Dragão', homeTeam: 'Brasil', awayTeam: 'Chile', phase: 'Dezasseis-avos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+        { id: 4, date: '2026-06-26', time: '15:00', stadium: 'Camp Nou', homeTeam: 'Espanha', awayTeam: 'Turquia', phase: 'Dezasseis-avos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+        { id: 5, date: '2026-06-26', time: '18:00', stadium: 'Wembley', homeTeam: 'Argentina', awayTeam: 'Nigéria', phase: 'Dezasseis-avos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+        { id: 6, date: '2026-06-26', time: '21:00', stadium: 'Santiago Bernabéu', homeTeam: 'Inglaterra', awayTeam: 'Áustria', phase: 'Dezasseis-avos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+        { id: 7, date: '2026-06-27', time: '15:00', stadium: 'Azteca', homeTeam: 'Alemanha', awayTeam: 'Austrália', phase: 'Dezasseis-avos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+        { id: 8, date: '2026-06-27', time: '18:00', stadium: 'Rose Bowl', homeTeam: 'Holanda', awayTeam: 'Polónia', phase: 'Dezasseis-avos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+        
+        { id: 9, date: '2026-06-27', time: '21:00', stadium: 'Estádio da Luz', homeTeam: 'Bélgica', awayTeam: 'Sérvia', phase: 'Dezasseis-avos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+        { id: 10, date: '2026-06-28', time: '15:00', stadium: 'Estádio Alvalade', homeTeam: 'Uruguai', awayTeam: 'Dinamarca', phase: 'Dezasseis-avos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+        { id: 11, date: '2026-06-28', time: '18:00', stadium: 'Estádio do Dragão', homeTeam: 'Croácia', awayTeam: 'Canadá', phase: 'Dezasseis-avos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+        { id: 12, date: '2026-06-28', time: '21:00', stadium: 'Camp Nou', homeTeam: 'Itália', awayTeam: 'Gana', phase: 'Dezasseis-avos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+        { id: 13, date: '2026-06-29', time: '15:00', stadium: 'Wembley', homeTeam: 'Marrocos', awayTeam: 'Coreia do Sul', phase: 'Dezasseis-avos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+        { id: 14, date: '2026-06-29', time: '18:00', stadium: 'Santiago Bernabéu', homeTeam: 'Colômbia', awayTeam: 'Japão', phase: 'Dezasseis-avos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+        { id: 15, date: '2026-06-29', time: '21:00', stadium: 'Azteca', homeTeam: 'Suíça', awayTeam: 'Senegal', phase: 'Dezasseis-avos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+        { id: 16, date: '2026-06-30', time: '18:00', stadium: 'Rose Bowl', homeTeam: 'EUA', awayTeam: 'Cuba', phase: 'Dezasseis-avos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+        
+        // Próximas fases
+        { id: 17, date: '2026-07-02', time: '18:00', stadium: 'Estádio da Luz', homeTeam: '', awayTeam: '', phase: 'Oitavos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+        { id: 18, date: '2026-07-02', time: '21:00', stadium: 'Estádio Alvalade', homeTeam: '', awayTeam: '', phase: 'Oitavos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+        { id: 19, date: '2026-07-03', time: '18:00', stadium: 'Estádio do Dragão', homeTeam: '', awayTeam: '', phase: 'Oitavos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+        { id: 20, date: '2026-07-03', time: '21:00', stadium: 'Camp Nou', homeTeam: '', awayTeam: '', phase: 'Oitavos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+        { id: 21, date: '2026-07-04', time: '18:00', stadium: 'Wembley', homeTeam: '', awayTeam: '', phase: 'Oitavos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+        { id: 22, date: '2026-07-04', time: '21:00', stadium: 'Santiago Bernabéu', homeTeam: '', awayTeam: '', phase: 'Oitavos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+        { id: 23, date: '2026-07-05', time: '18:00', stadium: 'Azteca', homeTeam: '', awayTeam: '', phase: 'Oitavos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+        { id: 24, date: '2026-07-05', time: '21:00', stadium: 'Rose Bowl', homeTeam: '', awayTeam: '', phase: 'Oitavos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+
+        { id: 25, date: '2026-07-08', time: '18:00', stadium: 'Estádio da Luz', homeTeam: '', awayTeam: '', phase: 'Quartos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+        { id: 26, date: '2026-07-08', time: '21:00', stadium: 'Camp Nou', homeTeam: '', awayTeam: '', phase: 'Quartos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+        { id: 27, date: '2026-07-09', time: '18:00', stadium: 'Wembley', homeTeam: '', awayTeam: '', phase: 'Quartos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+        { id: 28, date: '2026-07-09', time: '21:00', stadium: 'Santiago Bernabéu', homeTeam: '', awayTeam: '', phase: 'Quartos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+
+        { id: 29, date: '2026-07-14', time: '20:00', stadium: 'Estádio da Luz', homeTeam: '', awayTeam: '', phase: 'Meias-Finais', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+        { id: 30, date: '2026-07-15', time: '20:00', stadium: 'Santiago Bernabéu', homeTeam: '', awayTeam: '', phase: 'Meias-Finais', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+
+        { id: 31, date: '2026-07-19', time: '21:00', stadium: 'Santiago Bernabéu', homeTeam: '', awayTeam: '', phase: 'Final', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) }
     ],
     teams: [
         { name: 'Portugal', coach: 'Roberto Martínez', players: [] },
         { name: 'França', coach: 'Didier Deschamps', players: [] },
-        { name: 'Espanha', coach: 'Luis de la Fuente', players: [] },
         { name: 'Brasil', coach: 'Dorival Júnior', players: [] },
+        { name: 'Espanha', coach: 'Luis de la Fuente', players: [] },
         { name: 'Argentina', coach: 'Lionel Scaloni', players: [] },
         { name: 'Inglaterra', coach: 'Gareth Southgate', players: [] },
         { name: 'Alemanha', coach: 'Julian Nagelsmann', players: [] },
-        { name: 'Marrocos', coach: 'Walid Regragui', players: [] },
-        { name: 'México', coach: 'Jaime Lozano', players: [] },
-        { name: 'Cuba', coach: 'Yunielys Castillo', players: [] },
-        { name: 'Itália', coach: 'Luciano Spalletti', players: [] },
-        { name: 'EUA', coach: 'Gregg Berhalter', players: [] },
         { name: 'Holanda', coach: 'Ronald Koeman', players: [] },
-        { name: 'Japão', coach: 'Hajime Moriyasu', players: [] },
+        { name: 'Bélgica', coach: 'Domenico Tedesco', players: [] },
+        { name: 'Uruguai', coach: 'Marcelo Bielsa', players: [] },
+        { name: 'Croácia', coach: 'Zlatko Dalić', players: [] },
+        { name: 'Itália', coach: 'Luciano Spalletti', players: [] },
+        { name: 'Marrocos', coach: 'Walid Regragui', players: [] },
         { name: 'Colômbia', coach: 'Néstor Lorenzo', players: [] },
-        { name: 'Senegal', coach: 'Aliou Cissé', players: [] }
+        { name: 'Suíça', coach: 'Murat Yakin', players: [] },
+        { name: 'EUA', coach: 'Gregg Berhalter', players: [] },
+        { name: 'Irão', coach: 'Amir Ghalenoei', players: [] },
+        { name: 'Ucrânia', coach: 'Serhiy Rebrov', players: [] },
+        { name: 'Chile', coach: 'Ricardo Gareca', players: [] },
+        { name: 'Turquia', coach: 'Vincenzo Montella', players: [] },
+        { name: 'Nigéria', coach: 'Finidi George', players: [] },
+        { name: 'Áustria', coach: 'Ralf Rangnick', players: [] },
+        { name: 'Austrália', coach: 'Graham Arnold', players: [] },
+        { name: 'Polónia', coach: 'Michał Probierz', players: [] },
+        { name: 'Sérvia', coach: 'Dragan Stojković', players: [] },
+        { name: 'Dinamarca', coach: 'Kasper Hjulmand', players: [] },
+        { name: 'Canadá', coach: 'Jesse Marsch', players: [] },
+        { name: 'Gana', coach: 'Otto Addo', players: [] },
+        { name: 'Coreia do Sul', coach: 'Hwang Sun-hong', players: [] },
+        { name: 'Japão', coach: 'Hajime Moriyasu', players: [] },
+        { name: 'Senegal', coach: 'Aliou Cissé', players: [] },
+        { name: 'Cuba', coach: 'Yunielys Castillo', players: [] }
     ],
     referees: [
         { id: 1, email: 'ref1@fifa.com', name: 'Artur Soares Dias', nationality: 'Portugal', type: 'Principal', status: 'Ativo', matchesCount: 0, score: 0, evaluationsCount: 0 },
@@ -141,7 +180,7 @@ const DEFAULT_DATA = {
         { email: 'ref@fifa.com', role: 'Árbitro', name: 'Artur Dias' }
     ],
     logs: [],
-    version: 7
+    version: 10
 };
 
 // Funções para Árbitros
@@ -190,9 +229,9 @@ function initDB() {
         localStorage.setItem('wc_data', JSON.stringify(DEFAULT_DATA));
     } else {
         const currentData = JSON.parse(stored);
-        if (!currentData.hasOwnProperty('version') || currentData.version !== 7) {
+        if (!currentData.hasOwnProperty('version') || currentData.version !== 10) {
             localStorage.setItem('wc_data', JSON.stringify(DEFAULT_DATA));
-            console.log('Base de dados resetada para nova estrutura (v7).');
+            console.log('Base de dados resetada para nova estrutura (v10).');
         }
     }
 }
