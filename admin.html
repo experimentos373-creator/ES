@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel Administrativo - FIFA World Cup 2026</title>
-    <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #00D26A;
+            --primary-dark: #00A352;
             --dark: #1A202C;
             --darker: #111827;
             --light: #F8F9FA;
@@ -16,16 +16,27 @@
             --text-muted: #6B7280;
         }
 
-        body { font-family: 'Outfit', sans-serif; background-color: var(--light); margin: 0; display: flex; }
+        body { font-family: 'Outfit', sans-serif; background-color: var(--light); margin: 0; display: flex; color: var(--dark); }
 
-        .sidebar { background-color: var(--darker); width: 280px; height: 100vh; position: fixed; color: white; padding: 2rem 1.5rem; z-index: 100; }
-        .logo { font-size: 1.5rem; font-weight: 800; margin-bottom: 3rem; color: var(--primary); display: flex; align-items: center; gap: 10px; }
+        /* Sidebar Nav */
+        .sidebar { background-color: var(--darker); width: 280px; height: 100vh; position: fixed; color: white; padding: 2rem 1.5rem; z-index: 100; box-sizing: border-box; }
+        .logo { font-size: 1.5rem; font-weight: 800; margin-bottom: 2rem; color: var(--primary); display: flex; align-items: center; gap: 10px; }
         
-        .main-content { margin-left: 280px; padding: 3rem; width: calc(100% - 280px); }
+        .nav-menu { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 2rem; }
+        .nav-item { padding: 1rem 1.5rem; border-radius: 12px; cursor: pointer; font-weight: 600; transition: 0.3s; color: #9CA3AF; display: flex; align-items: center; gap: 10px; }
+        .nav-item:hover, .nav-item.active { background: rgba(0, 210, 106, 0.1); color: var(--primary); }
+        
+        .main-content { margin-left: 280px; padding: 3rem; width: calc(100% - 280px); box-sizing: border-box; }
 
         .admin-header { margin-bottom: 3rem; }
         .admin-header h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
 
+        /* Views */
+        .view-section { display: none; }
+        .view-section.active { display: block; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Dashboard */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 3rem; }
         .stat-card { background: white; padding: 2.5rem; border-radius: 30px; border: 1px solid var(--border); box-shadow: 0 15px 30px rgba(0,0,0,0.03); text-align: center; }
         .stat-label { font-size: 0.9rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 1rem; letter-spacing: 0.05em; }
@@ -33,98 +44,433 @@
         .stat-val.profit { color: var(--primary); }
 
         .module-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; }
-        .module-card { 
-            background: white; padding: 2rem; border-radius: 24px; border: 1px solid var(--border); 
-            text-decoration: none; color: inherit; transition: 0.3s; display: flex; flex-direction: column; align-items: center; text-align: center;
-        }
+        .module-card { background: white; padding: 2rem; border-radius: 24px; border: 1px solid var(--border); text-decoration: none; color: inherit; transition: 0.3s; display: flex; flex-direction: column; align-items: center; text-align: center; }
         .module-card:hover { transform: translateY(-10px); border-color: var(--primary); box-shadow: 0 20px 40px rgba(0,0,0,0.06); }
         .module-icon { font-size: 2.5rem; margin-bottom: 1rem; background: var(--light); width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; border-radius: 20px; }
-        .module-card h3 { margin: 0; font-size: 1.25rem; font-weight: 800; }
-        .module-card p { color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem; font-weight: 600; }
 
-        .btn-logout { 
-            position: absolute; bottom: 2rem; left: 1.5rem; right: 1.5rem; padding: 1rem; background: rgba(255,255,255,0.05); 
-            border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #EF4444; text-align: center; text-decoration: none; font-weight: 700;
-        }
+        /* Formulários e Cards (Genérico) */
+        .card { background: white; padding: 2rem; border-radius: 24px; border: 1px solid var(--border); margin-bottom: 2rem; }
+        .card h2 { margin-top: 0; font-size: 1.5rem; margin-bottom: 1.5rem; }
+        
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
+        .form-group label { font-weight: 600; font-size: 0.9rem; }
+        .form-group input, .form-group select { padding: 0.8rem 1rem; border: 1px solid var(--border); border-radius: 12px; font-family: inherit; font-size: 1rem; }
+        
+        .btn { padding: 0.8rem 1.5rem; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s; font-family: inherit; font-size: 1rem; }
+        .btn:hover { background: var(--primary-dark); }
+        .btn.outline { background: transparent; border: 2px solid var(--border); color: var(--dark); }
+        .btn.outline:hover { border-color: var(--primary); color: var(--primary); }
+
+        /* Tabela Listagens */
+        .list-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+        .list-item { background: white; padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .list-item-info strong { font-size: 1.1rem; display: block; margin-bottom: 0.2rem; }
+        .list-item-info span { color: var(--text-muted); font-size: 0.9rem; }
+
+        /* Plantel Grid */
+        .players-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem; }
+        .player-card { background: var(--light); padding: 1rem; border-radius: 12px; text-align: center; border: 1px solid var(--border); position: relative; }
+        .player-number { font-size: 1.5rem; font-weight: 800; color: var(--primary); }
+        .player-name { font-weight: 600; margin: 0.5rem 0; }
+        .player-pos { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; }
+
+        /* Modal Match Finalize */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; padding: 2.5rem; border-radius: 24px; width: 400px; max-width: 90%; }
+
     </style>
 </head>
 <body>
 
     <aside class="sidebar">
         <div class="logo"><span>🛡️</span> Admin Panel</div>
-        <p style="font-size: 0.85rem; color: #9CA3AF; padding: 0 1rem;">Bem-vindo, Administrador</p>
-        <a href="index.html" class="btn-logout">Sair do Sistema</a>
+        <p style="font-size: 0.85rem; color: #9CA3AF; padding: 0 1rem;">Mundial 2026</p>
+        
+        <div class="nav-menu">
+            <div class="nav-item active" onclick="switchView('dashboard', this)">📊 Dashboard</div>
+            <div class="nav-item" onclick="switchView('equipas', this)">👕 Gestão de Equipas</div>
+            <div class="nav-item" onclick="switchView('jogos', this)">⚽ Gestão de Jogos</div>
+            <div class="nav-item" onclick="switchView('bracket', this)">🏆 Avanço do Torneio</div>
+        </div>
+
+        <a href="index.html" class="btn" style="position: absolute; bottom: 2rem; left: 1.5rem; right: 1.5rem; background: rgba(255,0,0,0.1); color: #EF4444; text-align: center; text-decoration: none;">Sair do Sistema</a>
     </aside>
 
     <main class="main-content">
-        <div class="admin-header">
-            <h1>Visão Geral do Torneio</h1>
-            <p style="color: var(--text-muted); font-weight: 600;">Supervisão financeira e operacional em tempo real.</p>
-        </div>
-
-        <!-- FINANCE DASHBOARD -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">Bilheteira Vendida</div>
-                <div class="stat-val" id="total-sold">0</div>
-                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 10px; font-weight: 600;">Bilhetes totais emitidos</p>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Lucro Acumulado</div>
-                <div class="stat-val profit" id="total-profit">0 €</div>
-                <p style="color: var(--primary); font-size: 0.9rem; margin-top: 10px; font-weight: 700;">Receita bruta confirmada</p>
-            </div>
-        </div>
-
-        <h2 style="margin-bottom: 1.5rem; font-weight: 800;">Acesso aos Módulos de Gestão</h2>
         
-        <div class="module-grid">
-            <a href="gestor_bilheteira.html" class="module-card">
-                <div class="module-icon">🎟️</div>
-                <h3>Bilheteira</h3>
-                <p>Gestão de preços e stock</p>
-            </a>
-            <a href="gestor_arbitragem.html" class="module-card">
-                <div class="module-icon">⚖️</div>
-                <h3>Arbitragem</h3>
-                <p>Supervisão de árbitros</p>
-            </a>
-            <a href="gestor_equipa.html" class="module-card">
-                <div class="module-icon">⚽</div>
-                <h3>Equipas</h3>
-                <p>Plantéis e seleções</p>
-            </a>
-            <a href="gestor_logistica.html" class="module-card">
-                <div class="module-icon">📦</div>
-                <h3>Logística</h3>
-                <p>Segurança e transportes</p>
-            </a>
-        </div>
+        <!-- DASHBOARD VIEW -->
+        <section id="view-dashboard" class="view-section active">
+            <div class="admin-header">
+                <h1>Visão Geral do Torneio</h1>
+                <p style="color: var(--text-muted); font-weight: 600;">Supervisão financeira e links rápidos.</p>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Bilheteira Vendida</div>
+                    <div class="stat-val" id="total-sold">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Lucro Acumulado</div>
+                    <div class="stat-val profit" id="total-profit">0 €</div>
+                </div>
+            </div>
+            <h2 style="margin-bottom: 1.5rem;">Acesso aos Módulos</h2>
+            <div class="module-grid">
+                <a href="gestor_bilheteira.html" class="module-card">
+                    <div class="module-icon">🎟️</div><h3>Bilheteira</h3>
+                </a>
+                <a href="gestor_arbitragem.html" class="module-card">
+                    <div class="module-icon">⚖️</div><h3>Arbitragem</h3>
+                </a>
+            </div>
+        </section>
+
+        <!-- EQUIPAS VIEW -->
+        <section id="view-equipas" class="view-section">
+            <div class="admin-header">
+                <h1>Gestão de Equipas e Plantéis</h1>
+                <p style="color: var(--text-muted); font-weight: 600;">Adicione nações e defina os 26 jogadores.</p>
+            </div>
+            
+            <div class="card">
+                <h2>Registar Nova Equipa</h2>
+                <form id="form-team" class="form-grid" onsubmit="event.preventDefault(); handleAddTeam();">
+                    <div class="form-group">
+                        <label>Nome da Seleção</label>
+                        <input type="text" id="team-name" required placeholder="Ex: Portugal">
+                    </div>
+                    <div class="form-group">
+                        <label>Treinador</label>
+                        <input type="text" id="team-coach" required placeholder="Ex: Roberto Martínez">
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <button type="submit" class="btn">Registar Equipa</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Equipas Registadas</h2>
+                <select id="select-team-view" class="form-group" style="width: 100%; padding: 1rem; margin-bottom: 2rem; border-radius: 12px; font-size: 1.1rem; border: 1px solid var(--border);" onchange="renderTeamRoster()">
+                    <option value="">Selecione uma equipa para gerir o plantel...</option>
+                </select>
+
+                <div id="roster-manager" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="margin:0;">Plantel (<span id="roster-count">0</span>/26)</h3>
+                    </div>
+                    
+                    <form id="form-player" style="display: flex; gap: 1rem; margin-bottom: 2rem;" onsubmit="event.preventDefault(); handleAddPlayer();">
+                        <input type="text" id="player-name" placeholder="Nome do Jogador" required style="flex: 2; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--border);">
+                        <input type="number" id="player-number" placeholder="Número" required min="1" max="99" style="flex: 1; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--border);">
+                        <select id="player-pos" required style="flex: 1; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--border);">
+                            <option value="Guarda-Redes">Guarda-Redes</option>
+                            <option value="Defesa">Defesa</option>
+                            <option value="Médio">Médio</option>
+                            <option value="Avançado">Avançado</option>
+                        </select>
+                        <button type="submit" class="btn">Adicionar Jogador</button>
+                    </form>
+
+                    <div class="players-grid" id="players-list">
+                        <!-- Render via JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- JOGOS VIEW -->
+        <section id="view-jogos" class="view-section">
+            <div class="admin-header">
+                <h1>Calendário de Jogos</h1>
+                <p style="color: var(--text-muted); font-weight: 600;">Agende partidas e defina os resultados.</p>
+            </div>
+
+            <div class="card">
+                <h2>Agendar Novo Jogo</h2>
+                <form id="form-match" class="form-grid" onsubmit="event.preventDefault(); handleAddMatch();">
+                    <div class="form-group">
+                        <label>Fase do Torneio</label>
+                        <select id="match-phase" required>
+                            <option value="Grupos">Fase de Grupos</option>
+                            <option value="Oitavos">Oitavos de Final</option>
+                            <option value="Quartos">Quartos de Final</option>
+                            <option value="Meias-Finais">Meias Finais</option>
+                            <option value="Final">Final</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Estádio</label>
+                        <select id="match-stadium" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Equipa Visitada (Casa)</label>
+                        <select id="match-home" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Equipa Visitante (Fora)</label>
+                        <select id="match-away" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Data</label>
+                        <input type="date" id="match-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Hora</label>
+                        <input type="time" id="match-time" required>
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <button type="submit" class="btn">Adicionar Jogo ao Calendário</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Lista de Jogos</h2>
+                <div class="list-grid" id="matches-list">
+                    <!-- Render via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- BRACKET VIEW -->
+        <section id="view-bracket" class="view-section">
+            <div class="admin-header">
+                <h1>Avanço do Torneio</h1>
+                <p style="color: var(--text-muted); font-weight: 600;">Visualize as chaves do torneio atualizadas em tempo real.</p>
+            </div>
+            
+            <div class="card" style="overflow-x: auto;">
+                <p>O Bracket renderiza as equipas apuradas. Para avançar as equipas, finalize os jogos no separador "Gestão de Jogos".</p>
+                <div style="margin-top: 2rem;">
+                    <a href="publico.html" target="_blank" class="btn outline">Abrir Bracket Completo no Público</a>
+                </div>
+            </div>
+        </section>
+
     </main>
+
+    <!-- Modal Finalizar Jogo -->
+    <div class="modal" id="modal-finalize">
+        <div class="modal-content">
+            <h2 style="margin-top:0;">Finalizar Jogo</h2>
+            <p>Selecione a equipa que avançará para a próxima fase.</p>
+            <div class="form-group" style="margin-top: 1.5rem;">
+                <label>Vencedor da Partida</label>
+                <select id="finalize-winner" style="width: 100%; margin-top: 0.5rem; padding: 1rem;"></select>
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button class="btn" style="flex:1;" onclick="confirmFinalize()">Confirmar e Avançar</button>
+                <button class="btn outline" style="flex:1;" onclick="closeModal()">Cancelar</button>
+            </div>
+        </div>
+    </div>
 
     <script src="app.js"></script>
     <script>
-        function updateAdminDashboard() {
-            const data = getData();
-            let totalSold = 0;
-            let totalRev = 0;
+        let currentFinalizeMatchId = null;
 
+        function switchView(viewName, element) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById('view-' + viewName).classList.add('active');
+            
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+
+            if (viewName === 'equipas') updateTeamSelects();
+            if (viewName === 'jogos') {
+                updateTeamSelects();
+                renderMatchesAdmin();
+            }
+        }
+
+        // --- Dashboard ---
+        function updateDashboardStats() {
+            const data = getData();
+            let totalSold = 0; let totalRev = 0;
             data.matches.forEach(m => {
                 if (m.tickets) {
-                    m.tickets.forEach(t => {
-                        totalSold += t.sold;
-                        totalRev += (t.sold * t.price);
-                    });
+                    m.tickets.forEach(t => { totalSold += t.sold; totalRev += (t.sold * t.price); });
                 }
             });
-
             document.getElementById('total-sold').innerText = totalSold.toLocaleString('pt-PT');
             document.getElementById('total-profit').innerText = totalRev.toLocaleString('pt-PT') + ' €';
         }
 
+        // --- Equipas e Plantel ---
+        function handleAddTeam() {
+            const name = document.getElementById('team-name').value;
+            const coach = document.getElementById('team-coach').value;
+            const res = addTeam({ name, coach });
+            if (res.success) {
+                alert('Equipa registada com sucesso!');
+                document.getElementById('form-team').reset();
+                updateTeamSelects();
+            } else {
+                alert(res.msg);
+            }
+        }
+
+        function updateTeamSelects() {
+            const data = getData();
+            const selects = [document.getElementById('select-team-view'), document.getElementById('match-home'), document.getElementById('match-away')];
+            
+            selects.forEach(select => {
+                if(!select) return;
+                const currentVal = select.value;
+                select.innerHTML = select.id === 'select-team-view' ? '<option value="">Selecione uma equipa...</option>' : '';
+                data.teams.forEach(t => {
+                    select.innerHTML += `<option value="${t.name}">${t.name}</option>`;
+                });
+                select.value = currentVal;
+            });
+            
+            // Popula estádios no form de jogos
+            const stadSelect = document.getElementById('match-stadium');
+            if(stadSelect && stadSelect.options.length === 0) {
+                STADIUMS_LIST.forEach(s => stadSelect.innerHTML += `<option value="${s}">${s}</option>`);
+            }
+        }
+
+        function renderTeamRoster() {
+            const teamName = document.getElementById('select-team-view').value;
+            const container = document.getElementById('roster-manager');
+            const list = document.getElementById('players-list');
+            
+            if (!teamName) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'block';
+            const data = getData();
+            const team = data.teams.find(t => t.name === teamName);
+            
+            document.getElementById('roster-count').innerText = team.players.length;
+            list.innerHTML = '';
+            
+            team.players.forEach(p => {
+                list.innerHTML += `
+                    <div class="player-card">
+                        <div class="player-number">${p.number}</div>
+                        <div class="player-name">${p.name}</div>
+                        <div class="player-pos">${p.position}</div>
+                    </div>
+                `;
+            });
+        }
+
+        function handleAddPlayer() {
+            const teamName = document.getElementById('select-team-view').value;
+            const player = {
+                name: document.getElementById('player-name').value,
+                number: document.getElementById('player-number').value,
+                position: document.getElementById('player-pos').value
+            };
+
+            const res = addPlayerToTeam(teamName, player);
+            if (res.success) {
+                document.getElementById('form-player').reset();
+                renderTeamRoster();
+            } else {
+                alert(res.msg);
+            }
+        }
+
+        // --- Gestão de Jogos ---
+        function handleAddMatch() {
+            const matchData = {
+                phase: document.getElementById('match-phase').value,
+                stadium: document.getElementById('match-stadium').value,
+                homeTeam: document.getElementById('match-home').value,
+                awayTeam: document.getElementById('match-away').value,
+                date: document.getElementById('match-date').value,
+                time: document.getElementById('match-time').value
+            };
+
+            if (matchData.homeTeam === matchData.awayTeam) {
+                alert("As equipas devem ser diferentes.");
+                return;
+            }
+
+            const res = addMatch(matchData);
+            if (res.success) {
+                alert('Jogo adicionado com sucesso!');
+                document.getElementById('form-match').reset();
+                renderMatchesAdmin();
+            } else {
+                alert(res.msg);
+            }
+        }
+
+        function renderMatchesAdmin() {
+            const data = getData();
+            const container = document.getElementById('matches-list');
+            container.innerHTML = '';
+
+            // Renderizar agrupado por fase
+            PHASES_LIST.forEach(phase => {
+                const phaseMatches = data.matches.filter(m => m.phase === phase);
+                if (phaseMatches.length === 0) return;
+
+                container.innerHTML += `<h3 style="margin-top:1.5rem; color:var(--primary);">${phase}</h3>`;
+                
+                phaseMatches.forEach(m => {
+                    const teamsStr = `${m.homeTeam || 'TBD'} vs ${m.awayTeam || 'TBD'}`;
+                    const canFinalize = m.status !== 'Finalizado' && m.homeTeam && m.awayTeam;
+                    
+                    container.innerHTML += `
+                        <div class="list-item">
+                            <div class="list-item-info">
+                                <strong>${teamsStr}</strong>
+                                <span>${m.date} às ${m.time} | ${m.stadium} | Status: <b style="color:${m.status === 'Finalizado' ? 'var(--primary)' : 'var(--text-muted)'}">${m.status}</b></span>
+                                ${m.winner ? `<span style="display:block; margin-top:5px; color:var(--primary);">Avançou: <b>${m.winner}</b></span>` : ''}
+                            </div>
+                            <div>
+                                ${canFinalize ? `<button class="btn" onclick="openFinalizeModal(${m.id}, '${m.homeTeam}', '${m.awayTeam}')">Finalizar Jogo</button>` : ''}
+                                ${m.status === 'Finalizado' ? `<button class="btn outline" disabled>Concluído</button>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+        }
+
+        // --- Finalização de Jogo (Avanço no Torneio) ---
+        function openFinalizeModal(matchId, home, away) {
+            currentFinalizeMatchId = matchId;
+            const select = document.getElementById('finalize-winner');
+            select.innerHTML = `
+                <option value="${home}">${home}</option>
+                <option value="${away}">${away}</option>
+            `;
+            document.getElementById('modal-finalize').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-finalize').classList.remove('active');
+            currentFinalizeMatchId = null;
+        }
+
+        function confirmFinalize() {
+            const winner = document.getElementById('finalize-winner').value;
+            if (currentFinalizeMatchId && winner) {
+                const success = finalizeMatch(currentFinalizeMatchId, winner);
+                if (success) {
+                    closeModal();
+                    renderMatchesAdmin();
+                    alert(`Jogo finalizado! ${winner} avançou para a próxima fase.`);
+                }
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
-            updateAdminDashboard();
+            updateDashboardStats();
+            updateTeamSelects();
         });
+
     </script>
 </body>
 </html>
