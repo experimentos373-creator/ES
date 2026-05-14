@@ -143,6 +143,7 @@
             <div class="nav-item" onclick="switchView('equipas', this)">👕 Gestão de Equipas</div>
             <div class="nav-item" onclick="switchView('jogos', this)">⚽ Gestão de Jogos</div>
             <div class="nav-item" onclick="switchView('bracket', this)">🏆 Avanço do Torneio</div>
+            <div class="nav-item" onclick="switchView('historico', this)">📜 Histórico de Jogos</div>
         </div>
 
         <a href="index.html" class="btn" style="position: absolute; bottom: 2rem; left: 1.5rem; right: 1.5rem; background: rgba(255,0,0,0.1); color: #EF4444; text-align: center; text-decoration: none;">Sair do Sistema</a>
@@ -300,6 +301,21 @@
             </div>
         </section>
 
+        <!-- HISTORICO VIEW -->
+        <section id="view-historico" class="view-section">
+            <div class="admin-header">
+                <h1>Histórico de Partidas</h1>
+                <p style="color: var(--text-muted); font-weight: 600;">Consulte os detalhes de todos os jogos já finalizados.</p>
+            </div>
+            
+            <div class="card">
+                <h2>Jogos Concluídos</h2>
+                <div class="list-grid" id="history-list">
+                    <!-- Render via JS -->
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <!-- Modal Finalizar Jogo — 3 Etapas -->
@@ -392,6 +408,7 @@
             element.classList.add('active');
             if (viewName === 'equipas') updateTeamSelects();
             if (viewName === 'jogos') { updateTeamSelects(); renderMatchesAdmin(); }
+            if (viewName === 'historico') { renderMatchHistory(); }
         }
 
         // ── Dashboard ──────────────────────────────────────────────────────
@@ -490,6 +507,36 @@
                         : (m.status === 'Finalizado' ? '<button class="btn outline" onclick="openHist(' + m.id + ')">Ver Historico</button>' : '');
                     container.innerHTML += '<div class="list-item"><div class="list-item-info"><strong>' + teamsStr + '</strong><span>' + m.date + ' as ' + m.time + ' | ' + m.stadium + ' | Status: <b style="color:' + (m.status === 'Finalizado' ? 'var(--primary)' : 'var(--text-muted)') + '">' + m.status + '</b></span>' + winnerHtml + '</div><div>' + btnHtml + '</div></div>';
                 });
+            });
+        }
+
+        function renderMatchHistory() {
+            var data = getData();
+            var container = document.getElementById('history-list');
+            container.innerHTML = '';
+            
+            var finished = data.matches.filter(function(m){ return m.status === 'Finalizado'; });
+            
+            if (finished.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:2rem;">Nenhum jogo finalizado para mostrar.</p>';
+                return;
+            }
+
+            // Order by most recent finished (assuming higher ID or just list them)
+            finished.forEach(function(m) {
+                var teamsStr = (m.homeTeam || 'TBD') + ' vs ' + (m.awayTeam || 'TBD');
+                var goals = m.events ? m.events.filter(function(e){ return e.type === 'Golo'; }).length : 0;
+                
+                container.innerHTML += '<div class="list-item">' +
+                    '<div class="list-item-info">' +
+                        '<strong>' + teamsStr + '</strong>' +
+                        '<span>' + m.date + ' | ' + m.stadium + ' | ' + m.phase + '</span>' +
+                        '<span style="display:block;margin-top:5px;color:var(--primary);">Vencedor: <b>' + m.winner + '</b></span>' +
+                    '</div>' +
+                    '<div>' +
+                        '<button class="btn outline" onclick="openHist(' + m.id + ')">Ver Detalhes</button>' +
+                    '</div>' +
+                '</div>';
             });
         }
 
