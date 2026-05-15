@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestor de Bilheteira - FIFA World Cup 2026</title>
+    <meta name="description" content="Gestão de Bilheteira do FIFA World Cup 2026">
+    <meta property="og:title" content="Gestor de Bilheteira - FIFA World Cup 2026">
+    <meta property="og:description" content="Gestão de Bilheteira do FIFA World Cup 2026">
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
@@ -99,14 +102,14 @@
 
         <!-- VIEW: SECURITY -->
         <div id="view-security" class="content-view">
-            <h1>Segurança & Anti-Fraude 🛡️</h1>
+            <h2 style="font-size: 2rem; margin: 0;">Segurança & Anti-Fraude 🛡️</h2>
             <p style="color: var(--text-muted); margin-bottom: 2rem;">Monitorização de <strong>Bilhetes Duplicados</strong> e <strong>IPs Suspeitos</strong>.</p>
             <div class="card"><table><thead><tr><th>Timestamp</th><th>Tipo</th><th>Descrição</th><th>Ação</th></tr></thead><tbody id="fraud-body"></tbody></table></div>
         </div>
 
         <!-- VIEW: INVENTORY -->
         <div id="view-inventory" class="content-view">
-            <h1>Inventário Global 🏟️</h1>
+            <h2 style="font-size: 2rem; margin: 0;">Inventário Global 🏟️</h2>
             <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 2rem;">
                 <div class="card">
                     <h3>Resumo de Lotação</h3>
@@ -128,7 +131,7 @@
 
         <!-- VIEW: REPORTS -->
         <div id="view-reports" class="content-view">
-            <h1>Relatórios 📈</h1>
+            <h2 style="font-size: 2rem; margin: 0;">Relatórios 📈</h2>
             <div class="card">
                 <table><thead><tr><th>Categoria</th><th>Bilhetes Vendidos</th><th>Receita Bruta</th></tr></thead><tbody id="category-report-body"></tbody></table>
             </div>

@@ -5,8 +5,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FIFA World Cup 2026 - Calendário</title>
+    <meta name="description" content="Calendário de Jogos e Bilhetes do FIFA World Cup 2026">
+    <meta property="og:title" content="FIFA World Cup 2026 - Calendário">
+    <meta property="og:description" content="Calendário de Jogos e Bilhetes do FIFA World Cup 2026">
     <link rel="stylesheet" href="styles.css">
     <style>
+        :root {
+            --primary: #00D26A;
+            --primary-dark: #00B159;
+            --border: #E2E8F0;
+            --text-main: #1A202C;
+            --text-muted: #718096;
+        }
+
         .hero {
             background-color: #1A202C;
             color: white;
@@ -119,12 +130,57 @@
             font-size: 0.75rem;
             font-weight: 700;
         }
+        .sidebar-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4); z-index: 999; display: none; opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .sidebar-overlay.active { display: block; opacity: 1; }
+
+        .groups-sidebar {
+            position: fixed; top: 0; left: -450px; width: 450px; max-width: 100%; height: 100vh;
+            background: #F8F9FA; z-index: 1000; box-shadow: 5px 0 25px rgba(0,0,0,0.1);
+            transition: left 0.3s ease; overflow-y: auto; padding: 2rem; box-sizing: border-box;
+        }
+        .groups-sidebar.active { left: 0; }
+
+        .btn-floating {
+            position: fixed; bottom: 30px; left: 30px;
+            background: var(--primary); color: white; padding: 1rem 1.5rem;
+            border-radius: 50px; font-weight: 700; cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0,210,106,0.3); z-index: 998;
+            display: flex; align-items: center; gap: 10px; border: none;
+            font-size: 1.1rem; transition: transform 0.2s;
+        }
+        .btn-floating:hover { transform: translateY(-3px); }
+
+        .group-table-public { width: 100%; border-collapse: collapse; margin-bottom: 2rem; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .group-table-public th { background: #EDF2F7; padding: 0.8rem; text-align: left; font-size: 0.85rem; color: #4A5568; }
+        .group-table-public td { padding: 0.8rem; border-top: 1px solid #E2E8F0; font-size: 0.9rem; font-weight: 600; }
+        .group-table-public tr:nth-child(1) td, .group-table-public tr:nth-child(2) td { background-color: #F0FFF4; border-left: 3px solid var(--primary); }
     </style>
 </head>
 
 <body style="display: block; background-color: #F8F9FA;">
 
-    <header class="hero">
+    <!-- Sidebar dos Grupos -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleGroupsSidebar()"></div>
+    <div class="groups-sidebar" id="groups-sidebar">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h2 style="margin: 0; font-size: 1.5rem;">Fase de Grupos</h2>
+            <button onclick="toggleGroupsSidebar()" style="background: none; border: none; font-size: 2rem; cursor: pointer; color: #A0AEC0;">&times;</button>
+        </div>
+        <div id="public-groups-container">
+            <!-- Grupos renderizados via JS -->
+        </div>
+    </div>
+
+    <!-- Botão Flutuante -->
+    <button class="btn-floating" onclick="toggleGroupsSidebar()">
+        📊 Classificação dos Grupos
+    </button>
+
+    <header class="hero" aria-label="public">
         <div
             style="background: #00D26A; width: 50px; height: 50px; border-radius: 12px; margin: 0 auto 1.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
             🌐</div>
@@ -146,6 +202,7 @@
         <div class="filters" id="phase-filters">
             <button class="filter-pill active" data-phase="Todos">Todos</button>
             <button class="filter-pill" data-phase="Grupos">Grupos</button>
+            <button class="filter-pill" data-phase="Dezasseis-avos">16-avos</button>
             <button class="filter-pill" data-phase="Oitavos">Oitavos</button>
             <button class="filter-pill" data-phase="Quartos">Quartos</button>
             <button class="filter-pill" data-phase="Meias-Finais">Meias-Finais</button>
@@ -195,7 +252,7 @@
         <div
             style="background: #00D26A; width: 50px; height: 50px; border-radius: 12px; margin: 0 auto 1.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
             🌐</div>
-        <h1>FIFA World Cup 2026</h1>
+        <h2 style="font-size: 2rem; margin: 0;">FIFA World Cup 2026</h2>
         <p>Calendário de Jogos & Bilhetes</p>
     </header>
 
@@ -258,18 +315,16 @@
             const data = getData();
             const container = document.getElementById('bracket-container');
             container.innerHTML = '';
-            container.style.cssText = 'display:flex; align-items:stretch; overflow-x:auto;';
-
-            const SLOT_H = 74; // altura base de cada jogo dos Oitavos em px
+            
+            const SLOT_H = 148; 
+            const totalH = 4 * SLOT_H; 
 
             const byPhase = {
-                'Oitavos': data.matches.filter(m => m.phase === 'Oitavos'),
-                'Quartos': data.matches.filter(m => m.phase === 'Quartos'),
-                'Meias-Finais': data.matches.filter(m => m.phase === 'Meias-Finais'),
-                'Final': data.matches.filter(m => m.phase === 'Final'),
+                'Oitavos': data.matches.filter(m => m.phase === 'Oitavos').sort((a,b) => a.id - b.id),
+                'Quartos': data.matches.filter(m => m.phase === 'Quartos').sort((a,b) => a.id - b.id),
+                'Meias-Finais': data.matches.filter(m => m.phase === 'Meias-Finais').sort((a,b) => a.id - b.id),
+                'Final': data.matches.filter(m => m.phase === 'Final').sort((a,b) => a.id - b.id),
             };
-
-            const totalH = 8 * SLOT_H; // altura total do bracket (8 slots de oitavos)
 
             function matchEl(m, slotHeight) {
                 const home = m ? m.homeTeam : '';
@@ -277,28 +332,27 @@
                 const div = document.createElement('div');
                 div.style.cssText = `height:${slotHeight}px; display:flex; flex-direction:column; justify-content:center; padding:0 8px; box-sizing:border-box;`;
                 div.innerHTML = `
-            <div style="border:1px solid #E2E8F0; border-bottom:none; border-radius:6px 6px 0 0; padding:7px 10px; font-size:12px; font-weight:${home ? '600' : '400'}; color:${home ? '#1A202C' : '#A0AEC0'}; background:white; display:flex; align-items:center; gap:6px; white-space:nowrap;">
+            <div style="border:1px solid #E2E8F0; border-bottom:none; border-radius:6px 6px 0 0; padding:6px 10px; font-size:11px; font-weight:${home ? '600' : '400'}; color:${home ? '#1A202C' : '#A0AEC0'}; background:white; display:flex; align-items:center; gap:6px; white-space:nowrap; overflow:hidden;">
                 <span>${BRACKET_FLAGS[home] || ''}</span>${home || 'A definir'}
             </div>
-            <div style="border:1px solid #E2E8F0; border-radius:0 0 6px 6px; padding:7px 10px; font-size:12px; font-weight:${away ? '600' : '400'}; color:${away ? '#1A202C' : '#A0AEC0'}; background:white; display:flex; align-items:center; gap:6px; white-space:nowrap;">
+            <div style="border:1px solid #E2E8F0; border-radius:0 0 6px 6px; padding:6px 10px; font-size:11px; font-weight:${away ? '600' : '400'}; color:${away ? '#1A202C' : '#A0AEC0'}; background:white; display:flex; align-items:center; gap:6px; white-space:nowrap; overflow:hidden;">
                 <span>${BRACKET_FLAGS[away] || ''}</span>${away || 'A definir'}
             </div>`;
                 return div;
             }
 
-            function connectorSVG(count, slotH) {
-                // count = número de jogos nesta coluna (que vai ser reduzido a metade)
-                const h = count * slotH; // altura total desta coluna
+            function connectorSVG(count, slotH, side = 'left') {
+                const h = count * slotH; 
                 let paths = '';
                 for (let i = 0; i < count / 2; i++) {
-                    const y1 = slotH * (i * 2) + slotH / 2;      // centro do jogo de cima
-                    const y2 = slotH * (i * 2 + 1) + slotH / 2;  // centro do jogo de baixo
+                    const y1 = slotH * (i * 2) + slotH / 2;     
+                    const y2 = slotH * (i * 2 + 1) + slotH / 2; 
                     const mid = (y1 + y2) / 2;
-                    paths += `
-                <line x1="0" y1="${y1}" x2="10" y2="${y1}" stroke="#CBD5E0" stroke-width="1.5"/>
-                <line x1="10" y1="${y1}" x2="10" y2="${y2}" stroke="#CBD5E0" stroke-width="1.5"/>
-                <line x1="10" y1="${y2}" x2="0" y2="${y2}" stroke="#CBD5E0" stroke-width="1.5"/>
-                <line x1="10" y1="${mid}" x2="20" y2="${mid}" stroke="#CBD5E0" stroke-width="1.5"/>`;
+                    if (side === 'left') {
+                        paths += `<line x1="0" y1="${y1}" x2="10" y2="${y1}" stroke="#CBD5E0" stroke-width="1.5"/><line x1="10" y1="${y1}" x2="10" y2="${y2}" stroke="#CBD5E0" stroke-width="1.5"/><line x1="10" y1="${y2}" x2="0" y2="${y2}" stroke="#CBD5E0" stroke-width="1.5"/><line x1="10" y1="${mid}" x2="20" y2="${mid}" stroke="#CBD5E0" stroke-width="1.5"/>`;
+                    } else {
+                        paths += `<line x1="20" y1="${y1}" x2="10" y2="${y1}" stroke="#CBD5E0" stroke-width="1.5"/><line x1="10" y1="${y1}" x2="10" y2="${y2}" stroke="#CBD5E0" stroke-width="1.5"/><line x1="10" y1="${y2}" x2="20" y2="${y2}" stroke="#CBD5E0" stroke-width="1.5"/><line x1="10" y1="${mid}" x2="0" y2="${mid}" stroke="#CBD5E0" stroke-width="1.5"/>`;
+                    }
                 }
                 const div = document.createElement('div');
                 div.style.cssText = `flex-shrink:0; height:${h}px;`;
@@ -308,61 +362,58 @@
 
             function buildPhaseCol(label, matches, slotHeight) {
                 const col = document.createElement('div');
-                col.style.cssText = `display:flex; flex-direction:column; flex:1; min-width:140px;`;
-
-                // Label no topo
+                col.style.cssText = `display:flex; flex-direction:column; flex:1; min-width:130px;`;
                 const lbl = document.createElement('div');
-                lbl.style.cssText = 'text-align:center; font-size:11px; font-weight:700; color:#718096; text-transform:uppercase; letter-spacing:0.06em; height:24px; display:flex; align-items:center; justify-content:center; flex-shrink:0;';
+                lbl.style.cssText = 'text-align:center; font-size:10px; font-weight:700; color:#718096; text-transform:uppercase; letter-spacing:0.06em; height:24px; display:flex; align-items:center; justify-content:center; flex-shrink:0;';
                 lbl.textContent = label;
                 col.appendChild(lbl);
-
-                // Wrapper dos jogos com altura total fixa
                 const wrap = document.createElement('div');
-                wrap.style.cssText = `height:${totalH}px; display:flex; flex-direction:column;`;
+                wrap.style.cssText = `height:${totalH}px; display:flex; flex-direction:column; justify-content:space-around;`;
                 matches.forEach(m => wrap.appendChild(matchEl(m, slotHeight)));
                 col.appendChild(wrap);
                 return col;
             }
 
-            function buildConnectorCol(count, slotH) {
+            function buildConnectorCol(count, slotH, side) {
                 const col = document.createElement('div');
                 col.style.cssText = 'flex-shrink:0; display:flex; flex-direction:column;';
-                // Espaço para o label (alinhado com labels das colunas)
                 const spacer = document.createElement('div');
                 spacer.style.cssText = 'height:24px; flex-shrink:0;';
                 col.appendChild(spacer);
-                col.appendChild(connectorSVG(count, slotH));
+                col.appendChild(connectorSVG(count, slotH, side));
                 return col;
             }
 
-            // Oitavos — 8 jogos, slotH = SLOT_H
-            container.appendChild(buildPhaseCol('Oitavos', byPhase['Oitavos'], SLOT_H));
-            container.appendChild(buildConnectorCol(8, SLOT_H));
+            // LADO ESQUERDO
+            const leftSide = document.createElement('div');
+            leftSide.style.cssText = 'display:flex; align-items:center; flex:1;';
+            leftSide.appendChild(buildPhaseCol('Oitavos', byPhase['Oitavos'].slice(0, 4), SLOT_H));
+            leftSide.appendChild(buildConnectorCol(4, SLOT_H, 'left'));
+            leftSide.appendChild(buildPhaseCol('Quartos', byPhase['Quartos'].slice(0, 2), SLOT_H * 2));
+            leftSide.appendChild(buildConnectorCol(2, SLOT_H * 2, 'left'));
+            leftSide.appendChild(buildPhaseCol('Meia-Final', byPhase['Meias-Finais'].slice(0, 1), SLOT_H * 4));
+            
+            // CENTRO (FINAL)
+            const centerCol = document.createElement('div');
+            centerCol.style.cssText = 'display:flex; flex-direction:column; align-items:center; min-width:160px; padding: 0 10px;';
+            const trophy = document.createElement('div');
+            trophy.style.cssText = 'font-size:40px; margin-bottom:10px; margin-top: 24px;';
+            trophy.innerHTML = '🏆';
+            centerCol.appendChild(trophy);
+            centerCol.appendChild(buildPhaseCol('GRANDE FINAL', byPhase['Final'], SLOT_H * 2));
 
-            // Quartos — 4 jogos, slotH = SLOT_H * 2
-            container.appendChild(buildPhaseCol('Quartos', byPhase['Quartos'], SLOT_H * 2));
-            container.appendChild(buildConnectorCol(4, SLOT_H * 2));
+            // LADO DIREITO (INVERTIDO)
+            const rightSide = document.createElement('div');
+            rightSide.style.cssText = 'display:flex; align-items:center; flex:1; flex-direction:row-reverse;';
+            rightSide.appendChild(buildPhaseCol('Oitavos', byPhase['Oitavos'].slice(4, 8), SLOT_H));
+            rightSide.appendChild(buildConnectorCol(4, SLOT_H, 'right'));
+            rightSide.appendChild(buildPhaseCol('Quartos', byPhase['Quartos'].slice(2, 4), SLOT_H * 2));
+            rightSide.appendChild(buildConnectorCol(2, SLOT_H * 2, 'right'));
+            rightSide.appendChild(buildPhaseCol('Meia-Final', byPhase['Meias-Finais'].slice(1, 2), SLOT_H * 4));
 
-            // Meias-Finais — 2 jogos, slotH = SLOT_H * 4
-            container.appendChild(buildPhaseCol('Meias-Finais', byPhase['Meias-Finais'], SLOT_H * 4));
-            container.appendChild(buildConnectorCol(2, SLOT_H * 4));
-
-            // Final — 1 jogo, centrado verticalmente
-            const finalMatch = byPhase['Final'][0];
-            const finalCol = document.createElement('div');
-            finalCol.style.cssText = 'flex-shrink:0; min-width:140px; display:flex; flex-direction:column; align-items:center;';
-
-            const finalLbl = document.createElement('div');
-            finalLbl.style.cssText = 'height:24px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#718096; text-transform:uppercase; letter-spacing:0.06em; flex-shrink:0;';
-            finalLbl.textContent = 'Final';
-            finalCol.appendChild(finalLbl);
-
-            const finalWrap = document.createElement('div');
-            finalWrap.style.cssText = `height:${totalH}px; display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%;`;
-            finalWrap.innerHTML = `<div style="font-size:22px; margin-bottom:8px;">🏆</div>`;
-            if (finalMatch) finalWrap.appendChild(matchEl(finalMatch, SLOT_H));
-            finalCol.appendChild(finalWrap);
-            container.appendChild(finalCol);
+            container.appendChild(leftSide);
+            container.appendChild(centerCol);
+            container.appendChild(rightSide);
         }
 
         function renderPublicMatches() {
@@ -375,7 +426,7 @@
                 const countryOk = !currentCountry || m.homeTeam === currentCountry || m.awayTeam === currentCountry;
                 const dateOk = !currentDate || m.date === currentDate;
                 const timeOk = !currentTime || m.time === currentTime;
-                return phaseOk && countryOk && dateOk && timeOk;
+                return phaseOk && countryOk && dateOk && timeOk && m.status !== 'Finalizado';
             });
 
 
@@ -429,7 +480,68 @@
             populateDatesAndTimes();
             renderBracket();
             renderPublicMatches();
+            renderPublicGroupStandings();
         });
+
+        function toggleGroupsSidebar() {
+            const sidebar = document.getElementById('groups-sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            const isActive = sidebar.classList.contains('active');
+            
+            if (isActive) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            } else {
+                renderPublicGroupStandings(); // Refresh dados
+                sidebar.classList.add('active');
+                overlay.classList.add('active');
+            }
+        }
+
+        function renderPublicGroupStandings() {
+            const data = getData();
+            const container = document.getElementById('public-groups-container');
+            container.innerHTML = '';
+
+            data.groups.forEach(group => {
+                const standings = calculateGroupStandings(group.name);
+                
+                const tableHTML = `
+                    <h3 style="margin-bottom: 0.5rem; color: #2D3748;">${group.name}</h3>
+                    <table class="group-table-public">
+                        <thead>
+                            <tr>
+                                <th>Equipa</th>
+                                <th>Pts</th>
+                                <th>J</th>
+                                <th>V</th>
+                                <th>E</th>
+                                <th>D</th>
+                                <th>GM</th>
+                                <th>GS</th>
+                                <th>SG</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${standings.map(s => `
+                                <tr>
+                                    <td>${s.name}</td>
+                                    <td style="color: var(--primary); font-size: 1rem;">${s.points}</td>
+                                    <td>${s.played}</td>
+                                    <td>${s.won}</td>
+                                    <td>${s.drawn}</td>
+                                    <td>${s.lost}</td>
+                                    <td>${s.goalsFor}</td>
+                                    <td>${s.goalsAgainst}</td>
+                                    <td>${s.goalsFor - s.goalsAgainst}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                container.innerHTML += tableHTML;
+            });
+        }
         document.getElementById('date-select').addEventListener('change', (e) => {
             currentTime = ''; // reset hora ao mudar data
             document.getElementById('time-select').value = '';

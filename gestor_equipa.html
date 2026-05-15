@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestor de Equipa - FIFA World Cup 2026</title>
+    <meta name="description" content="Gestão de Equipas do FIFA World Cup 2026">
+    <meta property="og:title" content="Gestor de Equipa - FIFA World Cup 2026">
+    <meta property="og:description" content="Gestão de Equipas do FIFA World Cup 2026">
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
@@ -346,7 +349,7 @@
         <div id="view-calendar" class="content-view">
             <header class="header">
                 <div class="welcome-text">
-                    <h1>Calendário de Jogos</h1>
+                    <h2 style="font-size: 2rem; margin: 0;">Calendário de Jogos</h2>
                     <p id="calendar-count">9 jogos registados</p>
                 </div>
             </header>
@@ -372,7 +375,7 @@
         <div id="view-team" class="content-view">
             <header class="header">
                 <div class="welcome-text">
-                    <h1>Equipas & Jogadores</h1>
+                    <h2 style="font-size: 2rem; margin: 0;">Equipas & Jogadores</h2>
                     <p>8 equipas registadas</p>
                 </div>
                 <div style="display: flex; gap: 1rem;">
@@ -403,10 +406,12 @@
             <div class="view-split">
                 <div class="card-container">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                        <h3 style="margin: 0;">Plantel Oficial</h3>
-                        <div style="font-size: 0.75rem; color: var(--text-muted);">
-                            <span style="margin-right: 10px;">⚠️ Suspensão</span>
-                            <span>🚑 Lesão</span>
+                        <div>
+                            <h3 style="margin: 0;">Plantel Oficial</h3>
+                            <p style="font-size: 0.8rem; margin: 5px 0 0 0; color: var(--text-muted);">Titulares: <span id="starter-count">0</span>/11</p>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <button class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem;" onclick="confirmSquad()">Confirmar Convocatória</button>
                         </div>
                     </div>
                     <table>
@@ -477,7 +482,12 @@
 
         function initTeam() {
             const user = getCurrentUser();
-            if (user && user.team) {
+            const adminSelected = sessionStorage.getItem('admin_selected_team');
+            
+            // Se o admin selecionou uma equipa, prioriza-se essa escolha independentemente do estado formal de login
+            if (adminSelected) {
+                currentTeam = adminSelected;
+            } else if (user && user.team && user.role !== 'Público') {
                 currentTeam = user.team;
             }
             
@@ -485,9 +495,11 @@
             document.getElementById('team-abbr').innerText = currentTeam.substring(0, 2).toUpperCase();
             
             // Calcular Estatísticas Dinâmicas
-            const teamPlayers = playersData[currentTeam] || [];
-            const totalGoals = teamPlayers.reduce((acc, p) => acc + p.goals, 0);
-            const totalCards = teamPlayers.reduce((acc, p) => acc + p.yellow, 0);
+            const data = getData();
+            const team = data.teams.find(t => t.name === currentTeam);
+            const teamPlayers = team ? team.players : [];
+            const totalGoals = teamPlayers.reduce((acc, p) => acc + (p.goals || 0), 0);
+            const totalCards = teamPlayers.reduce((acc, p) => acc + (p.yellow || 0), 0);
             const aptoPlayers = teamPlayers.filter(p => p.status === 'Apto').length;
 
             document.getElementById('stat-goals').innerText = totalGoals;
@@ -516,7 +528,7 @@
                         <div style="font-weight: 800; margin: 4px 0;">${m.homeTeam} vs ${m.awayTeam}</div>
                         <div style="font-size: 0.75rem; color: var(--text-muted);">${m.stadium} • ${m.phase}</div>
                     </div>
-                    <span class="badge" style="background: #EFF6FF; color: #2563EB;">Agendado</span>
+                    <span class="badge" style="background: ${m.status === 'Finalizado' ? '#DCFCE7' : '#EFF6FF'}; color: ${m.status === 'Finalizado' ? '#166534' : '#2563EB'};">${m.status}</span>
                 `;
                 container.appendChild(div);
             });
@@ -540,39 +552,32 @@
                     <td><div style="font-weight: 700;">${m.homeTeam} vs ${m.awayTeam}</div></td>
                     <td style="color: var(--text-muted);">${m.stadium}</td>
                     <td><span class="badge" style="background: #EFF6FF; color: #2563EB;">${m.phase}</span></td>
-                    <td><span class="badge" style="background: #F3F4F6; color: #6B7280;">Agendado</span></td>
+                    <td><span class="badge" style="background: ${m.status === 'Finalizado' ? '#DCFCE7' : '#F3F4F6'}; color: ${m.status === 'Finalizado' ? '#166534' : '#6B7280'};">${m.status}</span></td>
                 `;
                 body.appendChild(tr);
             });
         }
 
-        // Mock extensivo de jogadores para demonstração conforme MD
-        const playersData = {
-            'Portugal': [
-                { id: 1, number: 7, name: 'Cristiano Ronaldo', pos: 'Avançado', status: 'Apto', goals: 125, assists: 45, injuries: 2, yellow: 1, red: 1, isStarter: true, minutes: 270, energy: 85, injuryHistory: ['Mialgia na coxa (2025)', 'Entorse no joelho (2024)'] },
-                { id: 2, number: 8, name: 'Bruno Fernandes', pos: 'Médio', status: 'Apto', goals: 20, assists: 30, injuries: 1, yellow: 0, red: 0, isStarter: true, minutes: 260, energy: 90, injuryHistory: ['Pequena sobrecarga (2026)'] },
-                { id: 3, number: 4, name: 'Rúben Dias', pos: 'Defesa', status: 'Apto', goals: 3, assists: 2, injuries: 3, yellow: 1, red: 2, isStarter: true, minutes: 270, energy: 95, injuryHistory: ['Lesão muscular (2024)'] },
-                { id: 4, number: 10, name: 'Bernardo Silva', pos: 'Médio', status: 'Apto', goals: 12, assists: 25, injuries: 2, yellow: 0, red: 0, isStarter: true, minutes: 245, energy: 88, injuryHistory: [] },
-                { id: 5, number: 6, name: 'João Palhinha', pos: 'Médio', status: 'Apto', goals: 2, assists: 1, injuries: 1, yellow: 1, red: 0, isStarter: true, minutes: 210, energy: 82, injuryHistory: ['Luxação no ombro (2023)'] },
-                { id: 6, number: 20, name: 'João Félix', pos: 'Avançado', status: 'Suspenso', goals: 8, assists: 10, injuries: 4, yellow: 2, red: 1, isStarter: false, minutes: 90, energy: 100, injuryHistory: ['Fratura no dedo (2025)'] },
-                { id: 7, number: 17, name: 'Rafael Leão', pos: 'Avançado', status: 'Lesionado', goals: 15, assists: 12, injuries: 5, yellow: 0, red: 0, isStarter: false, minutes: 45, energy: 20, injuryHistory: ['Lesão no tendão (2026)'] },
-                { id: 8, number: 19, name: 'Nuno Mendes', pos: 'Defesa', status: 'Apto', goals: 1, assists: 5, injuries: 6, yellow: 1, red: 0, isStarter: false, minutes: 120, energy: 80, injuryHistory: ['Pubalgia crónica (2024-2025)'] }
-            ]
-        };
-
         function renderPlayers() {
             const body = document.getElementById('player-list-body');
             body.innerHTML = '';
             
-            const teamPlayers = playersData[currentTeam] || [];
+            const data = getData();
+            const team = data.teams.find(t => t.name === currentTeam);
+            const teamPlayers = team ? team.players : [];
             
+            const starters = teamPlayers.filter(p => p.isStarter);
+            const reserves = teamPlayers.filter(p => !p.isStarter);
+            
+            document.getElementById('starter-count').innerText = starters.length;
+
             // Render Starters
             renderCategoryHeader(body, '⭐️ Titulares (Onze Inicial)');
-            teamPlayers.filter(p => p.isStarter).forEach(p => renderPlayerRow(body, p));
+            starters.forEach(p => renderPlayerRow(body, p));
 
             // Render Reserves
             renderCategoryHeader(body, '💺 Suplentes / Reservas');
-            teamPlayers.filter(p => !p.isStarter).forEach(p => renderPlayerRow(body, p));
+            reserves.forEach(p => renderPlayerRow(body, p));
         }
 
         function renderCategoryHeader(body, title) {
@@ -597,14 +602,44 @@
                     <div style="font-size: 0.75rem; color: var(--text-muted);">${p.pos}</div>
                 </td>
                 <td>
-                    <div style="font-size: 0.8rem; font-weight: 600;">${p.minutes}'</div>
-                    <div style="width: 40px; height: 4px; background: #E5E7EB; border-radius: 2px; margin-top: 4px;">
-                        <div style="width: ${p.energy}%; height: 100%; background: ${p.energy > 50 ? '#00D26A' : '#EF4444'}; border-radius: 2px;"></div>
-                    </div>
+                    <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="event.stopPropagation(); toggleStarter(${p.id || p.number})">
+                        ${p.isStarter ? 'Passar a Reserva' : 'Passar a Titular'}
+                    </button>
                 </td>
                 <td><span class="badge badge-${p.status.toLowerCase()}">${p.status}</span></td>
             `;
             body.appendChild(tr);
+        }
+
+        function toggleStarter(playerId) {
+            const data = getData();
+            const team = data.teams.find(t => t.name === currentTeam);
+            if (!team) return;
+            const player = team.players.find(p => p.id === playerId || p.number === playerId);
+            if (!player) return;
+            
+            player.isStarter = !player.isStarter;
+            saveData(data);
+            renderPlayers();
+            
+            // Updates details card if currently open
+            const detailsName = document.querySelector('#player-details h2');
+            if(detailsName && detailsName.innerText === player.name) {
+                showPlayerDetails(player);
+            }
+        }
+
+        function confirmSquad() {
+            const data = getData();
+            const team = data.teams.find(t => t.name === currentTeam);
+            if (!team) return;
+            
+            const starters = team.players.filter(p => p.isStarter).length;
+            if (starters !== 11) {
+                alert("Erro: O onze inicial deve ter exatamente 11 titulares selecionados (Regras FIFA). Atualmente tem: " + starters);
+                return;
+            }
+            alert("Sucesso: Convocatória do jogo confirmada com sucesso!\\n\\n11 Titulares e " + (team.players.length - 11) + " Reservas confirmados.");
         }
 
         function showPlayerDetails(p) {
@@ -662,9 +697,26 @@
                     </div>
 
                     <button class="btn btn-outline" style="width: 100%; margin-bottom: 0.5rem;" onclick="alert('A exportar ficha técnica do jogador...')">📄 Exportar Ficha Técnica</button>
-                    <button class="btn btn-outline" style="width: 100%; border-color: #FEE2E2; color: #DC2626;" onclick="alert('Funcionalidade de remover em breve')">🗑️ Remover do Plantel</button>
+                    <button class="btn btn-outline" style="width: 100%; border-color: #FEE2E2; color: #DC2626;" onclick="removePlayerFromSquad(${p.id || p.number})">🗑️ Remover do Plantel</button>
                 </div>
             `;
+        }
+
+        function removePlayerFromSquad(playerId) {
+            if (!confirm("Tem a certeza que deseja remover este jogador do plantel?")) return;
+            const data = getData();
+            const team = data.teams.find(t => t.name === currentTeam);
+            if (!team) return;
+            
+            const playerIndex = team.players.findIndex(p => p.id === playerId || p.number === playerId);
+            if (playerIndex > -1) {
+                team.players.splice(playerIndex, 1);
+                saveData(data);
+                renderPlayers();
+                document.getElementById('player-details').innerHTML = '<p style="color:var(--text-muted);">Selecione um jogador para ver detalhes.</p>';
+                initTeam(); // Atualiza estatísticas do topo
+                alert("Jogador removido do plantel.");
+            }
         }
 
         function exportSquad() {
@@ -676,17 +728,36 @@
 
         document.getElementById('player-form').onsubmit = (e) => {
             e.preventDefault();
+            
+            const data = getData();
+            const team = data.teams.find(t => t.name === currentTeam);
+            if (!team) return;
+
+            if (team.players.length >= 26) {
+                alert("Erro: O plantel já atingiu o limite máximo de 26 jogadores estabelecido pela FIFA.");
+                return;
+            }
+
+            const num = parseInt(document.getElementById('p-number').value);
+            if (team.players.some(p => p.number === num)) {
+                alert("Erro: Este número de camisola já está a ser utilizado por outro jogador do plantel.");
+                return;
+            }
+
             const newP = {
-                id: Math.random(),
-                number: document.getElementById('p-number').value,
+                id: Date.now(),
+                number: num,
                 name: document.getElementById('p-name').value,
                 pos: document.getElementById('p-pos').value,
                 status: 'Apto',
                 goals: 0, assists: 0, injuries: 0, yellow: 0, red: 0, isStarter: false, minutes: 0, energy: 100, injuryHistory: []
             };
-            if (!playersData[currentTeam]) playersData[currentTeam] = [];
-            playersData[currentTeam].push(newP);
+            
+            team.players.push(newP);
+            saveData(data);
+            
             renderPlayers();
+            initTeam(); // Atualiza estatísticas do topo
             closePlayerModal();
             e.target.reset();
         };
