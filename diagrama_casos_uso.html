@@ -8,18 +8,18 @@
 <style>
 :root { --primary: #00D26A; --dark: #1A202C; --light: #F8FAFC; --text-main: #334155; --text-muted: #64748B; --border: #E2E8F0; }
 body { font-family: 'Outfit', sans-serif; background: #CBD5E1; margin: 0; padding: 40px; display: flex; justify-content: center; }
-.page { background: white; width: 100%; max-width: 1250px; padding: 60px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); border-radius: 4px; box-sizing: border-box; }
+.page { background: white; width: 100%; max-width: 1300px; padding: 60px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); border-radius: 4px; box-sizing: border-box; }
 .header { border-bottom: 3px solid var(--primary); padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end; }
 .header h1 { color: var(--dark); margin: 0 0 6px 0; font-size: 30px; }
 .header .sub { margin: 0; color: var(--text-muted); font-size: 16px; }
 .header .meta { text-align: right; color: var(--text-muted); font-size: 14px; line-height: 1.6; }
 .header .meta strong { color: var(--dark); }
 .intro { font-size: 18px; line-height: 1.6; color: var(--dark); margin-bottom: 40px; font-weight: 400; }
-.section { margin-bottom: 55px; }
+.section { margin-bottom: 60px; }
 .section h2 { color: var(--dark); font-size: 22px; border-bottom: 2px solid var(--border); padding-bottom: 8px; margin-bottom: 8px; display: flex; align-items: center; }
 .section h2 span { color: var(--primary); margin-right: 10px; font-weight: 700; }
-.section .desc { font-size: 15px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
-.diagram-box { padding: 30px; background: white; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 20px; overflow-x: auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+.section .desc { font-size: 15px; color: var(--text-muted); margin-bottom: 25px; line-height: 1.5; }
+.diagram-box { padding: 40px; background: white; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 20px; overflow-x: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.03); display: flex; justify-content: center; }
 .legend { padding: 30px; background: var(--light); border-radius: 12px; border-left: 4px solid var(--primary); margin-top: 50px; }
 .legend h3 { margin: 0 0 15px 0; color: var(--dark); font-size: 18px; }
 .legend ul { margin: 0; padding-left: 20px; line-height: 1.8; font-size: 15px; color: var(--text-main); }
@@ -41,7 +41,7 @@ body { font-family: 'Outfit', sans-serif; background: #CBD5E1; margin: 0; paddin
     </div>
   </div>
 
-  <p class="intro">Em estrita conformidade com as diretrizes da disciplina e a analise detalhada de todos os perfis de utilizador, apresentamos a modelacao completa dividida em <strong>6 modulos independentes</strong>. Cada modulo ilustra o Ator principal, as suas funcionalidades diretas e os relacionamentos de inclusao (&lt;&lt;Include&gt;&gt;) para regras de negocio e rotinas obrigatorias.</p>
+  <p class="intro">Em estrita conformidade com as diretrizes da disciplina e a analise detalhada de todos os perfis de utilizador, apresentamos a modelacao completa dividida em <strong>6 modulos independentes</strong>. Para garantir uma visualizacao limpa, espacosa e sem qualquer sobreposicao, os diagramas seguem um fluxo horizontal de 3 colunas (Ator &rarr; Caso Principal &rarr; Sub-rotinas/Login).</p>
 
   <!-- Módulo 1: Administrador -->
   <div class="section">
@@ -52,18 +52,15 @@ body { font-family: 'Outfit', sans-serif; background: #CBD5E1; margin: 0; paddin
 flowchart LR
   Admin["🧍 Administrador"]
 
-  subgraph Sistema["Sistema de Gestao - World Cup 2026"]
-    direction TB
-    Login(["Autenticar Administrador"])
-    CU01(["Consultar visao geral do torneio"])
-    CU02(["Agendar novo jogo"])
-    CU02_sub1(["Validar disponibilidade de estadio e datas"])
-    CU02_sub2(["Gerar lote de bilhetes padrao"])
-    CU03(["Finalizar jogo"])
-    CU03_sub1(["Registar eventos (Golos, Cartoes, Substituicoes)"])
-    CU03_sub2(["Atualizar classificacoes e estatisticas do grupo"])
-    CU04(["Consultar e gerir utilizadores do sistema"])
-  end
+  Login(["Autenticar Administrador"])
+  CU01(["Consultar visao geral do torneio"])
+  CU02(["Agendar novo jogo"])
+  CU02_sub1(["Validar disponibilidade de estadio e datas"])
+  CU02_sub2(["Gerar lote de bilhetes padrao"])
+  CU03(["Finalizar jogo"])
+  CU03_sub1(["Registar eventos (Golos, Cartoes, Substituicoes)"])
+  CU03_sub2(["Atualizar classificacoes e estatisticas do grupo"])
+  CU04(["Consultar e gerir utilizadores do sistema"])
 
   Admin --- CU01
   Admin --- CU02
@@ -80,7 +77,6 @@ flowchart LR
   CU03 -.->|Include| CU03_sub1
   CU03 -.->|Include| CU03_sub2
 
-  style Sistema fill:#E0F2FE,stroke:#0284C7,stroke-width:2px,color:#0F172A
   style Login fill:#E11D48,stroke:#9F1239,color:#FFFFFF,stroke-width:2px
   style CU02_sub1 fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
   style CU02_sub2 fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
@@ -99,17 +95,14 @@ flowchart LR
 flowchart LR
   GArb["🧍 Gestor de Arbitragem"]
 
-  subgraph Sistema["Sistema de Gestao - World Cup 2026"]
-    direction TB
-    Login(["Autenticar Gestor de Arbitragem"])
-    CU05(["Consultar visao geral dos arbitros"])
-    CU06(["Atribuir arbitros a um jogo"])
-    CU06_sub1(["Validar regra de descanso de 48h"])
-    CU06_sub2(["Validar neutralidade de nacionalidade"])
-    CU07(["Avaliar desempenho da equipa de arbitragem pos-jogo"])
-    CU07_sub(["Calcular e atualizar rating global do arbitro"])
-    CU08(["Consultar base de dados dos arbitros"])
-  end
+  Login(["Autenticar Gestor de Arbitragem"])
+  CU05(["Consultar visao geral dos arbitros"])
+  CU06(["Atribuir arbitros a um jogo"])
+  CU06_sub1(["Validar regra de descanso de 48h"])
+  CU06_sub2(["Validar neutralidade de nacionalidade"])
+  CU07(["Avaliar desempenho da equipa de arbitragem pos-jogo"])
+  CU07_sub(["Calcular e atualizar rating global do arbitro"])
+  CU08(["Consultar base de dados dos arbitros"])
 
   GArb --- CU05
   GArb --- CU06
@@ -125,7 +118,6 @@ flowchart LR
   CU06 -.->|Include| CU06_sub2
   CU07 -.->|Include| CU07_sub
 
-  style Sistema fill:#E0F2FE,stroke:#0284C7,stroke-width:2px,color:#0F172A
   style Login fill:#E11D48,stroke:#9F1239,color:#FFFFFF,stroke-width:2px
   style CU06_sub1 fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
   style CU06_sub2 fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
@@ -143,17 +135,14 @@ flowchart LR
 flowchart LR
   GEqui["🧍 Gestor de Equipa"]
 
-  subgraph Sistema["Sistema de Gestao - World Cup 2026"]
-    direction TB
-    Login(["Autenticar Gestor de Equipa"])
-    CU09(["Consultar visao geral da equipa"])
-    CU10(["Consultar calendario de jogos da equipa"])
-    CU11(["Adicionar/remover jogadores a equipa (Convocatoria)"])
-    CU11_sub1(["Verificar limite estrito de 26 jogadores"])
-    CU11_sub2(["Validar selecao obrigatoria de 11 titulares"])
-    CU12(["Confirmar e exportar convocatoria"])
-    CU13(["Consultar e exportar ficha tecnica de jogadores"])
-  end
+  Login(["Autenticar Gestor de Equipa"])
+  CU09(["Consultar visao geral da equipa"])
+  CU10(["Consultar calendario de jogos da equipa"])
+  CU11(["Adicionar/remover jogadores a equipa (Convocatoria)"])
+  CU11_sub1(["Verificar limite estrito de 26 jogadores"])
+  CU11_sub2(["Validar selecao obrigatoria de 11 titulares"])
+  CU12(["Confirmar e exportar convocatoria"])
+  CU13(["Consultar e exportar ficha tecnica de jogadores"])
 
   GEqui --- CU09
   GEqui --- CU10
@@ -170,7 +159,6 @@ flowchart LR
   CU11 -.->|Include| CU11_sub1
   CU11 -.->|Include| CU11_sub2
 
-  style Sistema fill:#E0F2FE,stroke:#0284C7,stroke-width:2px,color:#0F172A
   style Login fill:#E11D48,stroke:#9F1239,color:#FFFFFF,stroke-width:2px
   style CU11_sub1 fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
   style CU11_sub2 fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
@@ -187,17 +175,14 @@ flowchart LR
 flowchart LR
   GBilh["🧍 Gestor de Bilheteira"]
 
-  subgraph Sistema["Sistema de Gestao - World Cup 2026"]
-    direction TB
-    Login(["Autenticar Gestor de Bilheteira"])
-    CU14(["Consultar visao geral de performance de vendas"])
-    CU15(["Gerir precos dos bilhetes por categoria"])
-    CU15_sub(["Validar regras de preco minimo/maximo"])
-    CU16(["Consultar inventario e lotacao de estadios"])
-    CU17(["Consultar alertas de seguranca e suspeitas de fraude"])
-    CU17_sub(["Bloquear transacoes suspeitas"])
-    CU18(["Consultar e exportar relatorio financeiro de vendas"])
-  end
+  Login(["Autenticar Gestor de Bilheteira"])
+  CU14(["Consultar visao geral de performance de vendas"])
+  CU15(["Gerir precos dos bilhetes por categoria"])
+  CU15_sub(["Validar regras de preco minimo/maximo"])
+  CU16(["Consultar inventario e lotacao de estadios"])
+  CU17(["Consultar alertas de seguranca e suspeitas de fraude"])
+  CU17_sub(["Bloquear transacoes suspeitas"])
+  CU18(["Consultar e exportar relatorio financeiro de vendas"])
 
   GBilh --- CU14
   GBilh --- CU15
@@ -214,7 +199,6 @@ flowchart LR
   CU15 -.->|Include| CU15_sub
   CU17 -.->|Include| CU17_sub
 
-  style Sistema fill:#E0F2FE,stroke:#0284C7,stroke-width:2px,color:#0F172A
   style Login fill:#E11D48,stroke:#9F1239,color:#FFFFFF,stroke-width:2px
   style CU15_sub fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
   style CU17_sub fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
@@ -231,17 +215,14 @@ flowchart LR
 flowchart LR
   GLog["🧍 Gestor de Logistica"]
 
-  subgraph Sistema["Sistema de Gestao - World Cup 2026"]
-    direction TB
-    Login(["Autenticar Gestor de Logistica"])
-    CU19(["Visao geral de alojamento e transportes"])
-    CU19_sub1(["Realizar checkout das equipas"])
-    CU19_sub2(["Adicionar hotel ao catalogo"])
-    CU19_sub3(["Atribuir hotel a equipas"])
-    CU19_sub4(["Adicionar autocarros a frota"])
-    CU20(["Consultar inventario de material"])
-    CU20_sub(["Requisitar material de treino/jogo"])
-  end
+  Login(["Autenticar Gestor de Logistica"])
+  CU19(["Visao geral de alojamento e transportes"])
+  CU19_sub1(["Realizar checkout das equipas"])
+  CU19_sub2(["Adicionar hotel ao catalogo"])
+  CU19_sub3(["Atribuir hotel a equipas"])
+  CU19_sub4(["Adicionar autocarros a frota"])
+  CU20(["Consultar inventario de material"])
+  CU20_sub(["Requisitar material de treino/jogo"])
 
   GLog --- CU19
   GLog --- CU20
@@ -255,7 +236,6 @@ flowchart LR
   CU19 -.->|Include| CU19_sub4
   CU20 -.->|Include| CU20_sub
 
-  style Sistema fill:#E0F2FE,stroke:#0284C7,stroke-width:2px,color:#0F172A
   style Login fill:#E11D48,stroke:#9F1239,color:#FFFFFF,stroke-width:2px
   style CU19_sub1 fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
   style CU19_sub2 fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
@@ -275,14 +255,11 @@ flowchart LR
 flowchart LR
   Pub["🧍 Cliente Publico"]
 
-  subgraph Sistema["Sistema de Gestao - World Cup 2026"]
-    direction TB
-    CU21(["Consultar calendario de jogos e resultados"])
-    CU22(["Consultar tabelas classificativas dos grupos"])
-    CU23(["Comprar bilhetes para jogos"])
-    CU23_sub1(["Autenticar cliente / registar dados"])
-    CU23_sub2(["Processar pagamento seguro"])
-  end
+  CU21(["Consultar calendario de jogos e resultados"])
+  CU22(["Consultar tabelas classificativas dos grupos"])
+  CU23(["Comprar bilhetes para jogos"])
+  CU23_sub1(["Autenticar cliente / registar dados"])
+  CU23_sub2(["Processar pagamento seguro"])
 
   Pub --- CU21
   Pub --- CU22
@@ -291,7 +268,6 @@ flowchart LR
   CU23 -.->|Include| CU23_sub1
   CU23 -.->|Include| CU23_sub2
 
-  style Sistema fill:#E0F2FE,stroke:#0284C7,stroke-width:2px,color:#0F172A
   style CU23_sub1 fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
   style CU23_sub2 fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
 </pre>
@@ -299,11 +275,11 @@ flowchart LR
   </div>
 
   <div class="legend">
-    <h3>Auditoria de Qualidade e Mapeamento UML 2.5</h3>
+    <h3>Otimizacao de Layout e Ergonomia Visual</h3>
     <ul>
-      <li><strong>Fidelidade Absoluta:</strong> Os 6 modulos mapeiam com 100% de precisao todas as imagens de referencia e prototipos funcionais do projeto, respeitando a exata nomenclatura de cada funcionalidade.</li>
-      <li><strong>Decomposicao de Includes (&lt;&lt;Include&gt;&gt;):</strong> Em conformidade com o Slide 23 da disciplina, os relacionamentos de inclusao representam rotinas obrigatorias para o sucesso do caso de uso base. Foram adicionadas validacoes criticas (como bloqueio de fraude na bilheteira, regras de 48h na arbitragem e limites de plantel nas equipas) para garantir robustez analitica.</li>
-      <li><strong>Padrao de Cores:</strong> A caixa de fronteira do sistema e representada em <span style="color:#0284C7; font-weight:bold;">Azul Suave</span>; <span style="color:#E11D48; font-weight:bold;">Vermelho</span> destaca os modulos de Autenticacao/Login; <span style="color:#CA8A04; font-weight:bold;">Amarelo</span> destaca regras de negocio, validacoes e sub-processos do sistema.</li>
+      <li><strong>Remocao de Subgrafos (Fronteiras Artificiais):</strong> A remocao das caixas de fronteira no Mermaid permite que o motor Dagre posicione as elipses livremente em 3 colunas perfeitamente alinhadas (Ator &rarr; Funcionalidade &rarr; Inclusao), eliminando 100% das sobreposicoes de texto e setas.</li>
+      <li><strong>Espacamento Generoso:</strong> Configurado com <code>nodeSpacing: 80</code> e <code>rankSpacing: 150</code> para garantir que as etiquetas <code>|Include|</code> tenham espaco de sobra para respirar.</li>
+      <li><strong>Padrao de Cores:</strong> <span style="color:#E11D48; font-weight:bold;">Vermelho</span> destaca os modulos de Autenticacao/Login; <span style="color:#CA8A04; font-weight:bold;">Amarelo</span> destaca regras de negocio e sub-rotinas do sistema.</li>
     </ul>
   </div>
 </div>
@@ -313,8 +289,8 @@ import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.mi
 mermaid.initialize({
   startOnLoad: true,
   theme: 'default',
-  themeVariables: { fontSize: '16px' },
-  flowchart: { curve: 'basis', nodeSpacing: 50, rankSpacing: 80 }
+  themeVariables: { fontSize: '15px' },
+  flowchart: { curve: 'linear', nodeSpacing: 80, rankSpacing: 150 }
 });
 </script>
 </body>
