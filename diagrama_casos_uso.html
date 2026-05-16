@@ -4,26 +4,25 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Diagramas de Casos de Uso - ES Fase 1</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
-:root { --primary: #0284C7; --dark: #0F172A; --light: #F8FAFC; --text-main: #334155; --text-muted: #64748B; --border: #E2E8F0; }
-body { font-family: 'Outfit', sans-serif; background: #E2E8F0; margin: 0; padding: 40px; display: flex; justify-content: center; }
-.page { background: white; width: 100%; max-width: 1250px; padding: 60px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); border-radius: 8px; box-sizing: border-box; }
-.header { border-bottom: 3px solid var(--primary); padding-bottom: 20px; margin-bottom: 35px; display: flex; justify-content: space-between; align-items: flex-end; }
-.header h1 { color: var(--dark); margin: 0 0 6px 0; font-size: 32px; font-weight: 700; }
-.header .sub { margin: 0; color: var(--text-muted); font-size: 18px; }
-.header .meta { text-align: right; color: var(--text-muted); font-size: 15px; line-height: 1.6; }
+:root { --primary: #00D26A; --dark: #1A202C; --light: #F8FAFC; --text-main: #334155; --text-muted: #64748B; --border: #E2E8F0; }
+body { font-family: 'Outfit', sans-serif; background: #CBD5E1; margin: 0; padding: 40px; display: flex; justify-content: center; }
+.page { background: white; width: 100%; max-width: 1200px; padding: 60px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); border-radius: 4px; box-sizing: border-box; }
+.header { border-bottom: 3px solid var(--primary); padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end; }
+.header h1 { color: var(--dark); margin: 0 0 6px 0; font-size: 30px; }
+.header .sub { margin: 0; color: var(--text-muted); font-size: 16px; }
+.header .meta { text-align: right; color: var(--text-muted); font-size: 14px; line-height: 1.6; }
 .header .meta strong { color: var(--dark); }
-.intro { font-size: 18px; line-height: 1.6; color: var(--dark); margin-bottom: 45px; font-weight: 400; }
-.section { margin-bottom: 55px; }
-.section h2 { color: var(--dark); font-size: 24px; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 10px; font-weight: 600; }
+.intro { font-size: 18px; line-height: 1.6; color: var(--dark); margin-bottom: 40px; font-weight: 400; }
+.section { margin-bottom: 50px; }
+.section h2 { color: var(--dark); font-size: 22px; border-bottom: 2px solid var(--border); padding-bottom: 8px; margin-bottom: 8px; }
 .section h2 span { color: var(--primary); }
-.section .desc { font-size: 16px; color: var(--text-muted); margin-bottom: 25px; }
-.diagram-box { padding: 35px; background: white; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 20px; overflow-x: auto; display: flex; justify-content: center; }
-.legend { padding: 30px; background: var(--light); border-radius: 12px; border-left: 4px solid var(--primary); margin-top: 50px; }
-.legend h3 { margin: 0 0 15px 0; color: var(--dark); font-size: 20px; font-weight: 600; }
-.legend p { margin: 0 0 10px 0; line-height: 1.6; font-size: 16px; color: var(--text-main); }
-.legend ul { margin: 0; padding-left: 20px; line-height: 1.8; font-size: 15px; color: var(--text-main); }
+.section .desc { font-size: 15px; color: var(--text-muted); margin-bottom: 20px; }
+.diagram-box { padding: 30px; background: white; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 20px; overflow-x: auto; }
+.legend { padding: 25px; background: var(--light); border-radius: 12px; border-left: 4px solid var(--primary); margin-top: 40px; }
+.legend h3 { margin: 0 0 15px 0; color: var(--dark); font-size: 18px; }
+.legend ul { margin: 0; padding-left: 20px; line-height: 1.8; font-size: 15px; }
 .legend strong { color: var(--dark); }
 @media print { body { background: white; padding: 0; } .page { box-shadow: none; padding: 20px; max-width: none; } .section { page-break-inside: avoid; } }
 </style>
@@ -32,185 +31,142 @@ body { font-family: 'Outfit', sans-serif; background: #E2E8F0; margin: 0; paddin
 <div class="page">
   <div class="header">
     <div>
-      <h1>Diagramas de Casos de Uso (Especificacao Fiel)</h1>
+      <h1>Diagramas de Casos de Uso</h1>
       <p class="sub">Sistema de Gestao do Campeonato do Mundo de Futebol 2026</p>
     </div>
     <div class="meta">
       <p><strong>Disciplina:</strong> Engenharia de Software</p>
-      <p><strong>Metodologia:</strong> ICONIX / UML</p>
+      <p><strong>Metodologia:</strong> ICONIX</p>
       <p><strong>Fase:</strong> 1</p>
     </div>
   </div>
 
-  <p class="intro">Esta documentacao apresenta os 5 diagramas de Casos de Uso modelados com exatidao e fidelidade absoluta as especificacoes visuais e funcionais de cada perfil de utilizador do sistema.</p>
+  <p class="intro">Para garantir a maxima clareza e simplicidade na modelacao ICONIX, os Casos de Uso foram divididos por modulos funcionais separados. Cada diagrama ilustra as interacoes do Ator e os relacionamentos de inclusao (&lt;&lt;Include&gt;&gt;).</p>
 
-  <!-- Diagrama 1: Público -->
+  <!-- Módulo 1 -->
   <div class="section">
-    <h2><span>1.</span> Publico</h2>
-    <p class="desc">Acesso externo nao autenticado para consulta de informacoes gerais do torneio.</p>
-    <div class="diagram-box">
-<pre class="mermaid">
-flowchart LR
-  Pub["🧍 Publico"]
-  subgraph Sistema["Sistema de Gestao - World Cup 2026"]
-    direction TB
-    CU1(["Consultar proximos jogos"])
-    CU2(["Consultar resultados de jogos"])
-    CU3(["Consultar contactos para comprar bilhetes"])
-  end
-  Pub --- CU1
-  Pub --- CU2
-  Pub --- CU3
-
-  style Sistema fill:#7DD3FC,stroke:#0284C7,stroke-width:2px,color:#0f172a
-  style CU1 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU2 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU3 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-</pre>
-    </div>
-  </div>
-
-  <!-- Diagrama 2: Administrador -->
-  <div class="section">
-    <h2><span>2.</span> Administrador</h2>
-    <p class="desc">Perfil de gestao global com controlo total sobre o agendamento de jogos, equipas e visao geral do torneio.</p>
+    <h2><span>Modulo 1</span> - Gestao de Jogos e Calendario</h2>
+    <p class="desc">Ator principal: Administrador | Foco: Agendamento e finalizacao de partidas</p>
     <div class="diagram-box">
 <pre class="mermaid">
 flowchart LR
   Admin["🧍 Administrador"]
-  subgraph Sistema["Sistema de Gestao - World Cup 2026"]
-    direction TB
-    CU1(["Adicionar novo jogo ao calendario"])
-    CU2(["Registar nova equipa"])
-    CU3(["Consultar visao geral do torneio"])
-    CU4(["Acesso aos varios modulos de gestao"])
-    CU5(["Finalizar jogo"])
-    CU5_sub(["Registar eventos e estatisticas"])
-  end
-  Admin --- CU1
-  Admin --- CU2
-  Admin --- CU3
-  Admin --- CU4
-  Admin --- CU5
-  CU5 -.->|Include| CU5_sub
 
-  style Sistema fill:#7DD3FC,stroke:#0284C7,stroke-width:2px,color:#0f172a
-  style CU1 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU2 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU3 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU4 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU5 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU5_sub fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
+  Login(["Autenticar Administrador"])
+  CU01(["CU01 - Agendar Novo Jogo"])
+  CU01_sub(["Gerar Bilhetes Padrao"])
+  CU02(["CU02 - Finalizar Jogo"])
+  CU02_sub1(["Registar Eventos (Golos/Cartoes)"])
+  CU02_sub2(["Atualizar Classificacoes do Grupo"])
+
+  Admin --- CU01
+  Admin --- CU02
+
+  CU01 -.->|Include| Login
+  CU02 -.->|Include| Login
+  CU01 -.->|Include| CU01_sub
+  CU02 -.->|Include| CU02_sub1
+  CU02 -.->|Include| CU02_sub2
+
+  style Login fill:#E11D48,stroke:#9F1239,color:#ffffff,stroke-width:2px
+  style CU01_sub fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
+  style CU02_sub1 fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
+  style CU02_sub2 fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
 </pre>
     </div>
   </div>
 
-  <!-- Diagrama 3: Gestor de Árbitros -->
+  <!-- Módulo 2 -->
   <div class="section">
-    <h2><span>3.</span> Gestor de Arbitros</h2>
-    <p class="desc">Gestao especializada da equipa de arbitragem, incluindo atribuicao a jogos e avaliacao de desempenho.</p>
+    <h2><span>Modulo 2</span> - Gestao de Arbitragem</h2>
+    <p class="desc">Ator principal: Gestor de Arbitragem | Foco: Atribuicao e avaliacao de arbitros</p>
     <div class="diagram-box">
 <pre class="mermaid">
 flowchart LR
-  GArb["🧍 Gestor de Arbitros"]
-  subgraph Sistema["Sistema de Gestao - World Cup 2026"]
-    direction TB
-    CU1(["Consultar visao geral dos arbitros"])
-    CU2(["Atribuir arbitros a um jogo"])
-    CU2_sub(["Validar nacionalidade e periodo de descanso dos arbitros"])
-    CU3(["Avaliar o desempenho da equipa de arbitragem no final de um jogo"])
-    CU4(["Consultar base de dados dos arbitros"])
-  end
-  GArb --- CU1
-  GArb --- CU2
-  GArb --- CU3
-  GArb --- CU4
-  CU2 -.->|Include| CU2_sub
+  GArb["🧍 Gestor de Arbitragem"]
 
-  style Sistema fill:#7DD3FC,stroke:#0284C7,stroke-width:2px,color:#0f172a
-  style CU1 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU2 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU2_sub fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU3 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU4 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
+  Login(["Autenticar Gestor"])
+  CU03(["CU03 - Atribuir Arbitros a Jogo"])
+  CU03_sub1(["Validar Regra 48h"])
+  CU03_sub2(["Validar Nacionalidade"])
+  CU04(["CU04 - Avaliar Arbitros Pos-Jogo"])
+
+  GArb --- CU03
+  GArb --- CU04
+
+  CU03 -.->|Include| Login
+  CU04 -.->|Include| Login
+  CU03 -.->|Include| CU03_sub1
+  CU03 -.->|Include| CU03_sub2
+
+  style Login fill:#E11D48,stroke:#9F1239,color:#ffffff,stroke-width:2px
+  style CU03_sub1 fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
+  style CU03_sub2 fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
 </pre>
     </div>
   </div>
 
-  <!-- Diagrama 4: Gestor de Equipa -->
+  <!-- Módulo 3 -->
   <div class="section">
-    <h2><span>4.</span> Gestor de Equipa</h2>
-    <p class="desc">Perfil dedicado aos selecionadores nacionais para convocatorias, gestao de planteis e consulta de calendario.</p>
+    <h2><span>Modulo 3</span> - Gestao de Equipas e Planteis</h2>
+    <p class="desc">Ator principal: Gestor de Equipa | Foco: Convocatoria e gestao de jogadores</p>
     <div class="diagram-box">
 <pre class="mermaid">
 flowchart LR
   GEqui["🧍 Gestor de Equipa"]
-  subgraph Sistema["Sistema de Gestao - World Cup 2026"]
-    direction TB
-    CU1(["Consultar visao geral da equipa"])
-    CU2(["Consultar calendario de jogos da equipa"])
-    CU3(["Adicionar/remover jogadores a equipa"])
-    CU3_sub(["Verificar limite de 26 jogadores e validar 11 titulares"])
-    CU4(["Confirmar e exportar convocatoria"])
-    CU5(["Consultar e exportar ficha tecnica de jogadores"])
-  end
-  GEqui --- CU1
-  GEqui --- CU2
-  GEqui --- CU3
-  GEqui --- CU4
-  GEqui --- CU5
-  CU3 -.->|Include| CU3_sub
 
-  style Sistema fill:#7DD3FC,stroke:#0284C7,stroke-width:2px,color:#0f172a
-  style CU1 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU2 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU3 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU3_sub fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU4 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU5 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
+  Login(["Autenticar Gestor de Equipa"])
+  CU05(["CU05 - Gerir Plantel da Selecao"])
+  CU05_sub1(["Validar Limite 26 Jogadores"])
+  CU05_sub2(["Validar 11 Titulares"])
+
+  GEqui --- CU05
+
+  CU05 -.->|Include| Login
+  CU05 -.->|Include| CU05_sub1
+  CU05 -.->|Include| CU05_sub2
+
+  style Login fill:#E11D48,stroke:#9F1239,color:#ffffff,stroke-width:2px
+  style CU05_sub1 fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
+  style CU05_sub2 fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
 </pre>
     </div>
   </div>
 
-  <!-- Diagrama 5: Gestor de Bilheteira -->
+  <!-- Módulo 4 -->
   <div class="section">
-    <h2><span>5.</span> Gestor de Bilheteira</h2>
-    <p class="desc">Controlo financeiro, inventario de ingressos, definicao de precos e monitorizacao de seguranca/fraude.</p>
+    <h2><span>Modulo 4</span> - Bilheteira, Logistica e Consulta Publica</h2>
+    <p class="desc">Atores: Gestor de Bilheteira, Gestor de Logistica, Cliente Publico</p>
     <div class="diagram-box">
 <pre class="mermaid">
 flowchart LR
   GBilh["🧍 Gestor de Bilheteira"]
-  subgraph Sistema["Sistema de Gestao - World Cup 2026"]
-    direction TB
-    CU1(["Consultar visao geral de performance de vendas"])
-    CU2(["Gerir precos dos bilhetes"])
-    CU3(["Consultar inventario"])
-    CU4(["Consultar alertas de seguranca e suspeitas de fraude"])
-    CU5(["Consultar relatorio de vendas"])
-  end
-  GBilh --- CU1
-  GBilh --- CU2
-  GBilh --- CU3
-  GBilh --- CU4
-  GBilh --- CU5
+  GLog["🧍 Gestor de Logistica"]
+  Pub["🧍 Cliente Publico"]
 
-  style Sistema fill:#7DD3FC,stroke:#0284C7,stroke-width:2px,color:#0f172a
-  style CU1 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU2 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU3 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU4 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU5 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
+  Login(["Autenticar Gestor"])
+  CU06(["CU06 - Gerir Lotacao e Precos"])
+  CU07(["CU07 - Atribuir Alojamento (Hotel)"])
+  CU08(["CU08 - Consultar Calendario e Tabelas"])
+
+  GBilh --- CU06
+  GLog --- CU07
+  Pub --- CU08
+
+  CU06 -.->|Include| Login
+  CU07 -.->|Include| Login
+
+  style Login fill:#E11D48,stroke:#9F1239,color:#ffffff,stroke-width:2px
 </pre>
     </div>
   </div>
 
   <div class="legend">
-    <h3>Confirmacao de Fidelidade e Validadacao UML</h3>
-    <p>Os 5 diagramas apresentados refletem com <strong>100% de exatidao</strong> as imagens de referencia fornecidas para o projeto, respeitando a nomenclatura exata de cada Ator e Caso de Uso.</p>
+    <h3>Resumo de Conceitos e Estereotipos</h3>
     <ul>
-      <li><strong>Caixa de Fronteira (Sistema):</strong> Delimita claramente o escopo do sistema de gestao da World Cup 2026 (em azul).</li>
-      <li><strong>Relacionamentos &lt;&lt;Include&gt;&gt;:</strong> Representados por setas tracejadas, indicando sub-processos ou validacoes obrigatorias (ex: verificar limites de plantel ou validar regras de arbitragem).</li>
-      <li><strong>Conformidade com o Prototipo:</strong> Cada elipse mapeia diretamente para as funcionalidades implementadas no frontend (app.js e respetivos modulos HTML).</li>
+      <li><strong>Abordagem Modular:</strong> A separacao por modulos evita diagramas complexos e confusos, permitindo analisar cada subsistema de forma isolada e clara.</li>
+      <li><strong>&lt;&lt;Include&gt;&gt; (Inclui):</strong> Indica que um caso de uso principal (ex: Agendar Jogo ou Gerir Plantel) necessita obrigatoriamente de executar outro caso de uso ou regra de negocio durante o seu fluxo (ex: Autenticacao ou Validacao de limites).</li>
+      <li><strong>Cores:</strong> <span style="color:#E11D48; font-weight:bold;">Vermelho</span> representa os modulos de Autenticacao/Seguranca; <span style="color:#CA8A04; font-weight:bold;">Amarelo</span> representa regras de negocio e validacoes automaticas do sistema.</li>
     </ul>
   </div>
 </div>
@@ -220,8 +176,8 @@ import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.mi
 mermaid.initialize({
   startOnLoad: true,
   theme: 'default',
-  themeVariables: { fontSize: '16px', fontFamily: 'Outfit' },
-  flowchart: { curve: 'basis', nodeSpacing: 60, rankSpacing: 90 }
+  themeVariables: { fontSize: '16px' },
+  flowchart: { curve: 'basis', nodeSpacing: 50, rankSpacing: 80 }
 });
 </script>
 </body>

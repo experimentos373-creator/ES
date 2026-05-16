@@ -1,94 +1,40 @@
-# Especificacao Fiel de Casos de Uso - ICONIX / UML (Fase 1)
+# Especificacao Modular de Casos de Uso - ICONIX (Fase 1)
 
-Este documento apresenta a modelacao de Casos de Uso do **Sistema de Gestao do Campeonato do Mundo 2026**.
-Para garantir **100% de conformidade e exatidao** com as imagens de referencia oficiais do projeto, o sistema esta modelado em **5 diagramas independentes**, representando cada perfil de utilizador e as suas respetivas elipses e relacionamentos `<<Include>>`.
-
----
-
-## 1. Publico
-
-**Ator:** Publico  
-**Descricao:** Acesso externo nao autenticado para consulta de informacoes gerais do torneio.
-
-### Diagrama Mermaid
-```mermaid
-flowchart LR
-  Pub["🧍 Publico"]
-  subgraph Sistema["Sistema de Gestao - World Cup 2026"]
-    direction TB
-    CU1(["Consultar proximos jogos"])
-    CU2(["Consultar resultados de jogos"])
-    CU3(["Consultar contactos para comprar bilhetes"])
-  end
-  Pub --- CU1
-  Pub --- CU2
-  Pub --- CU3
-
-  style Sistema fill:#7DD3FC,stroke:#0284C7,stroke-width:2px,color:#0f172a
-  style CU1 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU2 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU3 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-```
-
-### Codigo PlantUML (Visual Paradigm)
-```plantuml
-@startuml
-left to right direction
-skinparam packageStyle rectangle
-skinparam usecase {
-  BackgroundColor LightBlue
-  BorderColor DarkBlue
-  ArrowColor DarkBlue
-}
-
-actor "Publico" as Pub
-
-rectangle "Sistema de Gestao - World Cup 2026" {
-  usecase "Consultar proximos jogos" as CU1
-  usecase "Consultar resultados de jogos" as CU2
-  usecase "Consultar contactos para comprar bilhetes" as CU3
-}
-
-Pub -- CU1
-Pub -- CU2
-Pub -- CU3
-@enduml
-```
+Este documento apresenta a modelacao de Casos de Uso do **Sistema de Gestao do Campeonato do Mundo 2026**. 
+Para garantir a maxima clareza, simplicidade e facilidade de leitura (conforme as boas praticas da metodologia ICONIX e os slides da disciplina), os casos de uso foram divididos em **4 modulos funcionais separados**.
 
 ---
 
-## 2. Administrador
+## 1. Modulo de Gestao de Jogos e Calendario (Administrador)
 
 **Ator:** Administrador  
-**Descricao:** Perfil de gestao global com controlo total sobre o agendamento de jogos, equipas e visao geral do torneio.
+**Foco:** Agendamento de novas partidas, geracao de bilhetes padrao e finalizacao de jogos com calculo automatico de classificacoes.
 
 ### Diagrama Mermaid
 ```mermaid
 flowchart LR
   Admin["🧍 Administrador"]
-  subgraph Sistema["Sistema de Gestao - World Cup 2026"]
-    direction TB
-    CU1(["Adicionar novo jogo ao calendario"])
-    CU2(["Registar nova equipa"])
-    CU3(["Consultar visao geral do torneio"])
-    CU4(["Acesso aos varios modulos de gestao"])
-    CU5(["Finalizar jogo"])
-    CU5_sub(["Registar eventos e estatisticas"])
-  end
-  Admin --- CU1
-  Admin --- CU2
-  Admin --- CU3
-  Admin --- CU4
-  Admin --- CU5
-  CU5 -.->|Include| CU5_sub
 
-  style Sistema fill:#7DD3FC,stroke:#0284C7,stroke-width:2px,color:#0f172a
-  style CU1 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU2 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU3 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU4 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU5 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU5_sub fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
+  Login(["Autenticar Administrador"])
+  CU01(["CU01 - Agendar Novo Jogo"])
+  CU01_sub(["Gerar Bilhetes Padrao"])
+  CU02(["CU02 - Finalizar Jogo"])
+  CU02_sub1(["Registar Eventos (Golos/Cartoes)"])
+  CU02_sub2(["Atualizar Classificacoes do Grupo"])
+
+  Admin --- CU01
+  Admin --- CU02
+
+  CU01 -.->|Include| Login
+  CU02 -.->|Include| Login
+  CU01 -.->|Include| CU01_sub
+  CU02 -.->|Include| CU02_sub1
+  CU02 -.->|Include| CU02_sub2
+
+  style Login fill:#E11D48,stroke:#9F1239,color:#ffffff,stroke-width:2px
+  style CU01_sub fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
+  style CU02_sub1 fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
+  style CU02_sub2 fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
 ```
 
 ### Codigo PlantUML (Visual Paradigm)
@@ -104,55 +50,55 @@ skinparam usecase {
 
 actor "Administrador" as Admin
 
-rectangle "Sistema de Gestao - World Cup 2026" {
-  usecase "Adicionar novo jogo ao calendario" as CU1
-  usecase "Registar nova equipa" as CU2
-  usecase "Consultar visao geral do torneio" as CU3
-  usecase "Acesso aos varios modulos de gestao" as CU4
-  usecase "Finalizar jogo" as CU5
-  usecase "Registar eventos e estatisticas" as CU5_sub
+rectangle "Modulo 1 - Gestao de Jogos" {
+  usecase "Autenticar Administrador" as Login #Pink
+  usecase "CU01 - Agendar Novo Jogo" as CU01
+  usecase "Gerar Bilhetes Padrao" as CU01_sub #Yellow
+  usecase "CU02 - Finalizar Jogo" as CU02
+  usecase "Registar Eventos (Golos/Cartoes)" as CU02_sub1 #Yellow
+  usecase "Atualizar Classificacoes do Grupo" as CU02_sub2 #Yellow
 }
 
-Admin -- CU1
-Admin -- CU2
-Admin -- CU3
-Admin -- CU4
-Admin -- CU5
-CU5 ..> CU5_sub : <<include>>
+Admin -- CU01
+Admin -- CU02
+
+CU01 ..> Login : <<include>>
+CU02 ..> Login : <<include>>
+CU01 ..> CU01_sub : <<include>>
+CU02 ..> CU02_sub1 : <<include>>
+CU02 ..> CU02_sub2 : <<include>>
 @enduml
 ```
 
 ---
 
-## 3. Gestor de Arbitros
+## 2. Modulo de Gestao de Arbitragem (Gestor de Arbitragem)
 
-**Ator:** Gestor de Arbitros  
-**Descricao:** Gestao especializada da equipa de arbitragem, incluindo atribuicao a jogos e avaliacao de desempenho.
+**Ator:** Gestor de Arbitragem  
+**Foco:** Atribuicao de equipas de arbitragem com validacao estrita de regras FIFA (descanso de 48h e neutralidade de nacionalidade) e avaliacao de desempenho pos-jogo.
 
 ### Diagrama Mermaid
 ```mermaid
 flowchart LR
-  GArb["🧍 Gestor de Arbitros"]
-  subgraph Sistema["Sistema de Gestao - World Cup 2026"]
-    direction TB
-    CU1(["Consultar visao geral dos arbitros"])
-    CU2(["Atribuir arbitros a um jogo"])
-    CU2_sub(["Validar nacionalidade e periodo de descanso dos arbitros"])
-    CU3(["Avaliar o desempenho da equipa de arbitragem no final de um jogo"])
-    CU4(["Consultar base de dados dos arbitros"])
-  end
-  GArb --- CU1
-  GArb --- CU2
-  GArb --- CU3
-  GArb --- CU4
-  CU2 -.->|Include| CU2_sub
+  GArb["🧍 Gestor de Arbitragem"]
 
-  style Sistema fill:#7DD3FC,stroke:#0284C7,stroke-width:2px,color:#0f172a
-  style CU1 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU2 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU2_sub fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU3 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU4 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
+  Login(["Autenticar Gestor"])
+  CU03(["CU03 - Atribuir Arbitros a Jogo"])
+  CU03_sub1(["Validar Regra 48h"])
+  CU03_sub2(["Validar Nacionalidade"])
+  CU04(["CU04 - Avaliar Arbitros Pos-Jogo"])
+
+  GArb --- CU03
+  GArb --- CU04
+
+  CU03 -.->|Include| Login
+  CU04 -.->|Include| Login
+  CU03 -.->|Include| CU03_sub1
+  CU03 -.->|Include| CU03_sub2
+
+  style Login fill:#E11D48,stroke:#9F1239,color:#ffffff,stroke-width:2px
+  style CU03_sub1 fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
+  style CU03_sub2 fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
 ```
 
 ### Codigo PlantUML (Visual Paradigm)
@@ -166,58 +112,52 @@ skinparam usecase {
   ArrowColor DarkBlue
 }
 
-actor "Gestor de Arbitros" as GArb
+actor "Gestor de Arbitragem" as GArb
 
-rectangle "Sistema de Gestao - World Cup 2026" {
-  usecase "Consultar visao geral dos arbitros" as CU1
-  usecase "Atribuir arbitros a um jogo" as CU2
-  usecase "Validar nacionalidade e periodo de descanso dos arbitros" as CU2_sub
-  usecase "Avaliar o desempenho da equipa de arbitragem no final de um jogo" as CU3
-  usecase "Consultar base de dados dos arbitros" as CU4
+rectangle "Modulo 2 - Arbitragem" {
+  usecase "Autenticar Gestor" as Login #Pink
+  usecase "CU03 - Atribuir Arbitros a Jogo" as CU03
+  usecase "Validar Regra 48h" as CU03_sub1 #Yellow
+  usecase "Validar Nacionalidade" as CU03_sub2 #Yellow
+  usecase "CU04 - Avaliar Arbitros Pos-Jogo" as CU04
 }
 
-GArb -- CU1
-GArb -- CU2
-GArb -- CU3
-GArb -- CU4
-CU2 ..> CU2_sub : <<include>>
+GArb -- CU03
+GArb -- CU04
+
+CU03 ..> Login : <<include>>
+CU04 ..> Login : <<include>>
+CU03 ..> CU03_sub1 : <<include>>
+CU03 ..> CU03_sub2 : <<include>>
 @enduml
 ```
 
 ---
 
-## 4. Gestor de Equipa
+## 3. Modulo de Gestao de Equipas e Planteis (Gestor de Equipa)
 
-**Ator:** Gestor de Equipa  
-**Descricao:** Perfil dedicado aos selecionadores nacionais para convocatorias, gestao de planteis e consulta de calendario.
+**Ator:** Gestor de Equipa (Selecionador)  
+**Foco:** Convocatoria de jogadores, garantindo o cumprimento do limite regulamentar de 26 atletas e a selecao dos 11 titulares para cada partida.
 
 ### Diagrama Mermaid
 ```mermaid
 flowchart LR
   GEqui["🧍 Gestor de Equipa"]
-  subgraph Sistema["Sistema de Gestao - World Cup 2026"]
-    direction TB
-    CU1(["Consultar visao geral da equipa"])
-    CU2(["Consultar calendario de jogos da equipa"])
-    CU3(["Adicionar/remover jogadores a equipa"])
-    CU3_sub(["Verificar limite de 26 jogadores e validar 11 titulares"])
-    CU4(["Confirmar e exportar convocatoria"])
-    CU5(["Consultar e exportar ficha tecnica de jogadores"])
-  end
-  GEqui --- CU1
-  GEqui --- CU2
-  GEqui --- CU3
-  GEqui --- CU4
-  GEqui --- CU5
-  CU3 -.->|Include| CU3_sub
 
-  style Sistema fill:#7DD3FC,stroke:#0284C7,stroke-width:2px,color:#0f172a
-  style CU1 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU2 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU3 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU3_sub fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU4 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU5 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
+  Login(["Autenticar Gestor de Equipa"])
+  CU05(["CU05 - Gerir Plantel da Selecao"])
+  CU05_sub1(["Validar Limite 26 Jogadores"])
+  CU05_sub2(["Validar 11 Titulares"])
+
+  GEqui --- CU05
+
+  CU05 -.->|Include| Login
+  CU05 -.->|Include| CU05_sub1
+  CU05 -.->|Include| CU05_sub2
+
+  style Login fill:#E11D48,stroke:#9F1239,color:#ffffff,stroke-width:2px
+  style CU05_sub1 fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
+  style CU05_sub2 fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
 ```
 
 ### Codigo PlantUML (Visual Paradigm)
@@ -233,55 +173,48 @@ skinparam usecase {
 
 actor "Gestor de Equipa" as GEqui
 
-rectangle "Sistema de Gestao - World Cup 2026" {
-  usecase "Consultar visao geral da equipa" as CU1
-  usecase "Consultar calendario de jogos da equipa" as CU2
-  usecase "Adicionar/remover jogadores a equipa" as CU3
-  usecase "Verificar limite de 26 jogadores e validar 11 titulares" as CU3_sub
-  usecase "Confirmar e exportar convocatoria" as CU4
-  usecase "Consultar e exportar ficha tecnica de jogadores" as CU5
+rectangle "Modulo 3 - Gestao de Equipas" {
+  usecase "Autenticar Gestor" as Login #Pink
+  usecase "CU05 - Gerir Plantel da Selecao" as CU05
+  usecase "Validar Limite 26 Jogadores" as CU05_sub1 #Yellow
+  usecase "Validar 11 Titulares" as CU05_sub2 #Yellow
 }
 
-GEqui -- CU1
-GEqui -- CU2
-GEqui -- CU3
-GEqui -- CU4
-GEqui -- CU5
-CU3 ..> CU3_sub : <<include>>
+GEqui -- CU05
+
+CU05 ..> Login : <<include>>
+CU05 ..> CU05_sub1 : <<include>>
+CU05 ..> CU05_sub2 : <<include>>
 @enduml
 ```
 
 ---
 
-## 5. Gestor de Bilheteira
+## 4. Modulo de Bilheteira, Logistica e Consulta Publica
 
-**Ator:** Gestor de Bilheteira  
-**Descricao:** Controlo financeiro, inventario de ingressos, definicao de precos e monitorizacao de seguranca/fraude.
+**Atores:** Gestor de Bilheteira, Gestor de Logistica, Cliente Publico  
+**Foco:** Venda e gestao de ingressos, alocacao de centros de estagio/hoteis para as selecoes e acesso publico aos calendarios e tabelas classificativas.
 
 ### Diagrama Mermaid
 ```mermaid
 flowchart LR
   GBilh["🧍 Gestor de Bilheteira"]
-  subgraph Sistema["Sistema de Gestao - World Cup 2026"]
-    direction TB
-    CU1(["Consultar visao geral de performance de vendas"])
-    CU2(["Gerir precos dos bilhetes"])
-    CU3(["Consultar inventario"])
-    CU4(["Consultar alertas de seguranca e suspeitas de fraude"])
-    CU5(["Consultar relatorio de vendas"])
-  end
-  GBilh --- CU1
-  GBilh --- CU2
-  GBilh --- CU3
-  GBilh --- CU4
-  GBilh --- CU5
+  GLog["🧍 Gestor de Logistica"]
+  Pub["🧍 Cliente Publico"]
 
-  style Sistema fill:#7DD3FC,stroke:#0284C7,stroke-width:2px,color:#0f172a
-  style CU1 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU2 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU3 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU4 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
-  style CU5 fill:#BAE6FD,stroke:#0369A1,color:#0c4a6e,stroke-width:1px
+  Login(["Autenticar Gestor"])
+  CU06(["CU06 - Gerir Lotacao e Precos"])
+  CU07(["CU07 - Atribuir Alojamento (Hotel)"])
+  CU08(["CU08 - Consultar Calendario e Tabelas"])
+
+  GBilh --- CU06
+  GLog --- CU07
+  Pub --- CU08
+
+  CU06 -.->|Include| Login
+  CU07 -.->|Include| Login
+
+  style Login fill:#E11D48,stroke:#9F1239,color:#ffffff,stroke-width:2px
 ```
 
 ### Codigo PlantUML (Visual Paradigm)
@@ -296,25 +229,29 @@ skinparam usecase {
 }
 
 actor "Gestor de Bilheteira" as GBilh
+actor "Gestor de Logistica" as GLog
+actor "Cliente Publico" as Pub
 
-rectangle "Sistema de Gestao - World Cup 2026" {
-  usecase "Consultar visao geral de performance de vendas" as CU1
-  usecase "Gerir precos dos bilhetes" as CU2
-  usecase "Consultar inventario" as CU3
-  usecase "Consultar alertas de seguranca e suspeitas de fraude" as CU4
-  usecase "Consultar relatorio de vendas" as CU5
+rectangle "Modulo 4 - Bilheteira, Logistica e Publico" {
+  usecase "Autenticar Gestor" as Login #Pink
+  usecase "CU06 - Gerir Lotacao e Precos" as CU06
+  usecase "CU07 - Atribuir Alojamento (Hotel)" as CU07
+  usecase "CU08 - Consultar Calendario e Tabelas" as CU08
 }
 
-GBilh -- CU1
-GBilh -- CU2
-GBilh -- CU3
-GBilh -- CU4
-GBilh -- CU5
+GBilh -- CU06
+GLog -- CU07
+Pub -- CU08
+
+CU06 ..> Login : <<include>>
+CU07 ..> Login : <<include>>
 @enduml
 ```
 
 ---
 
-## Confirmacao de Exatidao
+## Resumo Metodologico (Estereotipos)
 
-Os 5 diagramas documentados acima correspondem com **100% de exatidao e fidelidade** as imagens oficiais do projeto, garantindo o alinhamento total entre a especificacao UML e o prototipo funcional desenvolvido.
+Conforme ilustrado no slide 23 da disciplina:
+1. **`<<Include>>`:** Utilizado para demonstrar que um caso de uso base invoca obrigatoriamente um sub-caso ou validacao de sistema (ex: Autenticacao ou regras de negocio).
+2. **Modularidade:** A separacao em 4 diagramas distintos elimina a complexidade visual, permitindo uma analise direta e limpa de cada dominio do sistema.
