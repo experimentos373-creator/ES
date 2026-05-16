@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagramas de Casos de Uso - ES Fase 1</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root { --primary: #00D26A; --dark: #1A202C; --light: #F8FAFC; --text-main: #334155; --text-muted: #64748B; --border: #E2E8F0; }
+body { font-family: 'Outfit', sans-serif; background: #CBD5E1; margin: 0; padding: 40px; display: flex; justify-content: center; }
+.page { background: white; width: 100%; max-width: 1200px; padding: 60px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); border-radius: 4px; box-sizing: border-box; }
+.header { border-bottom: 3px solid var(--primary); padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end; }
+.header h1 { color: var(--dark); margin: 0 0 6px 0; font-size: 30px; }
+.header .sub { margin: 0; color: var(--text-muted); font-size: 16px; }
+.header .meta { text-align: right; color: var(--text-muted); font-size: 14px; line-height: 1.6; }
+.header .meta strong { color: var(--dark); }
+.intro { font-size: 18px; line-height: 1.6; color: var(--dark); margin-bottom: 40px; font-weight: 400; }
+.section { margin-bottom: 50px; }
+.section h2 { color: var(--dark); font-size: 22px; border-bottom: 2px solid var(--border); padding-bottom: 8px; margin-bottom: 8px; }
+.section h2 span { color: var(--primary); }
+.section .desc { font-size: 15px; color: var(--text-muted); margin-bottom: 20px; }
+.diagram-box { padding: 30px; background: white; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 20px; overflow-x: auto; }
+.legend { padding: 25px; background: var(--light); border-radius: 12px; border-left: 4px solid var(--primary); margin-top: 40px; }
+.legend h3 { margin: 0 0 15px 0; color: var(--dark); font-size: 18px; }
+.legend ul { margin: 0; padding-left: 20px; line-height: 1.8; font-size: 15px; }
+.legend strong { color: var(--dark); }
+@media print { body { background: white; padding: 0; } .page { box-shadow: none; padding: 20px; max-width: none; } .section { page-break-inside: avoid; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div>
+      <h1>Diagramas de Casos de Uso</h1>
+      <p class="sub">Sistema de Gestao do Campeonato do Mundo de Futebol 2026</p>
+    </div>
+    <div class="meta">
+      <p><strong>Disciplina:</strong> Engenharia de Software</p>
+      <p><strong>Metodologia:</strong> ICONIX</p>
+      <p><strong>Fase:</strong> 1</p>
+    </div>
+  </div>
+
+  <p class="intro">Para garantir a maxima clareza e simplicidade na modelacao ICONIX, os Casos de Uso foram divididos por modulos funcionais separados. Cada diagrama ilustra as interacoes do Ator e os relacionamentos de inclusao (&lt;&lt;Include&gt;&gt;).</p>
+
+  <!-- Módulo 1 -->
+  <div class="section">
+    <h2><span>Modulo 1</span> - Gestao de Jogos e Calendario</h2>
+    <p class="desc">Ator principal: Administrador | Foco: Agendamento e finalizacao de partidas</p>
+    <div class="diagram-box">
+<pre class="mermaid">
+flowchart LR
+  Admin["🧍 Administrador"]
+
+  Login(["Autenticar Administrador"])
+  CU01(["CU01 - Agendar Novo Jogo"])
+  CU01_sub(["Gerar Bilhetes Padrao"])
+  CU02(["CU02 - Finalizar Jogo"])
+  CU02_sub1(["Registar Eventos (Golos/Cartoes)"])
+  CU02_sub2(["Atualizar Classificacoes do Grupo"])
+
+  Admin --- CU01
+  Admin --- CU02
+
+  CU01 -.->|Include| Login
+  CU02 -.->|Include| Login
+  CU01 -.->|Include| CU01_sub
+  CU02 -.->|Include| CU02_sub1
+  CU02 -.->|Include| CU02_sub2
+
+  style Login fill:#E11D48,stroke:#9F1239,color:#ffffff,stroke-width:2px
+  style CU01_sub fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
+  style CU02_sub1 fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
+  style CU02_sub2 fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
+</pre>
+    </div>
+  </div>
+
+  <!-- Módulo 2 -->
+  <div class="section">
+    <h2><span>Modulo 2</span> - Gestao de Arbitragem</h2>
+    <p class="desc">Ator principal: Gestor de Arbitragem | Foco: Atribuicao e avaliacao de arbitros</p>
+    <div class="diagram-box">
+<pre class="mermaid">
+flowchart LR
+  GArb["🧍 Gestor de Arbitragem"]
+
+  Login(["Autenticar Gestor"])
+  CU03(["CU03 - Atribuir Arbitros a Jogo"])
+  CU03_sub1(["Validar Regra 48h"])
+  CU03_sub2(["Validar Nacionalidade"])
+  CU04(["CU04 - Avaliar Arbitros Pos-Jogo"])
+
+  GArb --- CU03
+  GArb --- CU04
+
+  CU03 -.->|Include| Login
+  CU04 -.->|Include| Login
+  CU03 -.->|Include| CU03_sub1
+  CU03 -.->|Include| CU03_sub2
+
+  style Login fill:#E11D48,stroke:#9F1239,color:#ffffff,stroke-width:2px
+  style CU03_sub1 fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
+  style CU03_sub2 fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
+</pre>
+    </div>
+  </div>
+
+  <!-- Módulo 3 -->
+  <div class="section">
+    <h2><span>Modulo 3</span> - Gestao de Equipas e Planteis</h2>
+    <p class="desc">Ator principal: Gestor de Equipa | Foco: Convocatoria e gestao de jogadores</p>
+    <div class="diagram-box">
+<pre class="mermaid">
+flowchart LR
+  GEqui["🧍 Gestor de Equipa"]
+
+  Login(["Autenticar Gestor de Equipa"])
+  CU05(["CU05 - Gerir Plantel da Selecao"])
+  CU05_sub1(["Validar Limite 26 Jogadores"])
+  CU05_sub2(["Validar 11 Titulares"])
+
+  GEqui --- CU05
+
+  CU05 -.->|Include| Login
+  CU05 -.->|Include| CU05_sub1
+  CU05 -.->|Include| CU05_sub2
+
+  style Login fill:#E11D48,stroke:#9F1239,color:#ffffff,stroke-width:2px
+  style CU05_sub1 fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
+  style CU05_sub2 fill:#FEF08A,stroke:#CA8A04,color:#854D0E,stroke-width:2px
+</pre>
+    </div>
+  </div>
+
+  <!-- Módulo 4 -->
+  <div class="section">
+    <h2><span>Modulo 4</span> - Bilheteira, Logistica e Consulta Publica</h2>
+    <p class="desc">Atores: Gestor de Bilheteira, Gestor de Logistica, Cliente Publico</p>
+    <div class="diagram-box">
+<pre class="mermaid">
+flowchart LR
+  GBilh["🧍 Gestor de Bilheteira"]
+  GLog["🧍 Gestor de Logistica"]
+  Pub["🧍 Cliente Publico"]
+
+  Login(["Autenticar Gestor"])
+  CU06(["CU06 - Gerir Lotacao e Precos"])
+  CU07(["CU07 - Atribuir Alojamento (Hotel)"])
+  CU08(["CU08 - Consultar Calendario e Tabelas"])
+
+  GBilh --- CU06
+  GLog --- CU07
+  Pub --- CU08
+
+  CU06 -.->|Include| Login
+  CU07 -.->|Include| Login
+
+  style Login fill:#E11D48,stroke:#9F1239,color:#ffffff,stroke-width:2px
+</pre>
+    </div>
+  </div>
+
+  <div class="legend">
+    <h3>Resumo de Conceitos e Estereotipos</h3>
+    <ul>
+      <li><strong>Abordagem Modular:</strong> A separacao por modulos evita diagramas complexos e confusos, permitindo analisar cada subsistema de forma isolada e clara.</li>
+      <li><strong>&lt;&lt;Include&gt;&gt; (Inclui):</strong> Indica que um caso de uso principal (ex: Agendar Jogo ou Gerir Plantel) necessita obrigatoriamente de executar outro caso de uso ou regra de negocio durante o seu fluxo (ex: Autenticacao ou Validacao de limites).</li>
+      <li><strong>Cores:</strong> <span style="color:#E11D48; font-weight:bold;">Vermelho</span> representa os modulos de Autenticacao/Seguranca; <span style="color:#CA8A04; font-weight:bold;">Amarelo</span> representa regras de negocio e validacoes automaticas do sistema.</li>
+    </ul>
+  </div>
+</div>
+
+<script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+mermaid.initialize({
+  startOnLoad: true,
+  theme: 'default',
+  themeVariables: { fontSize: '16px' },
+  flowchart: { curve: 'basis', nodeSpacing: 50, rankSpacing: 80 }
+});
+</script>
+</body>
+</html>

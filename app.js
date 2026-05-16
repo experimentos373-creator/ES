@@ -35,6 +35,7 @@ function finalizeMatch(matchId, resultData) {
     match.penaltiesHome = resultData.penaltiesHome || null;
     match.penaltiesAway = resultData.penaltiesAway || null;
     if (resultData.events) match.events = resultData.events;
+    if (resultData.stats) match.stats = resultData.stats;
 
     const phaseOrder = ['Grupos', 'Dezasseis-avos','Oitavos','Quartos','Meias-Finais','Final'];
     const currentIdx = phaseOrder.indexOf(match.phase);

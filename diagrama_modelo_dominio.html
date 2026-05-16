@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modelo de Dominio - ES Fase 1</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root { --primary: #00D26A; --dark: #1A202C; --light: #F8FAFC; --text-main: #334155; --text-muted: #64748B; --border: #E2E8F0; }
+body { font-family: 'Outfit', sans-serif; background: #CBD5E1; margin: 0; padding: 40px; display: flex; justify-content: center; }
+.page { background: white; width: 100%; max-width: 1200px; padding: 60px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); border-radius: 4px; box-sizing: border-box; }
+.header { border-bottom: 3px solid var(--primary); padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end; }
+.header h1 { color: var(--dark); margin: 0 0 6px 0; font-size: 30px; }
+.header .sub { margin: 0; color: var(--text-muted); font-size: 16px; }
+.header .meta { text-align: right; color: var(--text-muted); font-size: 14px; line-height: 1.6; }
+.header .meta strong { color: var(--dark); }
+.intro { font-size: 20px; line-height: 1.6; color: var(--dark); margin-bottom: 35px; font-weight: 500; }
+.diagram-box { padding: 30px; background: white; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 30px; overflow-x: auto; }
+.legend { padding: 25px; background: var(--light); border-radius: 12px; border-left: 4px solid var(--primary); }
+.legend h3 { margin: 0 0 12px 0; color: var(--dark); font-size: 18px; }
+.legend table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.legend th { text-align: left; padding: 8px 10px; background: var(--dark); color: white; }
+.legend td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+.legend td:first-child { font-weight: 600; color: var(--dark); }
+@media print { body { background: white; padding: 0; } .page { box-shadow: none; padding: 20px; max-width: none; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div>
+      <h1>Modelo de Dominio</h1>
+      <p class="sub">Sistema de Gestao do Campeonato do Mundo de Futebol 2026</p>
+    </div>
+    <div class="meta">
+      <p><strong>Disciplina:</strong> Engenharia de Software</p>
+      <p><strong>Metodologia:</strong> ICONIX</p>
+      <p><strong>Fase:</strong> 1</p>
+    </div>
+  </div>
+
+  <p class="intro">Representacao das entidades do dominio e suas relacoes, extraidas da estrutura de dados do prototipo funcional (app.js).</p>
+
+  <div class="diagram-box">
+<pre class="mermaid">
+erDiagram
+  GROUP ||--|{ TEAM : contem
+  TEAM ||--|{ PLAYER : tem
+  MATCH }|--|| TEAM : homeTeam
+  MATCH }|--|| TEAM : awayTeam
+  MATCH ||--|{ EVENT : regista
+  MATCH ||--o| MATCH_STATS : possui
+  MATCH ||--|{ TICKET : vende
+  MATCH }o--o{ REFEREE : arbitrado
+  HOTEL }o--o| TEAM : aloja
+  USER }o--o| TEAM : gere
+
+  GROUP {
+    string name
+    array teams
+  }
+
+  TEAM {
+    string name
+    string coach
+    string flag
+  }
+
+  PLAYER {
+    int id
+    int number
+    string name
+    string position
+    string status
+    boolean isStarter
+    int goals
+    int assists
+    int yellow
+    int red
+    int minutes
+    int energy
+  }
+
+  MATCH {
+    int id
+    string date
+    string time
+    string stadium
+    string phase
+    string status
+    string winner
+    int goalsHome
+    int goalsAway
+    boolean evaluated
+  }
+
+  EVENT {
+    string type
+    int minute
+    string player
+    string team
+  }
+
+  MATCH_STATS {
+    int possession
+    int totalShots
+    int shotsOnTarget
+    int corners
+    int offsides
+    int fouls
+    int yellowCards
+    int redCards
+    int saves
+    int totalPasses
+    int passAccuracy
+  }
+
+  TICKET {
+    string category
+    float price
+    int sold
+    int total
+  }
+
+  REFEREE {
+    int id
+    string name
+    string nationality
+    string type
+    string status
+    int matchesCount
+    float score
+  }
+
+  HOTEL {
+    int id
+    string name
+    string location
+    int stars
+    int capacity
+    string status
+  }
+
+  USER {
+    string email
+    string name
+    string role
+    string team
+  }
+</pre>
+  </div>
+
+  <div class="legend">
+    <h3>Relacoes e Multiplicidades</h3>
+    <table>
+      <tr><th>Relacao</th><th>Mult.</th><th>Descricao</th></tr>
+      <tr><td>Group - Team</td><td>1 : 4</td><td>Cada grupo contem 4 equipas</td></tr>
+      <tr><td>Team - Player</td><td>1 : 0..26</td><td>Cada equipa tem ate 26 jogadores</td></tr>
+      <tr><td>Match - Team</td><td>N : 1 (x2)</td><td>Cada jogo envolve 2 equipas</td></tr>
+      <tr><td>Match - Event</td><td>1 : 0..*</td><td>Um jogo pode ter multiplos eventos</td></tr>
+      <tr><td>Match - MatchStats</td><td>1 : 0..1</td><td>Estatisticas opcionais</td></tr>
+      <tr><td>Match - Ticket</td><td>1 : 4</td><td>4 categorias de bilhete por jogo</td></tr>
+      <tr><td>Match - Referee</td><td>N : 4</td><td>4 posicoes de arbitragem</td></tr>
+      <tr><td>Hotel - Team</td><td>N : 0..1</td><td>Um hotel pode alojar uma equipa</td></tr>
+      <tr><td>User - Team</td><td>N : 0..1</td><td>Um gestor esta associado a uma selecao</td></tr>
+    </table>
+  </div>
+</div>
+
+<script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+mermaid.initialize({
+  startOnLoad: true,
+  theme: 'default',
+  themeVariables: { fontSize: '16px' },
+  er: { layoutDirection: 'TB', useMaxWidth: true }
+});
+</script>
+</body>
+</html>

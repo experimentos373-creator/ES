@@ -342,6 +342,8 @@
             border-radius: 30px;
             width: 700px;
             max-width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
             box-shadow: 0 25px 50px rgba(0,0,0,0.2);
         }
     </style>
@@ -572,15 +574,104 @@
             <div id="penalty-area" style="display: none; background: #FFF5F5; padding: 1rem; border-radius: 12px; margin-bottom: 1rem; border: 1px solid #FEB2B2;">
                 <h4 style="margin: 0 0 0.5rem 0; color: #C53030; font-size: 0.9rem;">Desempate por Pênaltis</h4>
                 <div style="display: flex; align-items: center; justify-content: center; gap: 1rem;">
-                    <input type="number" id="pen-home" placeholder="Casa" style="width: 60px; text-align: center; padding: 0.5rem;">
+                    <input type="number" id="pen-home" placeholder="Casa" style="width: 60px; text-align: center; padding: 0.5rem;" oninput="(function(){ const d = getData(); const m = d.matches.find(x => x.id === currentFinalizeMatchId); updateWinnerDropdown(m.homeTeam, m.awayTeam, m.phase); })();">
                     <span>X</span>
-                    <input type="number" id="pen-away" placeholder="Fora" style="width: 60px; text-align: center; padding: 0.5rem;">
+                    <input type="number" id="pen-away" placeholder="Fora" style="width: 60px; text-align: center; padding: 0.5rem;" oninput="(function(){ const d = getData(); const m = d.matches.find(x => x.id === currentFinalizeMatchId); updateWinnerDropdown(m.homeTeam, m.awayTeam, m.phase); })();">
+                </div>
+            </div>
+
+            <div style="background: #F7FAFC; padding: 1rem; border-radius: 12px; margin-bottom: 1rem; border: 1px solid var(--border); max-height: 250px; overflow-y: auto;">
+                <h4 style="margin: 0 0 1rem 0; font-size: 0.9rem; color: var(--dark); position: sticky; top: -1rem; background: #F7FAFC; padding-bottom: 0.5rem; z-index: 10;">Estatísticas da Partida (Casa vs Fora)</h4>
+                
+                <!-- Posse e Remates -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.5rem;">
+                    <label style="font-size: 0.8rem;">Posse de Bola (%)</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="number" id="stat-pos-home" placeholder="Casa" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px;">
+                        <input type="number" id="stat-pos-away" placeholder="Fora" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px;">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.5rem;">
+                    <label style="font-size: 0.8rem;">Total Remates</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="number" id="stat-shots-home" placeholder="Casa" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px;">
+                        <input type="number" id="stat-shots-away" placeholder="Fora" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px;">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.5rem;">
+                    <label style="font-size: 0.8rem;">Remates à Baliza</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="number" id="stat-target-home" placeholder="Casa" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px;">
+                        <input type="number" id="stat-target-away" placeholder="Fora" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px;">
+                    </div>
+                </div>
+
+                <!-- Novas Estatísticas: Cantos e Foras de Jogo -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.5rem;">
+                    <label style="font-size: 0.8rem;">Cantos</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="number" id="stat-corners-home" placeholder="Casa" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px;">
+                        <input type="number" id="stat-corners-away" placeholder="Fora" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px;">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.5rem;">
+                    <label style="font-size: 0.8rem;">Foras de Jogo</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="number" id="stat-offsides-home" placeholder="Casa" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px;">
+                        <input type="number" id="stat-offsides-away" placeholder="Fora" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px;">
+                    </div>
+                </div>
+
+                <!-- Faltas e Cartões -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.5rem;">
+                    <label style="font-size: 0.8rem;">Faltas Cometidas</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="number" id="stat-fouls-home" placeholder="Casa" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px;">
+                        <input type="number" id="stat-fouls-away" placeholder="Fora" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px;">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.5rem;">
+                    <label style="font-size: 0.8rem;">Cartões Amarelos</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="number" id="stat-yellows-home" placeholder="Casa" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px;">
+                        <input type="number" id="stat-yellows-away" placeholder="Fora" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px;">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.5rem;">
+                    <label style="font-size: 0.8rem;">Cartões Vermelhos</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="number" id="stat-reds-home" placeholder="Casa" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px;">
+                        <input type="number" id="stat-reds-away" placeholder="Fora" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px;">
+                    </div>
+                </div>
+
+                <!-- Guarda-Redes e Passes -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.5rem;">
+                    <label style="font-size: 0.8rem;">Defesas Guarda-Redes</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="number" id="stat-saves-home" placeholder="Casa" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px;">
+                        <input type="number" id="stat-saves-away" placeholder="Fora" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px;">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.5rem;">
+                    <label style="font-size: 0.8rem;">Passes Totais</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="number" id="stat-passes-home" placeholder="Casa" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px;">
+                        <input type="number" id="stat-passes-away" placeholder="Fora" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px;">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <label style="font-size: 0.8rem;">Precisão de Passe (%)</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="number" id="stat-passacc-home" placeholder="Casa" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px;">
+                        <input type="number" id="stat-passacc-away" placeholder="Fora" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px;">
+                    </div>
                 </div>
             </div>
 
             <div class="form-group" style="margin-top: 1rem; border-top: 1px solid #E2E8F0; padding-top: 1rem;">
-                <label>Vencedor (Apurado)</label>
-                <select id="finalize-winner" style="width: 100%; margin-top: 0.5rem; padding: 0.8rem; border-radius: 12px; border: 1px solid var(--border); font-weight: 700;"></select>
+                <label>Vencedor (Apurado Automaticamente)</label>
+                <input type="text" id="finalize-winner" readonly style="width: 100%; margin-top: 0.5rem; padding: 0.8rem; border-radius: 12px; border: 1px solid var(--border); font-weight: 700; background: #EDF2F7; color: #4A5568; text-align: center; cursor: not-allowed;">
             </div>
             <div style="display: flex; gap: 1rem; margin-top: 2rem;">
                 <button class="btn" style="flex:1;" onclick="confirmFinalize()">Confirmar e Avançar</button>
@@ -770,6 +861,14 @@
             }
         }
 
+        function handleCancelMatch(matchId) {
+            if (confirm("Tem a certeza que deseja cancelar e remover este jogo agendado?")) {
+                deleteMatch(matchId);
+                alert("Jogo cancelado com sucesso!");
+                renderMatchesAdmin();
+            }
+        }
+
         function renderMatchesAdmin() {
             const data = getData();
             const container = document.getElementById('matches-list');
@@ -793,9 +892,10 @@
                                 <span>${m.date} às ${m.time} | ${m.stadium} | Status: <b style="color:${m.status === 'Finalizado' ? 'var(--primary)' : 'var(--text-muted)'}">${m.status}</b></span>
                                 ${m.winner ? `<span style="display:block; margin-top:5px; color:var(--primary);">Avançou: <b>${m.winner}</b></span>` : ''}
                             </div>
-                            <div>
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
                                 ${canFinalize ? `<button class="btn" onclick="openFinalizeModal(${m.id}, '${m.homeTeam}', '${m.awayTeam}')">Finalizar Jogo</button>` : ''}
-                                ${m.status === 'Finalizado' ? `<button class="btn outline" disabled style="margin-right:0.5rem;">Concluído</button> <button class="btn" onclick="openHistoryModal(${m.id})" style="background: #3182CE; border-color: #3182CE;">Ver Histórico</button>` : ''}
+                                ${m.status === 'Agendado' ? `<button class="btn outline" onclick="handleCancelMatch(${m.id})" style="color: #E53E3E; border-color: #E53E3E;">Cancelar</button>` : ''}
+                                ${m.status === 'Finalizado' ? `<button class="btn outline" disabled>Concluído</button> <button class="btn" onclick="openHistoryModal(${m.id})" style="background: #3182CE; border-color: #3182CE;">Ver Histórico</button>` : ''}
                             </div>
                         </div>
                     `;
@@ -824,22 +924,8 @@
         }
 
         function updateWinnerDropdown(home, away, phase) {
-            const select = document.getElementById('finalize-winner');
+            const input = document.getElementById('finalize-winner');
             const score = calculateTempScore(home, away);
-            
-            let options = `<option value="${home}">${home}</option>
-                           <option value="${away}">${away}</option>`;
-            
-            if (phase === 'Grupos') {
-                options += `<option value="Empate">Empate</option>`;
-            }
-
-            select.innerHTML = options;
-
-            // Auto-selecionar baseado no score
-            if (score.home > score.away) select.value = home;
-            else if (score.away > score.home) select.value = away;
-            else if (phase === 'Grupos') select.value = 'Empate';
 
             // Mostrar área de penaltis se for empate em eliminatória
             const penArea = document.getElementById('penalty-area');
@@ -848,6 +934,20 @@
             } else {
                 penArea.style.display = 'none';
             }
+
+            let winner = 'Empate';
+            if (score.home > score.away) winner = home;
+            else if (score.away > score.home) winner = away;
+            else if (phase !== 'Grupos') {
+                const penHome = parseInt(document.getElementById('pen-home').value) || 0;
+                const penAway = parseInt(document.getElementById('pen-away').value) || 0;
+                if (penHome > penAway) winner = home;
+                else if (penAway > penHome) winner = away;
+                else winner = 'A aguardar desempate...';
+            }
+
+            input.value = winner;
+            input.setAttribute('data-winner-value', winner !== 'A aguardar desempate...' ? winner : 'Empate');
         }
 
         function calculateTempScore(home, away) {
@@ -916,19 +1016,51 @@
 
         function confirmFinalize() {
             if (!currentFinalizeMatchId) return;
-            const winner = document.getElementById('finalize-winner').value;
+            const inputElement = document.getElementById('finalize-winner');
+            const winner = inputElement.getAttribute('data-winner-value') || inputElement.value;
             
+            if (winner === 'A aguardar desempate...') {
+                alert('O jogo encontra-se empatado na fase eliminatória. Resolva o desempate por pênaltis primeiro.');
+                return;
+            }
+
             const data = getData();
             const match = data.matches.find(m => m.id === currentFinalizeMatchId);
             const score = calculateTempScore(match.homeTeam, match.awayTeam);
             
+            const stats = {
+                posHome: document.getElementById('stat-pos-home').value || 50,
+                posAway: document.getElementById('stat-pos-away').value || 50,
+                shotsHome: document.getElementById('stat-shots-home').value || 0,
+                shotsAway: document.getElementById('stat-shots-away').value || 0,
+                targetHome: document.getElementById('stat-target-home').value || 0,
+                targetAway: document.getElementById('stat-target-away').value || 0,
+                cornersHome: document.getElementById('stat-corners-home').value || 0,
+                cornersAway: document.getElementById('stat-corners-away').value || 0,
+                offsidesHome: document.getElementById('stat-offsides-home').value || 0,
+                offsidesAway: document.getElementById('stat-offsides-away').value || 0,
+                foulsHome: document.getElementById('stat-fouls-home').value || 0,
+                foulsAway: document.getElementById('stat-fouls-away').value || 0,
+                yellowsHome: document.getElementById('stat-yellows-home').value || 0,
+                yellowsAway: document.getElementById('stat-yellows-away').value || 0,
+                redsHome: document.getElementById('stat-reds-home').value || 0,
+                redsAway: document.getElementById('stat-reds-away').value || 0,
+                savesHome: document.getElementById('stat-saves-home').value || 0,
+                savesAway: document.getElementById('stat-saves-away').value || 0,
+                passesHome: document.getElementById('stat-passes-home').value || 0,
+                passesAway: document.getElementById('stat-passes-away').value || 0,
+                passaccHome: document.getElementById('stat-passacc-home').value || 0,
+                passaccAway: document.getElementById('stat-passacc-away').value || 0
+            };
+
             const resultData = {
                 winner,
                 goalsHome: score.home,
                 goalsAway: score.away,
                 penaltiesHome: parseInt(document.getElementById('pen-home').value) || null,
                 penaltiesAway: parseInt(document.getElementById('pen-away').value) || null,
-                events: tempEvents
+                events: tempEvents,
+                stats: stats
             };
 
             const res = finalizeMatch(currentFinalizeMatchId, resultData);
@@ -946,12 +1078,78 @@
             const data = getData();
             const match = data.matches.find(m => m.id === matchId);
             const container = document.getElementById('history-content');
+            
+            let statsHtml = '';
+            if (match && match.stats) {
+                statsHtml = `
+                <div style="background: #F7FAFC; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid var(--border);">
+                    <h4 style="text-align:center; margin: 0 0 1rem 0;">Estatísticas: ${match.homeTeam} vs ${match.awayTeam}</h4>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; font-size:0.85rem;">
+                        <span style="font-weight:bold; color:var(--primary);">${match.stats.posHome || 0}%</span>
+                        <span style="color:var(--text-muted);">Posse de Bola</span>
+                        <span style="font-weight:bold; color:var(--primary);">${match.stats.posAway || 0}%</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; font-size:0.85rem;">
+                        <span style="font-weight:bold; color:var(--primary);">${match.stats.shotsHome || 0}</span>
+                        <span style="color:var(--text-muted);">Total de Remates</span>
+                        <span style="font-weight:bold; color:var(--primary);">${match.stats.shotsAway || 0}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; font-size:0.85rem;">
+                        <span style="font-weight:bold; color:var(--primary);">${match.stats.targetHome || 0}</span>
+                        <span style="color:var(--text-muted);">Remates à Baliza</span>
+                        <span style="font-weight:bold; color:var(--primary);">${match.stats.targetAway || 0}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; font-size:0.85rem;">
+                        <span style="font-weight:bold; color:var(--primary);">${match.stats.cornersHome || 0}</span>
+                        <span style="color:var(--text-muted);">Cantos</span>
+                        <span style="font-weight:bold; color:var(--primary);">${match.stats.cornersAway || 0}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; font-size:0.85rem;">
+                        <span style="font-weight:bold; color:var(--primary);">${match.stats.offsidesHome || 0}</span>
+                        <span style="color:var(--text-muted);">Foras de Jogo</span>
+                        <span style="font-weight:bold; color:var(--primary);">${match.stats.offsidesAway || 0}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; font-size:0.85rem;">
+                        <span style="font-weight:bold; color:var(--primary);">${match.stats.foulsHome || 0}</span>
+                        <span style="color:var(--text-muted);">Faltas Cometidas</span>
+                        <span style="font-weight:bold; color:var(--primary);">${match.stats.foulsAway || 0}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; font-size:0.85rem;">
+                        <span style="font-weight:bold; color:var(--primary);">${match.stats.yellowsHome || 0}</span>
+                        <span style="color:var(--text-muted);">Cartões Amarelos</span>
+                        <span style="font-weight:bold; color:var(--primary);">${match.stats.yellowsAway || 0}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; font-size:0.85rem;">
+                        <span style="font-weight:bold; color:var(--primary);">${match.stats.redsHome || 0}</span>
+                        <span style="color:var(--text-muted);">Cartões Vermelhos</span>
+                        <span style="font-weight:bold; color:var(--primary);">${match.stats.redsAway || 0}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; font-size:0.85rem;">
+                        <span style="font-weight:bold; color:var(--primary);">${match.stats.savesHome || 0}</span>
+                        <span style="color:var(--text-muted);">Defesas Guarda-Redes</span>
+                        <span style="font-weight:bold; color:var(--primary);">${match.stats.savesAway || 0}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; font-size:0.85rem;">
+                        <span style="font-weight:bold; color:var(--primary);">${match.stats.passesHome || 0}</span>
+                        <span style="color:var(--text-muted);">Passes Totais</span>
+                        <span style="font-weight:bold; color:var(--primary);">${match.stats.passesAway || 0}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
+                        <span style="font-weight:bold; color:var(--primary);">${match.stats.passaccHome || 0}%</span>
+                        <span style="color:var(--text-muted);">Precisão de Passe</span>
+                        <span style="font-weight:bold; color:var(--primary);">${match.stats.passaccAway || 0}%</span>
+                    </div>
+                </div>
+                <h4 style="margin-bottom:1rem;">Eventos (Linha do Tempo)</h4>
+                `;
+            }
+
             if(!match || !match.events || match.events.length === 0) {
-                container.innerHTML = '<p style="color: #A0AEC0;">Nenhum evento registado para este jogo.</p>';
+                container.innerHTML = statsHtml + '<p style="color: #A0AEC0;">Nenhum evento registado para este jogo.</p>';
             } else {
                 // Sort events by minute
                 const sortedEvents = match.events.sort((a,b) => parseInt(a.minute) - parseInt(b.minute));
-                container.innerHTML = sortedEvents.map(e => `
+                const eventsHtml = sortedEvents.map(e => `
                     <div style="padding: 0.8rem; border-bottom: 1px solid #E2E8F0; display: flex; align-items: center; gap: 1rem;">
                         <div style="font-weight: 800; color: var(--primary); min-width: 40px;">${e.minute}'</div>
                         <div>
@@ -960,6 +1158,7 @@
                         </div>
                     </div>
                 `).join('');
+                container.innerHTML = statsHtml + eventsHtml;
             }
             document.getElementById('modal-history').classList.add('active');
         }
