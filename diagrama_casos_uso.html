@@ -20,7 +20,7 @@ body { font-family: 'Outfit', sans-serif; background: #CBD5E1; margin: 0; paddin
 .section h2 span { color: var(--primary); margin-right: 12px; font-weight: 700; }
 .section .desc { font-size: 18px; color: var(--text-muted); margin-bottom: 30px; line-height: 1.5; }
 .diagram-box { padding: 50px 40px; background: var(--light); border: 2px solid var(--border); border-radius: 16px; margin-bottom: 20px; overflow-x: auto; box-shadow: inset 0 2px 5px rgba(0,0,0,0.02); display: block; width: 100%; box-sizing: border-box; }
-.diagram-box svg { width: 100% !important; max-width: none !important; height: auto !important; max-height: none !important; display: block !important; margin: 0 auto !important; }
+.diagram-box svg { width: 75% !important; max-width: none !important; height: auto !important; max-height: none !important; display: block !important; margin: 0 auto !important; }
 .legend { padding: 35px; background: var(--light); border-radius: 16px; border-left: 5px solid var(--primary); margin-top: 60px; }
 .legend h3 { margin: 0 0 18px 0; color: var(--dark); font-size: 20px; font-weight: 700; }
 .legend ul { margin: 0; padding-left: 22px; line-height: 1.8; font-size: 17px; color: var(--text-main); }
@@ -42,7 +42,7 @@ body { font-family: 'Outfit', sans-serif; background: #CBD5E1; margin: 0; paddin
     </div>
   </div>
 
-  <p class="intro">Em estrita conformidade com as diretrizes da disciplina e a analise detalhada de todos os perfis de utilizador, apresentamos a modelacao completa dividida em <strong>6 modulos independentes</strong>. Para garantir a maxima visibilidade e impacto visual no ecrã, todos os diagramas ocupam 100% da largura da pagina sem restricoes de altura.</p>
+  <p class="intro">Em estrita conformidade com as diretrizes da disciplina e a analise detalhada de todos os perfis de utilizador, apresentamos a modelacao completa dividida em <strong>6 modulos independentes</strong>. Para garantir um equilibrio visual perfeito e evitar fadiga visual, todos os diagramas foram ajustados para uma escala ergonomica de 75% da largura da pagina.</p>
 
   <!-- Módulo 1: Administrador -->
   <div class="section">
@@ -276,10 +276,10 @@ flowchart LR
   </div>
 
   <div class="legend">
-    <h3>Remocao de Restricoes de Escala e Max-Height</h3>
+    <h3>Ajuste de Escala Ergonomica (75%)</h3>
     <ul>
-      <li><strong>Desbloqueio de Altura e Largura Total:</strong> A eliminacao da propriedade <code>max-height</code> e a definicao de <code>width: 100%</code> sem limites garantem que os modulos mais complexos (com 5 ou mais casos de uso verticais) nunca sejam encolhidos pelo browser, mantendo uma escala imponente e identica ao Modulo 6.</li>
-      <li><strong>Espacamento Generoso:</strong> Configurado com <code>nodeSpacing: 120</code> e <code>rankSpacing: 200</code> para afastar as colunas e dar total destaque as ligacoes e elipses.</li>
+      <li><strong>Reducao Proporcional Perfeita:</strong> A regra CSS <code>width: 75% !important; margin: 0 auto;</code> reduz o tamanho total de todos os diagramas em exatamente 25%, mantendo-os perfeitamente centrados na caixa.</li>
+      <li><strong>Nitidez Preservada:</strong> Configurado com <code>fontSize: '22px'</code> e <code>nodeSpacing: 100</code> para garantir que as elipses e os textos fiquem perfeitamente proporcionais e nitidos nesta nova escala.</li>
       <li><strong>Padrao de Cores:</strong> <span style="color:#E11D48; font-weight:bold;">Vermelho</span> destaca os modulos de Autenticacao/Login; <span style="color:#CA8A04; font-weight:bold;">Amarelo</span> destaca regras de negocio e sub-rotinas do sistema.</li>
     </ul>
   </div>
@@ -290,8 +290,8 @@ import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.mi
 mermaid.initialize({
   startOnLoad: true,
   theme: 'default',
-  themeVariables: { fontSize: '24px', fontFamily: 'Outfit' },
-  flowchart: { curve: 'linear', nodeSpacing: 120, rankSpacing: 200 }
+  themeVariables: { fontSize: '22px', fontFamily: 'Outfit' },
+  flowchart: { curve: 'linear', nodeSpacing: 100, rankSpacing: 180 }
 });
 </script>
 </body>
