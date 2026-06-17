@@ -17,5 +17,24 @@ projeto_java/src/test/
 PLAN-*.md
 *.ser
 *.log
+.agent/
+DIAGRAMA_CASOS_USO.md
+PLANO_EXPANSAO.md
+RELATORIO_FINAL.md
+SKILL.md
+diagrama_classes.html
+diagrama_modelo_dominio.html
+diagrama_robustez.html
+diagrama_sequencia.html
+notebooklm-py
+stitch-sdk
+update_app.js
+.vscode/
+APLICACAO_APRENDIZADOS.md
+AULAS.md
+documentacao_fase2/
+extracted_text/
+read_pdfs.py
+
 
 
