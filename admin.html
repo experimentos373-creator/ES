@@ -438,6 +438,7 @@
                     onchange="renderTeamRoster()">
                     <option value="">Selecione uma equipa para visualizar...</option>
                 </select>
+                <button id="btn-manage-team" class="btn" style="margin-bottom: 2rem; display: none; width: 100%; font-size: 1.1rem; padding: 1rem;" onclick="goToTeamManager()">✏️ Gerir Plantel desta Equipa (Módulo Gestor de Equipa)</button>
 
                 <div id="roster-manager" style="display: none;">
                     <div
@@ -519,6 +520,7 @@
             <div class="card" style="overflow-x: auto;">
                 <p>O Bracket renderiza as equipas apuradas. Para avançar as equipas, finalize os jogos no separador
                     "Gestão de Jogos".</p>
+                <div id="admin-bracket-container" style="display: flex; justify-content: space-between; min-width: 1000px; padding: 2rem 0;"></div>
                 <div style="margin-top: 2rem;">
                     <a href="publico.html" target="_blank" class="btn outline">Abrir Bracket Completo no Público</a>
                 </div>
@@ -542,12 +544,20 @@
     <div class="modal" id="modal-finalize">
         <div class="modal-content">
             <h2 style="margin-top:0;">Finalizar Jogo & Registar Eventos</h2>
+            <div style="background: #EFF6FF; border-left: 4px solid #2563EB; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                <h4 style="margin: 0 0 0.5rem 0; color: #1E3A8A; display: flex; align-items: center; gap: 8px;">
+                    <span>ℹ️</span> Nota de Funcionamento do Protótipo (Opção B)
+                </h4>
+                <p style="margin: 0; font-size: 0.85rem; color: #1E40AF; line-height: 1.5;">
+                    Neste protótipo adota-se a <b>Abordagem B</b>: o utilizador regista os golos e eventos na linha do tempo acima, e o resultado final (vencedor e pontuação) é <b>apurado automaticamente em baixo</b> com base nos eventos registados.
+                </p>
+            </div>
             <p>Adicione eventos do jogo (cartões, faltas, golos) antes de o concluir.</p>
             
             <div style="background: #F7FAFC; padding: 1.5rem; border-radius: 12px; margin: 1rem 0; border: 1px solid var(--border);">
                 <h3 style="margin-top: 0; font-size: 1rem; color: var(--primary);">Registar Evento</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem;">
-                    <select id="event-team" style="padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border);"></select>
+                    <select id="event-team" style="padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border);" onchange="updateEventPlayerDropdown()"></select>
                     <select id="event-type" style="padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border);">
                         <option value="Golo">Golo</option>
                         <option value="Auto-Golo">Auto-Golo</option>
@@ -559,7 +569,7 @@
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.8rem; margin-top: 0.8rem;">
                     <input type="number" id="event-min" placeholder="Min" style="padding: 0.8rem; border-radius: 12px; border: 1px solid var(--border);" min="1" max="120">
-                    <input type="text" id="event-player" placeholder="Nome do Jogador" style="padding: 0.8rem; border-radius: 12px; border: 1px solid var(--border); grid-column: span 1;">
+                    <select id="event-player" style="padding: 0.8rem; border-radius: 12px; border: 1px solid var(--border); grid-column: span 1; background: white;"></select>
                     <button class="btn" onclick="addTempEvent()" style="height: 100%;">Adicionar</button>
                 </div>
                 <div id="temp-events-list" style="margin-top: 1rem; font-size: 0.9rem; max-height: 150px; overflow-y: auto; background: white; padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border);">
@@ -698,6 +708,14 @@
     <div class="modal" id="modal-history">
         <div class="modal-content">
             <h2 style="margin-top:0;">Histórico de Eventos do Jogo</h2>
+            <div style="background: #ECFDF5; border-left: 4px solid #10B981; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                <h4 style="margin: 0 0 0.5rem 0; color: #065F46; display: flex; align-items: center; gap: 8px;">
+                    <span>🔒</span> Garantia de Integridade de Dados (Snapshot Histórico)
+                </h4>
+                <p style="margin: 0; font-size: 0.85rem; color: #065F46; line-height: 1.5;">
+                    Para assegurar a integridade dos registos oficiais da FIFA, os eventos e estatísticas de cada partida guardam uma <b>fotografia estática (snapshot)</b> dos plantéis no momento do jogo. Alterações futuras na convocatória de uma seleção não corrompem o histórico de partidas passadas.
+                </p>
+            </div>
             <div id="history-content" style="margin-top: 1rem; max-height: 400px; overflow-y: auto;">
                 <!-- Render via JS -->
             </div>
@@ -725,6 +743,7 @@
                 renderMatchesAdmin();
             }
             if (viewName === 'grupos') renderGroupStandingsAdmin();
+            if (viewName === 'bracket') renderBracketAdmin();
         }
 
         // --- Dashboard ---
@@ -779,13 +798,19 @@
             const teamName = document.getElementById('select-team-view').value;
             const container = document.getElementById('roster-manager');
             const list = document.getElementById('players-list');
+            const btnManage = document.getElementById('btn-manage-team');
 
             if (!teamName) {
                 container.style.display = 'none';
+                if (btnManage) btnManage.style.display = 'none';
                 return;
             }
 
             container.style.display = 'block';
+            if (btnManage) {
+                btnManage.style.display = 'block';
+                btnManage.innerText = `✏️ Gerir Plantel de ${teamName} (Módulo Gestor de Equipa)`;
+            }
             const data = getData();
             const team = data.teams.find(t => t.name === teamName);
 
@@ -797,10 +822,17 @@
                     <div class="player-card">
                         <div class="player-number">${p.number}</div>
                         <div class="player-name">${p.name}</div>
-                        <div class="player-pos">${p.position}</div>
+                        <div class="player-pos">${p.position || p.pos || 'Desconhecido'}</div>
                     </div>
                 `;
             });
+        }
+
+        function goToTeamManager() {
+            const teamName = document.getElementById('select-team-view').value;
+            if (!teamName) return;
+            sessionStorage.setItem('admin_selected_team', teamName);
+            window.location.href = 'gestor_equipa.html';
         }
 
         // --- Team Select Modal ---
@@ -917,10 +949,33 @@
                 <option value="${home}">${home} (Casa)</option>
                 <option value="${away}">${away} (Fora)</option>
             `;
+            updateEventPlayerDropdown();
 
             renderTempEvents();
             updateWinnerDropdown(home, away, match.phase);
             document.getElementById('modal-finalize').classList.add('active');
+        }
+
+        function updateEventPlayerDropdown() {
+            const teamName = document.getElementById('event-team').value;
+            const playerSelect = document.getElementById('event-player');
+            playerSelect.innerHTML = '';
+
+            const data = getData();
+            const team = data.teams.find(t => t.name === teamName);
+
+            if (!team || !team.players || team.players.length === 0) {
+                playerSelect.innerHTML = `
+                    <option value="Jogador Teste #1">⚠️ Demonstração: Equipa sem plantel (Usar "Jogador Teste #1")</option>
+                    <option value="Jogador Teste #2">⚠️ Demonstração: Equipa sem plantel (Usar "Jogador Teste #2")</option>
+                    <option value="Jogador Teste #3">⚠️ Demonstração: Equipa sem plantel (Usar "Jogador Teste #3")</option>
+                `;
+            } else {
+                const sortedPlayers = [...team.players].sort((a,b) => a.number - b.number);
+                sortedPlayers.forEach(p => {
+                    playerSelect.innerHTML += `<option value="${p.name}">#${p.number} - ${p.name} (${p.isStarter ? 'Titular' : 'Suplente'})</option>`;
+                });
+            }
         }
 
         function updateWinnerDropdown(home, away, phase) {
@@ -967,11 +1022,10 @@
             const player = document.getElementById('event-player').value;
             const team = document.getElementById('event-team').value;
             
-            if(!min || !player) { alert('Preencha o minuto e o nome do jogador!'); return; }
+            if(!min || !player) { alert('Preencha o minuto e selecione o jogador!'); return; }
             
             tempEvents.push({ type, minute: min, player, team });
             document.getElementById('event-min').value = '';
-            document.getElementById('event-player').value = '';
             
             renderTempEvents();
             
@@ -1219,9 +1273,121 @@
             });
         }
 
+        const BRACKET_FLAGS = {
+            'Portugal': '🇵🇹', 'Espanha': '🇪🇸', 'Brasil': '🇧🇷', 'França': '🇫🇷',
+            'Argentina': '🇦🇷', 'Inglaterra': '🏴', 'Alemanha': '🇩🇪'
+        };
+
+        function renderBracketAdmin() {
+            const data = getData();
+            const container = document.getElementById('admin-bracket-container');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            const SLOT_H = 148; 
+            const totalH = 4 * SLOT_H; 
+
+            const byPhase = {
+                'Oitavos': data.matches.filter(m => m.phase === 'Oitavos').sort((a,b) => a.id - b.id),
+                'Quartos': data.matches.filter(m => m.phase === 'Quartos').sort((a,b) => a.id - b.id),
+                'Meias-Finais': data.matches.filter(m => m.phase === 'Meias-Finais').sort((a,b) => a.id - b.id),
+                'Final': data.matches.filter(m => m.phase === 'Final').sort((a,b) => a.id - b.id),
+            };
+
+            function matchEl(m, slotHeight) {
+                const home = m ? m.homeTeam : '';
+                const away = m ? m.awayTeam : '';
+                const div = document.createElement('div');
+                div.style.cssText = `height:${slotHeight}px; display:flex; flex-direction:column; justify-content:center; padding:0 8px; box-sizing:border-box;`;
+                div.innerHTML = `
+            <div style="border:1px solid #E2E8F0; border-bottom:none; border-radius:6px 6px 0 0; padding:6px 10px; font-size:11px; font-weight:${home ? '600' : '400'}; color:${home ? '#1A202C' : '#A0AEC0'}; background:white; display:flex; align-items:center; gap:6px; white-space:nowrap; overflow:hidden;">
+                <span>${BRACKET_FLAGS[home] || ''}</span>${home || 'A definir'}
+            </div>
+            <div style="border:1px solid #E2E8F0; border-radius:0 0 6px 6px; padding:6px 10px; font-size:11px; font-weight:${away ? '600' : '400'}; color:${away ? '#1A202C' : '#A0AEC0'}; background:white; display:flex; align-items:center; gap:6px; white-space:nowrap; overflow:hidden;">
+                <span>${BRACKET_FLAGS[away] || ''}</span>${away || 'A definir'}
+            </div>`;
+                return div;
+            }
+
+            function connectorSVG(count, slotH, side = 'left') {
+                const h = count * slotH; 
+                let paths = '';
+                for (let i = 0; i < count / 2; i++) {
+                    const y1 = slotH * (i * 2) + slotH / 2;     
+                    const y2 = slotH * (i * 2 + 1) + slotH / 2; 
+                    const mid = (y1 + y2) / 2;
+                    if (side === 'left') {
+                        paths += `<line x1="0" y1="${y1}" x2="10" y2="${y1}" stroke="#CBD5E0" stroke-width="1.5"/><line x1="10" y1="${y1}" x2="10" y2="${y2}" stroke="#CBD5E0" stroke-width="1.5"/><line x1="10" y1="${y2}" x2="0" y2="${y2}" stroke="#CBD5E0" stroke-width="1.5"/><line x1="10" y1="${mid}" x2="20" y2="${mid}" stroke="#CBD5E0" stroke-width="1.5"/>`;
+                    } else {
+                        paths += `<line x1="20" y1="${y1}" x2="10" y2="${y1}" stroke="#CBD5E0" stroke-width="1.5"/><line x1="10" y1="${y1}" x2="10" y2="${y2}" stroke="#CBD5E0" stroke-width="1.5"/><line x1="10" y1="${y2}" x2="20" y2="${y2}" stroke="#CBD5E0" stroke-width="1.5"/><line x1="10" y1="${mid}" x2="0" y2="${mid}" stroke="#CBD5E0" stroke-width="1.5"/>`;
+                    }
+                }
+                const div = document.createElement('div');
+                div.style.cssText = `flex-shrink:0; height:${h}px;`;
+                div.innerHTML = `<svg width="20" height="${h}" style="display:block;">${paths}</svg>`;
+                return div;
+            }
+
+            function buildPhaseCol(label, matches, slotHeight) {
+                const col = document.createElement('div');
+                col.style.cssText = `display:flex; flex-direction:column; flex:1; min-width:130px;`;
+                const lbl = document.createElement('div');
+                lbl.style.cssText = 'text-align:center; font-size:10px; font-weight:700; color:#718096; text-transform:uppercase; letter-spacing:0.06em; height:24px; display:flex; align-items:center; justify-content:center; flex-shrink:0;';
+                lbl.textContent = label;
+                col.appendChild(lbl);
+                const wrap = document.createElement('div');
+                wrap.style.cssText = `height:${totalH}px; display:flex; flex-direction:column; justify-content:space-around;`;
+                matches.forEach(m => wrap.appendChild(matchEl(m, slotHeight)));
+                col.appendChild(wrap);
+                return col;
+            }
+
+            function buildConnectorCol(count, slotH, side) {
+                const col = document.createElement('div');
+                col.style.cssText = 'flex-shrink:0; display:flex; flex-direction:column;';
+                const spacer = document.createElement('div');
+                spacer.style.cssText = 'height:24px; flex-shrink:0;';
+                col.appendChild(spacer);
+                col.appendChild(connectorSVG(count, slotH, side));
+                return col;
+            }
+
+            // LADO ESQUERDO
+            const leftSide = document.createElement('div');
+            leftSide.style.cssText = 'display:flex; align-items:center; flex:1;';
+            leftSide.appendChild(buildPhaseCol('Oitavos', byPhase['Oitavos'].slice(0, 4), SLOT_H));
+            leftSide.appendChild(buildConnectorCol(4, SLOT_H, 'left'));
+            leftSide.appendChild(buildPhaseCol('Quartos', byPhase['Quartos'].slice(0, 2), SLOT_H * 2));
+            leftSide.appendChild(buildConnectorCol(2, SLOT_H * 2, 'left'));
+            leftSide.appendChild(buildPhaseCol('Meia-Final', byPhase['Meias-Finais'].slice(0, 1), SLOT_H * 4));
+            
+            // CENTRO (FINAL)
+            const centerCol = document.createElement('div');
+            centerCol.style.cssText = 'display:flex; flex-direction:column; align-items:center; min-width:160px; padding: 0 10px;';
+            const trophy = document.createElement('div');
+            trophy.style.cssText = 'font-size:40px; margin-bottom:10px; margin-top: 24px;';
+            trophy.innerHTML = '🏆';
+            centerCol.appendChild(trophy);
+            centerCol.appendChild(buildPhaseCol('GRANDE FINAL', byPhase['Final'], SLOT_H * 2));
+
+            // LADO DIREITO (INVERTIDO)
+            const rightSide = document.createElement('div');
+            rightSide.style.cssText = 'display:flex; align-items:center; flex:1; flex-direction:row-reverse;';
+            rightSide.appendChild(buildPhaseCol('Oitavos', byPhase['Oitavos'].slice(4, 8), SLOT_H));
+            rightSide.appendChild(buildConnectorCol(4, SLOT_H, 'right'));
+            rightSide.appendChild(buildPhaseCol('Quartos', byPhase['Quartos'].slice(2, 4), SLOT_H * 2));
+            rightSide.appendChild(buildConnectorCol(2, SLOT_H * 2, 'right'));
+            rightSide.appendChild(buildPhaseCol('Meia-Final', byPhase['Meias-Finais'].slice(1, 2), SLOT_H * 4));
+
+            container.appendChild(leftSide);
+            container.appendChild(centerCol);
+            container.appendChild(rightSide);
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             updateDashboardStats();
             updateTeamSelects();
+            renderBracketAdmin();
         });
 
     </script>

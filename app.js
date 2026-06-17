@@ -402,7 +402,6 @@ function injectRoleSwitcher() {
         <p style="font-size: 0.8rem; margin-bottom: 5px; color: #666;"><strong>Role Switcher (Protótipo)</strong></p>
         <select id="role-select" style="padding: 5px; width: 100%;">
             <option value="Público">Público</option>
-            <option value="Árbitro">Árbitro</option>
             <option value="Gestor de Arbitragem">Gestor Árbitros</option>
             <option value="Gestor de Equipa">Gestor Equipa</option>
             <option value="Gestor de Logística">Gestor Logística</option>

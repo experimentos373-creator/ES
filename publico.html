@@ -129,6 +129,8 @@
             border-radius: 50px;
             font-size: 0.75rem;
             font-weight: 700;
+            white-space: nowrap;
+            display: inline-block;
         }
         .sidebar-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -236,6 +238,7 @@
                         <th>Jogo</th>
                         <th>Estádio</th>
                         <th>Fase</th>
+                        <th>Plantéis</th>
                         <th>Bilhetes</th>
                     </tr>
                 </thead>
@@ -255,6 +258,31 @@
         <h2 style="font-size: 2rem; margin: 0;">FIFA World Cup 2026</h2>
         <p>Calendário de Jogos & Bilhetes</p>
     </header>
+
+    <!-- Modal de Detalhes do Jogo (Plantéis) -->
+    <div class="modal" id="modal-match-details" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1001; align-items: center; justify-content: center; background: rgba(0,0,0,0.5);">
+        <div class="modal-content" style="background: white; width: 90%; max-width: 900px; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); overflow: hidden; display: flex; flex-direction: column; max-height: 90vh;">
+            <div style="background: #1A202C; color: white; padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <span style="background: #00D26A; color: white; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.75rem; border-radius: 50px; text-transform: uppercase; margin-bottom: 0.5rem; display: inline-block;" id="details-match-phase">Fase</span>
+                    <h2 style="margin: 0; font-size: 1.5rem; display: flex; align-items: center; gap: 10px;" id="details-match-title">Equipa A vs Equipa B</h2>
+                    <p style="color: #A0AEC0; margin: 0; font-size: 0.9rem; margin-top: 4px;" id="details-match-info">Data • Hora • Estádio</p>
+                </div>
+                <button onclick="closeMatchDetailsModal()" style="background: none; border: none; color: white; font-size: 2rem; cursor: pointer;">&times;</button>
+            </div>
+            <div style="padding: 2rem; overflow-y: auto; flex: 1; background: #F8F9FA;">
+                <p style="text-align: center; color: var(--text-muted); margin-top: 0; margin-bottom: 2rem; font-size: 0.95rem;">
+                    Abaixo apresentamos as fichas de jogo e os jogadores convocados para representar cada seleção nesta partida.
+                </p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;" id="details-rosters-grid">
+                    <!-- Dinâmico via JS -->
+                </div>
+            </div>
+            <div style="padding: 1.2rem 2rem; background: white; border-top: 1px solid #E2E8F0; text-align: right;">
+                <button class="filter-pill active" onclick="closeMatchDetailsModal()" style="margin: 0;">Fechar Detalhes</button>
+            </div>
+        </div>
+    </div>
 
     <script src="app.js"></script>
     <script>
@@ -431,7 +459,7 @@
 
 
             if (!filtered.length) {
-                body.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem; color: #A0AEC0;">Sem jogos para este filtro.</td></tr>`;
+                body.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2rem; color: #A0AEC0;">Sem jogos para este filtro.</td></tr>`;
                 return;
             }
 
@@ -450,6 +478,9 @@
             <td style="color: #718096;">${match.stadium}</td>
             <td><span class="phase-badge">${match.phase}</span></td>
             <td>
+                <button class="btn-buy" style="background: #EBF4FF; color: #2B6CB0; border: 1px solid #BEE3F8; box-shadow: 0 2px 4px rgba(0,0,0,0.05);" onclick="openMatchDetailsModal(${match.id})">🔍 Ver Plantéis</button>
+            </td>
+            <td>
                 <div style="display: flex; align-items: center; gap: 1rem;">
                     <span style="font-size: 0.8rem; color: #718096;">+351 210 000 001</span>
                     <a href="#" class="btn-buy" onclick="alert('Redirecionando para TicketMaster...')">Comprar ↗️</a>
@@ -458,6 +489,77 @@
         `;
                 body.appendChild(tr);
             });
+        }
+
+        function openMatchDetailsModal(matchId) {
+            const data = getData();
+            const match = data.matches.find(m => m.id === matchId);
+            if (!match) return;
+
+            document.getElementById('details-match-phase').innerText = match.phase;
+            document.getElementById('details-match-title').innerText = `${match.homeTeam} vs ${match.awayTeam}`;
+            document.getElementById('details-match-info').innerText = `${match.date} às ${match.time} • ${match.stadium}`;
+
+            const grid = document.getElementById('details-rosters-grid');
+            grid.innerHTML = '';
+
+            [match.homeTeam, match.awayTeam].forEach(teamName => {
+                const team = data.teams.find(t => t.name === teamName);
+                const col = document.createElement('div');
+                col.style.cssText = 'background: white; border-radius: 12px; border: 1px solid #E2E8F0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);';
+                
+                let headerHtml = `
+                    <div style="background: #EDF2F7; padding: 1rem 1.5rem; border-bottom: 1px solid #E2E8F0; font-weight: 800; color: #2D3748; display: flex; align-items: center; justify-content: space-between;">
+                        <span>${BRACKET_FLAGS[teamName] || '⚽'} ${teamName}</span>
+                        <span style="font-size: 0.8rem; font-weight: 600; color: #718096; background: white; padding: 0.2rem 0.6rem; border-radius: 50px; border: 1px solid #CBD5E0;">
+                            ${team ? team.players.length : 0} Jogadores
+                        </span>
+                    </div>
+                `;
+
+                let playersHtml = '<div style="padding: 1.5rem; display: flex; flex-direction: column; gap: 0.8rem;">';
+
+                if (!team || !team.players || team.players.length === 0) {
+                    playersHtml += `
+                        <div style="padding: 2rem 1rem; text-align: center; color: #A0AEC0; font-style: italic; font-size: 0.9rem;">
+                            Convocatória oficial ainda não fechada / Plantel a definir para esta seleção.
+                        </div>
+                    `;
+                } else {
+                    const sortedPlayers = [...team.players].sort((a,b) => {
+                        if (a.isStarter !== b.isStarter) return b.isStarter ? -1 : 1;
+                        return a.number - b.number;
+                    });
+
+                    sortedPlayers.forEach(p => {
+                        const isStarter = p.isStarter;
+                        playersHtml += `
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 1rem; background: ${isStarter ? '#F0FFF4' : '#F7FAFC'}; border-left: 4px solid ${isStarter ? '#00D26A' : '#CBD5E0'}; border-radius: 6px; border-top: 1px solid #EDF2F7; border-right: 1px solid #EDF2F7; border-bottom: 1px solid #EDF2F7;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span style="font-weight: 800; color: ${isStarter ? '#00B159' : '#718096'}; width: 24px;">#${p.number}</span>
+                                    <div>
+                                        <div style="font-weight: 700; color: #1A202C; font-size: 0.95rem;">${p.name}</div>
+                                        <div style="font-size: 0.75rem; color: #718096;">${p.pos || p.position || 'Desconhecido'}</div>
+                                    </div>
+                                </div>
+                                <span style="font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 50px; background: ${isStarter ? '#C6F6D5' : '#E2E8F0'}; color: ${isStarter ? '#22543D' : '#4A5568'};">
+                                    ${isStarter ? 'Titular' : 'Suplente'}
+                                </span>
+                            </div>
+                        `;
+                    });
+                }
+
+                playersHtml += '</div>';
+                col.innerHTML = headerHtml + playersHtml;
+                grid.appendChild(col);
+            });
+
+            document.getElementById('modal-match-details').style.display = 'flex';
+        }
+
+        function closeMatchDetailsModal() {
+            document.getElementById('modal-match-details').style.display = 'none';
         }
 
         // Filtros de fase

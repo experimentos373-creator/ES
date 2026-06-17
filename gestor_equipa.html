@@ -601,7 +601,7 @@
                 <td style="font-weight: 700; color: var(--text-muted);">${p.number}</td>
                 <td>
                     <div style="font-weight: 700;">${p.name} ${yellowWarning} ${injuryIcon}</div>
-                    <div style="font-size: 0.75rem; color: var(--text-muted);">${p.pos}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">${p.pos || p.position || 'Desconhecido'}</div>
                 </td>
                 <td>
                     <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="event.stopPropagation(); toggleStarter(${p.id || p.number})">
@@ -652,7 +652,7 @@
                         <div style="width: 80px; height: 80px; background: #F3F4F6; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 2rem;">👤</div>
                         <div>
                             <h2 style="margin: 0;">${p.name}</h2>
-                            <p style="color: var(--text-muted); margin: 0;">#${p.number} • ${p.pos}</p>
+                            <p style="color: var(--text-muted); margin: 0;">#${p.number} • ${p.pos || p.position || 'Desconhecido'}</p>
                             <span class="badge" style="margin-top: 8px; background: ${p.isStarter ? '#EFF6FF' : '#F3F4F6'}; color: ${p.isStarter ? '#2563EB' : '#6B7280'};">
                                 ${p.isStarter ? 'Titular' : 'Reserva'}
                             </span>
@@ -751,6 +751,7 @@
                 number: num,
                 name: document.getElementById('p-name').value,
                 pos: document.getElementById('p-pos').value,
+                position: document.getElementById('p-pos').value,
                 status: 'Apto',
                 goals: 0, assists: 0, injuries: 0, yellow: 0, red: 0, isStarter: false, minutes: 0, energy: 100, injuryHistory: []
             };
