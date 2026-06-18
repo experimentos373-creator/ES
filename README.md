@@ -1,34 +1,59 @@
 # World Cup Management System (ES)
 
-Projeto em JavaFX para gestão do Campeonato do Mundo.
+Projeto em JavaFX para gestão do Campeonato do Mundo 2026.
 
-## Como Importar e Executar no IntelliJ IDEA
+## Requisitos
 
-1. **Clonar o Repositório**:
+- **JDK 17 ou superior** (testado com JDK 17, 21 e 26)
+- **Maven** (incluído no IntelliJ ou instalável via `sudo apt install maven` / `choco install maven`)
+
+## Como Importar e Executar
+
+### Opção A — IntelliJ IDEA (recomendado)
+
+1. Clonar o repositório:
    ```bash
    git clone https://github.com/experimentos373-creator/ES.git
    cd ES
    ```
 
-2. **Abrir no IntelliJ**:
-   - Vá a `File` -> `Open`.
-   - Selecione a pasta **`projeto_java`** (que contém o `pom.xml`).
-   - Escolha **"Open as Project"** (projeto Maven).
+2. Abrir no IntelliJ:
+   - `File` → `Open` → selecionar a pasta **`projeto_java`** (contém o `pom.xml`).
+   - Escolher **"Open as Project"** (Maven).
 
-3. **Configurar o JDK**:
-   - Vá a `File` -> `Project Structure` -> `Project`.
-   - Defina o SDK para **JDK 17 ou superior** (ex: JDK 21).
+3. Configurar o JDK:
+   - `File` → `Project Structure` → `Project` → definir SDK para **JDK 17+**.
 
-4. **Executar a Aplicação**:
-   - Localize o arquivo `boundary.gui.Launcher` em `src/main/java` (ou na estrutura de pacotes `src/boundary/gui/Launcher.java`).
-   - Clique com o botão direito em `Launcher` e selecione **`Run 'Launcher.main()'`**.
-   - *Nota*: Usamos a classe `Launcher` como ponto de entrada para contornar restrições de inicialização do JavaFX sem requerer argumentos VM complexos.
+4. Executar:
+   - Abrir `src/boundary/gui/Launcher.java`.
+   - Clicar com o botão direito → **`Run 'Launcher.main()'`**.
+   - Se der erro de módulos JavaFX, adicionar nas VM options da Run Configuration:
+     ```
+     --add-modules javafx.controls,javafx.fxml
+     ```
 
-## Credenciais de Acesso (Login)
-Os dados são auto-semeados no primeiro arranque:
-- **Administrador**: `admin` / `admin`
-- **Gestor de Equipa**: `equipa` / `equipa`
-- **Gestor de Bilheteira**: `bilheteira` / `bilheteira`
-- **Gestor de Logística**: `logistica` / `logistica`
-- **Gestor de Arbitragem**: `arbitragem` / `arbitragem`
-- **Público Geral**: Não requer login (basta usar a interface principal/pública).
+### Opção B — Terminal com Maven
+
+```bash
+cd projeto_java
+mvn clean javafx:run
+```
+
+Se `javafx:run` não funcionar, usar:
+```bash
+mvn clean compile exec:java
+```
+
+## Credenciais de Login (Dados de Demonstração)
+
+Os dados são auto-gerados no primeiro arranque. Usar o **email** no campo de login:
+
+| Perfil | Email | Nome |
+|--------|-------|------|
+| Administrador | `admin@fifa.com` | Administrador FIFA |
+| Gestor de Arbitragem | `arbitragem@fifa.com` | Gestor Arbitragem |
+| Gestor de Equipa | `equipa@fifa.com` | Gestor Equipa (Portugal) |
+| Gestor de Logística | `logistica@fifa.com` | Gestor Logística |
+| Público (Adepto) | Botão **"Entrar como Público"** | Sem credenciais |
+
+> **Nota:** Se já existirem ficheiros `.ser` na pasta raiz do projeto, apagar todos (`rm *.ser` ou `del *.ser`) para forçar a regeneração dos dados de demonstração.
