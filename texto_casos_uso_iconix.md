@@ -22,8 +22,8 @@
 3. O sistema calcula o total de bilhetes vendidos e a receita acumulada das vendas.
 4. O sistema apresenta o ecrã de visão geral exibindo o resumo estatístico com o total de equipas, total de jogos, total de árbitros, bilhetes vendidos e receita.
 
-**Cenário Alternativo 1 — Sem Dados Registados:**
-- No passo 4, se não existirem dados correspondentes no sistema, o sistema apresenta o resumo estatístico a zeros com a mensagem "Sem dados registados" no ecrã de visão geral.
+**Caminhos Alternativos:**
+* **4.1 — Sem Dados Registados:** Se não existirem dados correspondentes no sistema, o sistema apresenta o resumo estatístico a zeros com a mensagem "Sem dados registados" no ecrã de visão geral.
 
 ---
 
@@ -44,14 +44,10 @@
 7. O sistema apresenta uma mensagem de confirmação: "Jogo agendado com sucesso!".
 8. O sistema atualiza a lista de jogos no ecrã principal.
 
-**Cenário Alternativo 1 — ID Duplicado:**
-- No passo 5, se o ID inserido já existir, o sistema apresenta a mensagem de erro "ID do jogo já existe!" e o caso de uso termina.
-
-**Cenário Alternativo 2 — Conflito de Calendário:**
-- No passo 5, se uma das equipas selecionadas já tiver um jogo agendado na mesma data, o sistema apresenta a mensagem de erro "Uma ou ambas as equipas já têm jogo agendado na data!" e o caso de uso termina.
-
-**Cenário Alternativo 3 — Formato de Data/Hora Inválido:**
-- No passo 5, se a data ou a hora inseridas não respeitarem o formato regulamentar, o sistema apresenta a mensagem de erro "Formato de data ou hora inválido!" e o caso de uso termina.
+**Caminhos Alternativos:**
+* **5.1 — ID Duplicado:** Se o ID inserido já existir, o sistema apresenta a mensagem de erro "ID do jogo já existe!" e o caso de uso termina.
+* **5.2 — Conflito de Calendário:** Se uma das equipas selecionadas já tiver um jogo agendado na mesma data, o sistema apresenta a mensagem de erro "Uma ou ambas as equipas já têm jogo agendado na data!" e o caso de uso termina.
+* **5.3 — Formato de Data/Hora Inválido:** Se a data ou a hora inseridas não respeitarem o formato regulamentar, o sistema apresenta a mensagem de erro "Formato de data ou hora inválido!" e o caso de uso termina.
 
 ---
 
@@ -74,12 +70,9 @@
 9. O sistema apresenta uma mensagem de confirmação contendo o vencedor.
 10. O sistema atualiza as pontuações na tabela classificativa e no bracket de eliminatórias.
 
-**Cenário Alternativo 1 — Empate em Fase Eliminatória (Sem Penalties):**
-- No passo 5, se for um jogo de eliminatórias e o resultado for de empate sem golos de penalties válidos, o sistema impede a gravação e apresenta a mensagem de erro "Jogos das eliminatórias empatados exigem penalties válidos e com vencedor decidido.".
-
-**Cenário Alternativo 2 — Empate com Penalties (Eliminatória):**
-- No passo 4, o Administrador preenche também os campos de golos de penalties de cada equipa.
-- No passo 5, o sistema valida que uma das equipas marcou mais penalties e avança com a equipa vencedora. O fluxo prossegue a partir do passo 6.
+**Caminhos Alternativos:**
+* **5.1 — Empate em Fase Eliminatória (Sem Penalties):** Se for um jogo de eliminatórias e o resultado for de empate sem golos de penalties válidos, o sistema impede a gravação e apresenta a mensagem de erro "Jogos das eliminatórias empatados exigem penalties válidos e com vencedor decidido.".
+* **5.2 — Empate com Penalties (Eliminatória):** Se forem fornecidos golos de penalties, o sistema valida que uma das equipas marcou mais penalties e avança com a equipa vencedora. O fluxo prossegue a partir do passo 6.
 
 ---
 
@@ -95,8 +88,8 @@
 2. O sistema lê os utilizadores registados na base de dados.
 3. O sistema apresenta a lista de utilizadores com: nome, email, cargo associado e equipa (se aplicável).
 
-**Cenário Alternativo 1 — Sem Utilizadores Registados:**
-- No passo 3, se não existirem utilizadores registados além do atual, o sistema apresenta a lista vazia com a indicação "Nenhum utilizador registado.".
+**Caminhos Alternativos:**
+* **3.1 — Sem Utilizadores Registados:** Se não existirem utilizadores registados além do atual, o sistema apresenta a lista vazia com a indicação "Nenhum utilizador registado.".
 
 ---
 
@@ -133,11 +126,9 @@
 4. O sistema analisa os jogos agendados para verificar se existem violações de regras éticas (nacionalidade de árbitro igual à de uma das equipas, ou descanso regulamentar de 48h não respeitado).
 5. O sistema apresenta o resumo estatístico e os alertas de integridade no ecrã de arbitragem.
 
-**Cenário Alternativo 1 — Sem Árbitros Cadastrados:**
-- No passo 5, se não existirem árbitros na base de dados, o sistema apresenta o resumo estatístico com valores a zero.
-
-**Cenário Alternativo 2 — Sem Alertas Éticos Detetados:**
-- No passo 5, se todos os agendamentos respeitarem as regras da FIFA, o sistema apresenta a mensagem de integridade positiva: "Sem violações de regras éticas ou de repouso detetadas.".
+**Caminhos Alternativos:**
+* **5.1 — Sem Árbitros Cadastrados:** Se não existirem árbitros na base de dados, o sistema apresenta o resumo estatístico com valores a zero.
+* **5.2 — Sem Alertas Éticos Detetados:** Se todos os agendamentos respeitarem as regras da FIFA, o sistema apresenta a mensagem de integridade positiva: "Sem violações de regras éticas ou de repouso detetadas.".
 
 ---
 
@@ -157,8 +148,8 @@
 6. O sistema regista o escalão no jogo selecionado.
 7. O sistema apresenta uma mensagem de confirmação: "Escala oficial de árbitros confirmada com sucesso!".
 
-**Cenário Alternativo 1 — Violação das Regras de Elegibilidade (Neutralidade ou Descanso):**
-- No passo 5, se algum dos árbitros selecionados violar a regra de neutralidade ou tiver menos de 48 horas de descanso, o sistema rejeita a escala e apresenta uma mensagem de erro indicando o árbitro inelegível e a causa detalhada. O caso de uso termina.
+**Caminhos Alternativos:**
+* **5.1 — Violação das Regras de Elegibilidade (Neutralidade ou Descanso):** Se algum dos árbitros selecionados violar a regra de neutralidade ou tiver menos de 48 horas de descanso, o sistema rejeita a escala e apresenta uma mensagem de erro indicando o árbitro inelegível e a causa detalhada. O caso de uso termina.
 
 ---
 
@@ -180,8 +171,8 @@
 8. O sistema apresenta a mensagem de confirmação: "Notas submetidas. FIFA Scores recalculados!".
 9. O sistema atualiza o score FIFA na lista de árbitros.
 
-**Cenário Alternativo 1 — Partida Sem Escala Oficial:**
-- No passo 3, se o jogo selecionado não possuir um escalão de árbitros atribuído, o sistema apresenta a mensagem de erro "Este jogo não possui uma escala de árbitros para avaliar." e o caso de uso termina.
+**Caminhos Alternativos:**
+* **3.1 — Partida Sem Escala Oficial:** Se o jogo selecionado não possuir um escalão de árbitros atribuído, o sistema apresenta a mensagem de erro "Este jogo não possui uma escala de árbitros para avaliar." e o caso de uso termina.
 
 ---
 
@@ -201,13 +192,9 @@
 6. O sistema grava a alteração do estado na base de dados.
 7. O sistema atualiza o estado do árbitro na lista e recalcula as estatísticas do ecrã.
 
-**Cenário Alternativo 1 — Lista Vazia:**
-- No passo 2, se não existirem árbitros registados na base de dados, o sistema apresenta a lista com a indicação "Nenhum árbitro credenciado.".
-
-**Cenário Alternativo 2 — Limpar Todas as Pontuações:**
-- No passo 5, o Gestor de Arbitragem seleciona a opção "Limpar Pontuações".
-- O sistema apresenta uma mensagem de confirmação. O Gestor confirma.
-- O sistema redefine as notas e o total de avaliações de todos os árbitros para zero e atualiza a lista de árbitros.
+**Caminhos Alternativos:**
+* **2.1 — Lista Vazia:** Se não existirem árbitros registados na base de dados, o sistema apresenta a lista com a indicação "Nenhum árbitro credenciado.".
+* **5.1 — Limpar Todas as Pontuações:** Se o Gestor selecionar a opção "Limpar Pontuações", o sistema apresenta uma mensagem de confirmação. Após a confirmação, redefine as notas e o total de avaliações de todos os árbitros para zero e atualiza a lista de árbitros.
 
 ---
 
@@ -226,8 +213,8 @@
 3. O sistema calcula o número de jogadores registados no plantel, pesquisa a data do próximo jogo, soma o total de golos marcados e determina a classificação atual no grupo.
 4. O sistema apresenta o ecrã com o resumo estatístico contendo o total de convocados, golos marcados, classificação e o adversário no próximo jogo.
 
-**Cenário Alternativo 1 — Sem Equipa Associada:**
-- No passo 2, se a conta do utilizador não possuir nenhuma equipa associada, o sistema apresenta a mensagem de aviso "Nenhuma equipa atribuída a este utilizador.".
+**Caminhos Alternativos:**
+* **2.1 — Sem Equipa Associada:** Se a conta do utilizador não possuir nenhuma equipa associada, o sistema apresenta a mensagem de aviso "Nenhuma equipa atribuída a este utilizador.".
 
 ---
 
@@ -243,8 +230,8 @@
 2. O sistema obtém a lista global de jogos e filtra apenas os confrontos em que a sua seleção participa (como equipa da casa ou visitante).
 3. O sistema apresenta a lista de jogos com: data, hora, estádio, adversário, fase e resultado (caso o jogo esteja concluído).
 
-**Cenário Alternativo 1 — Sem Jogos Agendados:**
-- No passo 3, se não existirem partidas agendadas para a seleção no campeonato, o sistema apresenta a mensagem "Nenhum jogo agendado.".
+**Caminhos Alternativos:**
+* **3.1 — Sem Jogos Agendados:** Se não existirem partidas agendadas para a seleção no campeonato, o sistema apresenta a mensagem "Nenhum jogo agendado.".
 
 ---
 
@@ -264,17 +251,10 @@
 6. O sistema apresenta uma mensagem de confirmação: "Jogador adicionado com sucesso.".
 7. O sistema atualiza a lista de convocados e as estatísticas de jogadores do ecrã.
 
-**Cenário Alternativo 1 — Limite de 26 Convocados Atingido:**
-- No passo 4, se o plantel já contar com 26 jogadores registados, o sistema bloqueia a adição e apresenta a mensagem de erro "Limite máximo de 26 jogadores atingido!". O caso de uso termina.
-
-**Cenário Alternativo 2 — Número de Camisola Duplicado:**
-- No passo 4, se o número de camisola inserido já pertencer a outro jogador da seleção, o sistema recusa o registo e apresenta a mensagem de erro "Número de camisola já atribuído a outro jogador.". O caso de uso termina.
-
-**Cenário Alternativo 3 — Remover Jogador:**
-1. O Gestor de Equipa seleciona um jogador na lista do plantel.
-2. O Gestor escolhe a opção "Remover".
-3. O sistema apresenta uma mensagem de confirmação. O Gestor confirma.
-4. O sistema elimina o jogador do plantel, guarda a alteração e atualiza a lista de convocados.
+**Caminhos Alternativos:**
+* **4.1 — Limite de 26 Convocados Atingido:** Se o plantel já contar com 26 jogadores registados, o sistema bloqueia a adição e apresenta a mensagem de erro "Limite máximo de 26 jogadores atingido!". O caso de uso termina.
+* **4.2 — Número de Camisola Duplicado:** Se o número de camisola inserido já pertencer a outro jogador da seleção, o sistema recusa o registo e apresenta a mensagem de erro "Número de camisola já atribuído a outro jogador.". O caso de uso termina.
+* **4.3 — Remover Jogador:** Se o Gestor escolher a opção "Remover" num jogador da lista, o sistema apresenta uma mensagem de confirmação. Após a confirmação, elimina o jogador do plantel e atualiza a lista de convocados.
 
 ---
 
@@ -311,8 +291,8 @@
 3. O sistema calcula a percentagem média de ocupação dos estádios relacionando a capacidade total com os bilhetes vendidos.
 4. O sistema apresenta o ecrã de vendas com o resumo estatístico contendo a receita total, bilhetes vendidos e taxa de ocupação global.
 
-**Cenário Alternativo 1 — Sem Vendas Registadas:**
-- No passo 4, se não existirem compras de bilhetes, o sistema apresenta os indicadores a zero no ecrã de vendas.
+**Caminhos Alternativos:**
+* **4.1 — Sem Vendas Registadas:** Se não existirem compras de bilhetes, o sistema apresenta os indicadores a zero no ecrã de vendas.
 
 ---
 
@@ -328,8 +308,8 @@
 2. O sistema lê os estádios e os seus respetivos setores.
 3. O sistema apresenta a lista de inventário de estádios, exibindo para cada setor: nome (ex: Setor Vip, Setor Económico), capacidade de público, bilhetes já emitidos, lugares que restam disponíveis e o preço do bilhete.
 
-**Cenário Alternativo 1 — Sem Estádios Registados:**
-- No passo 3, se não existirem estádios cadastrados no sistema, o sistema apresenta a mensagem de erro "Nenhum estádio registado.".
+**Caminhos Alternativos:**
+* **3.1 — Sem Estádios Registados:** Se não existirem estádios cadastrados no sistema, o sistema apresenta a mensagem de erro "Nenhum estádio registado.".
 
 ---
 
@@ -351,18 +331,10 @@
 6. O sistema apresenta uma mensagem de confirmação: "Hotel alocado com sucesso.".
 7. O sistema atualiza o estado do hotel para ocupado na lista de alojamentos.
 
-**Cenário Alternativo 1 — Capacidade de Quartos Insuficiente:**
-- No passo 4, se o número de elementos da equipa for superior aos quartos do hotel selecionado, o sistema rejeita a atribuição e apresenta a mensagem de erro "Capacidade do hotel insuficiente para o plantel." e o caso de uso termina.
-
-**Cenário Alternativo 2 — Hotel Ocupado por Outra Seleção:**
-- No passo 4, se o hotel selecionado já estiver alocado a outra seleção nacional, o sistema recusa a alocação e apresenta a mensagem de erro "Hotel já ocupado por outra equipa." e o caso de uso termina.
-
-**Cenário Alternativo 3 — Realizar Check-out:**
-1. O Gestor de Logística seleciona um hotel ocupado na lista de alojamentos.
-2. O Gestor escolhe a opção "Checkout".
-3. O sistema apresenta uma mensagem de confirmação. O Gestor confirma.
-4. O sistema desvincula a seleção do hotel, altera o estado de ocupação para livre e atualiza o estado de alojamento na interface.
-5. O sistema apresenta a mensagem de confirmação: "Checkout realizado com sucesso.".
+**Caminhos Alternativos:**
+* **4.1 — Capacidade de Quartos Insuficiente:** Se o número de elementos da equipa for superior aos quartos do hotel selecionado, o sistema rejeita a atribuição e apresenta a mensagem de erro "Capacidade do hotel insuficiente para o plantel." e o caso de uso termina.
+* **4.2 — Hotel Ocupado por Outra Seleção:** Se o hotel selecionado já estiver alocado a outra seleção nacional, o sistema recusa a alocação e apresenta a mensagem de erro "Hotel já ocupado por outra equipa." e o caso de uso termina.
+* **4.3 — Realizar Check-out:** Se o Gestor escolher a opção "Checkout" num hotel ocupado, o sistema apresenta uma mensagem de confirmação. Após a confirmação, desvincula a seleção do hotel, altera o estado de ocupação para livre e atualiza o estado de alojamento na interface.
 
 ---
 
@@ -378,11 +350,10 @@
 **Cenário Principal:**
 1. O Adepto seleciona a opção "Calendário e Resultados" no portal público.
 2. O sistema carrega todos os jogos registados no campeonato.
-3. O sistema apresenta a lista de jogos organizando-os por fase do campeonato (Fase de Grupos, Oitavos-de-Final, etc.), contendo: data, hora, estádio, equipas concorrentes e o resultado final (se concluído).
+3. O sistema apresenta a lista de jogos organizando-os por fase del campeonato (Fase de Grupos, Oitavos-de-Final, etc.), contendo: data, hora, estádio, equipas concorrentes e o resultado final (se concluído).
 
-**Cenário Alternativo 1 — Filtrar Jogos por Fase:**
-- No passo 3, o Adepto pode selecionar uma fase específica (ex: "Fase de Grupos") a partir de uma lista de filtragem.
-- O sistema atualiza a lista exibindo apenas os jogos da fase selecionada.
+**Caminhos Alternativos:**
+* **3.1 — Filtrar Jogos por Fase:** Se o Adepto selecionar uma fase específica a partir de uma lista de filtragem, o sistema atualiza a lista exibindo apenas os jogos da fase selecionada.
 
 ---
 
@@ -398,8 +369,8 @@
 2. O sistema calcula a classificação em tempo real para os grupos (A a H) ordenando as equipas de acordo com as regras FIFA (pontos, saldo de golos e golos marcados).
 3. O sistema apresenta as tabelas de grupos no ecrã, exibindo a posição, nome da equipa, jogos disputados, vitórias, empates, derrotas, saldo de golos e pontos.
 
-**Cenário Alternativo 1 — Sem Jogos Concluídos no Grupo:**
-- No passo 3, se nenhuma partida do grupo tiver sido jogada, o sistema apresenta a tabela com todas as equipas empatadas em primeiro lugar com 0 pontos e 0 jogos disputados.
+**Caminhos Alternativos:**
+* **3.1 — Sem Jogos Concluídos no Grupo:** Se nenhuma partida do grupo tiver sido jogada, o sistema apresenta a tabela com todas as equipas empatadas em primeiro lugar com 0 pontos e 0 jogos disputados.
 
 ---
 
@@ -419,11 +390,9 @@
 6. O sistema emite os bilhetes correspondentes.
 7. O sistema apresenta a mensagem de confirmação: "Compra efetuada! Total: [Valor] EUR".
 
-**Cenário Alternativo 1 — Quantidade Superior a 4 (Bloqueio Anti-Bot):**
-- No passo 4, se o utilizador tentar comprar uma quantidade menor que 1 ou maior que 4 bilhetes, o sistema rejeita a operação e apresenta a mensagem de erro: "Limite máximo de compra de 4 bilhetes por transação (regra anti-bot).". A compra não é registada.
-
-**Cenário Alternativo 2 — Setor Esgotado ou Sem Lugares Suficientes:**
-- No passo 4, se a quantidade solicitada for maior que a capacidade restante do setor, o sistema bloqueia a transação e apresenta a mensagem de erro "Compra falhou. Capacidade do setor excedida." e o caso de uso termina.
+**Caminhos Alternativos:**
+* **4.1 — Quantidade Superior a 4 (Bloqueio Anti-Bot):** Se o utilizador tentar comprar uma quantidade menor que 1 ou maior que 4 bilhetes, o sistema rejeita a operação e apresenta a mensagem de erro: "Limite máximo de compra de 4 bilhetes por transação (regra anti-bot).". A compra não é registada.
+* **4.2 — Setor Esgotado ou Sem Lugares Suficientes:** Se a quantidade solicitada for maior que a capacidade restante do setor, o sistema bloqueia a transação e apresenta a mensagem de erro "Compra falhou. Capacidade do setor excedida." e o caso de uso termina.
 
 ---
 
@@ -444,10 +413,6 @@
 5. O sistema desenha o menu de navegação apresentando exclusivamente as opções de ecrã a que o utilizador tem direito com base nas permissões do seu perfil (RBAC).
 6. O sistema apresenta o ecrã correspondente ao perfil autenticado.
 
-**Cenário Alternativo 1 — Email Não Registado:**
-- No passo 3, se o email inserido não constar da base de dados, o sistema impede o login e apresenta a mensagem de erro "Email não encontrado!" no ecrã de login.
-
-**Cenário Alternativo 2 — Terminar Sessão (Logout):**
-1. O utilizador escolhe a opção "Sair" no menu de navegação.
-2. O sistema destrói a sessão ativa da conta, limpando as variáveis de sessão.
-3. O sistema redireciona o utilizador de volta para o ecrã de login.
+**Caminhos Alternativos:**
+* **3.1 — Email Não Registado:** Se o email inserido não constar da base de dados, o sistema impede o login e apresenta a mensagem de erro "Email não encontrado!" no ecrã de login.
+* **6.1 — Terminar Sessão (Logout):** Se o utilizador escolher a opção "Sair" no menu de navegação, o sistema destrói a sessão ativa da conta, limpando as variáveis de sessão, e redireciona o utilizador de volta para o ecrã de login.
