@@ -79,6 +79,14 @@ public class Arbitro implements Serializable {
         this.totalAvaliacoes = oldTotal + 1;
     }
 
+    /**
+     * Reinicia as pontuações e avaliações do árbitro.
+     */
+    public void resetScore() {
+        this.scoreFIFA = 0;
+        this.totalAvaliacoes = 0;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

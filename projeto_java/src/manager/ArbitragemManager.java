@@ -122,8 +122,10 @@ public class ArbitragemManager {
      */
     public boolean isArbitroElegivel(Jogo jogo, Arbitro ref) {
         // Regra de neutralidade (Opcao B): nacionalidade do arbitro coincide com o pais da equipa
-        if (ref.getNacionalidade().equalsIgnoreCase(jogo.getHomeTeam().getNome()) ||
-            ref.getNacionalidade().equalsIgnoreCase(jogo.getAwayTeam().getNome())) {
+        if (jogo.getHomeTeam() != null && ref.getNacionalidade().equalsIgnoreCase(jogo.getHomeTeam().getNome())) {
+            return false;
+        }
+        if (jogo.getAwayTeam() != null && ref.getNacionalidade().equalsIgnoreCase(jogo.getAwayTeam().getNome())) {
             return false;
         }
 

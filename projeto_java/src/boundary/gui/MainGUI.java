@@ -4,6 +4,8 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+import java.util.*;
+
 import domain.*;
 import manager.*;
 
@@ -15,10 +17,8 @@ public class MainGUI extends Application {
     public void start(Stage stage) {
         primaryStage = stage;
 
-        // Seeding database if empty (identical to CLI startup)
-        if (isBaseVazia()) {
-            semearDados();
-        }
+        // Forçar sempre a nova sementeira rica de demonstração
+        semearDados();
 
         // Initialize UI
         showLoginScreen();
@@ -29,9 +29,7 @@ public class MainGUI extends Application {
         primaryStage.show();
     }
 
-    private boolean isBaseVazia() {
-        return AutenticacaoManager.getInstance().getUtilizadores().isEmpty();
-    }
+
 
     /**
      * DADOS DE DEMONSTRAÇÃO (SEED) — Idempotente, só corre se a base estiver vazia.
@@ -39,86 +37,26 @@ public class MainGUI extends Application {
      * Para produção, substituir por dados reais ou remover este método.
      */
     private void semearDados() {
+        // Garantir limpeza total de todos os managers para sementeira fresca
+        AutenticacaoManager.getInstance().reset();
+        CampeonatoManager.getInstance().reset();
+        ArbitragemManager.getInstance().reset();
+        LogisticaManager.getInstance().reset();
+        BilheteiraManager.getInstance().reset();
+
         // [SEED] 1. Utilizadores (Atores do Sistema)
         AutenticacaoManager auth = AutenticacaoManager.getInstance();
         auth.registarUtilizador(new Utilizador("admin@fifa.com", "Administrador FIFA", TipoUtilizador.ADMIN, null));
         auth.registarUtilizador(new Utilizador("arbitragem@fifa.com", "Gestor Arbitragem", TipoUtilizador.GESTOR_ARBITRAGEM, null));
         auth.registarUtilizador(new Utilizador("logistica@fifa.com", "Gestor Logistica", TipoUtilizador.GESTOR_LOGISTICA, null));
         auth.registarUtilizador(new Utilizador("equipa@fifa.com", "Gestor Equipa", TipoUtilizador.GESTOR_EQUIPA, "Portugal"));
+        auth.registarUtilizador(new Utilizador("bilheteira@fifa.com", "Gestor Bilheteira", TipoUtilizador.GESTOR_BILHETEIRA, null));
         auth.registarUtilizador(new Utilizador("adepto@wc2026.com", "Adepto Geral", TipoUtilizador.PUBLICO, null));
 
-        // [SEED] 2. Equipas e Jogadores (semente mínima e detalhada para Portugal)
         CampeonatoManager camp = CampeonatoManager.getInstance();
-        
-        Equipa portugal = new Equipa("Portugal", "Roberto Martinez");
-        Equipa brasil = new Equipa("Brasil", "Dorival Junior");
-        Equipa franca = new Equipa("França", "Didier Deschamps");
-        Equipa espanha = new Equipa("Espanha", "Luis de la Fuente");
-        Equipa argentina = new Equipa("Argentina", "Lionel Scaloni");
-        Equipa alemanha = new Equipa("Alemanha", "Julian Nagelsmann");
-        Equipa inglaterra = new Equipa("Inglaterra", "Gareth Southgate");
-        Equipa cuba = new Equipa("Cuba", "Yunielys Castillo");
+        camp.reset(); // Garantir base limpa para a nova sementeira rica
 
-        // [SEED] Jogadores de Portugal (23 Jogadores: 11 Titulares, 12 Suplentes)
-        // Titulares
-        Jogador j1 = new Jogador(1, 1, "Diogo Costa", "Guarda-Redes", EstadoJogador.APTO); j1.setStarter(true); j1.setEnergy(100); portugal.adicionarJogador(j1);
-        Jogador j2 = new Jogador(2, 2, "Nélson Semedo", "Defesa", EstadoJogador.APTO); j2.setStarter(true); j2.setEnergy(90); j2.setYellowCards(1); portugal.adicionarJogador(j2);
-        Jogador j3 = new Jogador(3, 3, "Pepe", "Defesa", EstadoJogador.APTO); j3.setStarter(true); j3.setEnergy(82); j3.addInjury("Lesão Muscular na Coxa (Outubro 2025)"); portugal.adicionarJogador(j3);
-        Jogador j4 = new Jogador(4, 4, "Rúben Dias", "Defesa", EstadoJogador.APTO); j4.setStarter(true); j4.setEnergy(98); portugal.adicionarJogador(j4);
-        Jogador j5 = new Jogador(5, 19, "Nuno Mendes", "Defesa", EstadoJogador.APTO); j5.setStarter(true); j5.setEnergy(88); j5.addInjury("Entorse do Tornozelo (Janeiro 2026)"); portugal.adicionarJogador(j5);
-        Jogador j6 = new Jogador(6, 6, "João Palhinha", "Médio", EstadoJogador.APTO); j6.setStarter(true); j6.setEnergy(95); j6.setYellowCards(2); portugal.adicionarJogador(j6);
-        Jogador j7 = new Jogador(7, 8, "Bruno Fernandes", "Médio", EstadoJogador.APTO); j7.setStarter(true); j7.setEnergy(97); j7.setGoals(2); j7.setAssists(3); portugal.adicionarJogador(j7);
-        Jogador j8 = new Jogador(8, 10, "Bernardo Silva", "Médio", EstadoJogador.APTO); j8.setStarter(true); j8.setEnergy(94); j8.setGoals(1); j8.setAssists(1); portugal.adicionarJogador(j8);
-        Jogador j9 = new Jogador(9, 7, "Cristiano Ronaldo", "Avançado", EstadoJogador.APTO); j9.setStarter(true); j9.setEnergy(92); j9.setGoals(4); j9.setAssists(1); portugal.adicionarJogador(j9);
-        Jogador j10 = new Jogador(10, 17, "Rafael Leão", "Avançado", EstadoJogador.APTO); j10.setStarter(true); j10.setEnergy(89); j10.setGoals(1); j10.addInjury("Mialgia de esforço (Fevereiro 2026)"); portugal.adicionarJogador(j10);
-        Jogador j11 = new Jogador(11, 11, "João Félix", "Avançado", EstadoJogador.APTO); j11.setStarter(true); j11.setEnergy(91); j11.setGoals(1); portugal.adicionarJogador(j11);
-
-        // Suplentes
-        Jogador j12 = new Jogador(12, 12, "Rui Patrício", "Guarda-Redes", EstadoJogador.APTO); portugal.adicionarJogador(j12);
-        Jogador j13 = new Jogador(13, 22, "José Sá", "Guarda-Redes", EstadoJogador.APTO); portugal.adicionarJogador(j13);
-        Jogador j14 = new Jogador(14, 5, "Diogo Dalot", "Defesa", EstadoJogador.APTO); portugal.adicionarJogador(j14);
-        Jogador j15 = new Jogador(15, 14, "Gonçalo Inácio", "Defesa", EstadoJogador.APTO); portugal.adicionarJogador(j15);
-        Jogador j16 = new Jogador(16, 24, "António Silva", "Defesa", EstadoJogador.APTO); portugal.adicionarJogador(j16);
-        Jogador j17 = new Jogador(17, 13, "Danilo Pereira", "Defesa", EstadoJogador.APTO); portugal.adicionarJogador(j17);
-        Jogador j18 = new Jogador(18, 15, "João Neves", "Médio", EstadoJogador.APTO); portugal.adicionarJogador(j18);
-        Jogador j19 = new Jogador(19, 16, "Vitinha", "Médio", EstadoJogador.APTO); portugal.adicionarJogador(j19);
-        Jogador j20 = new Jogador(20, 23, "Otávio", "Médio", EstadoJogador.APTO); portugal.adicionarJogador(j20);
-        Jogador j21 = new Jogador(21, 21, "Diogo Jota", "Avançado", EstadoJogador.APTO); j21.setGoals(2); portugal.adicionarJogador(j21);
-        Jogador j22 = new Jogador(22, 9, "Gonçalo Ramos", "Avançado", EstadoJogador.LESIONADO); j22.setEnergy(45); j22.setEstado(EstadoJogador.LESIONADO); j22.addInjury("Estiramento Ligamentar (Junho 2026)"); portugal.adicionarJogador(j22);
-        Jogador j23 = new Jogador(23, 18, "Rúben Neves", "Médio", EstadoJogador.SUSPENSO); j23.setEstado(EstadoJogador.SUSPENSO); portugal.adicionarJogador(j23);
-
-        // [SEED] Jogadores genéricos para outras equipas (dados de demonstração)
-        for (int i = 1; i <= 5; i++) {
-            brasil.adicionarJogador(new Jogador(100 + i, i, "Brasileiro " + i, "Avançado", EstadoJogador.APTO));
-            franca.adicionarJogador(new Jogador(200 + i, i, "Francês " + i, "Defesa", EstadoJogador.APTO));
-            espanha.adicionarJogador(new Jogador(300 + i, i, "Espanhol " + i, "Médio", EstadoJogador.APTO));
-            argentina.adicionarJogador(new Jogador(400 + i, i, "Argentino " + i, "Avançado", EstadoJogador.APTO));
-            alemanha.adicionarJogador(new Jogador(500 + i, i, "Alemão " + i, "Defesa", EstadoJogador.APTO));
-            inglaterra.adicionarJogador(new Jogador(600 + i, i, "Inglês " + i, "Médio", EstadoJogador.APTO));
-            cuba.adicionarJogador(new Jogador(700 + i, i, "Cubano " + i, "Avançado", EstadoJogador.APTO));
-        }
-
-        camp.registarEquipa(portugal);
-        camp.registarEquipa(brasil);
-        camp.registarEquipa(franca);
-        camp.registarEquipa(espanha);
-        camp.registarEquipa(argentina);
-        camp.registarEquipa(alemanha);
-        camp.registarEquipa(inglaterra);
-        camp.registarEquipa(cuba);
-
-        // Registar nos Grupos (para tabela dinâmica de grupos)
-        camp.registarEquipaNoGrupo("Grupo A", "Portugal");
-        camp.registarEquipaNoGrupo("Grupo A", "Cuba");
-        camp.registarEquipaNoGrupo("Grupo A", "Espanha");
-        camp.registarEquipaNoGrupo("Grupo A", "Alemanha");
-        
-        camp.registarEquipaNoGrupo("Grupo B", "Brasil");
-        camp.registarEquipaNoGrupo("Grupo B", "França");
-        camp.registarEquipaNoGrupo("Grupo B", "Argentina");
-        camp.registarEquipaNoGrupo("Grupo B", "Inglaterra");
-
-        // [SEED] 3. Estádios e Setores
+        // [SEED] 2. Estádios e Setores
         Estadio luz = new Estadio("Estádio da Luz", "Lisboa");
         luz.adicionarSetor(new SetorEstadio("Premium", 5000, 200.0));
         luz.adicionarSetor(new SetorEstadio("Intermedia", 15000, 100.0));
@@ -140,7 +78,7 @@ public class MainGUI extends Application {
         dragao.adicionarSetor(new SetorEstadio("Local", 11000, 20.0));
         camp.registarEstadio(dragao);
 
-        // [SEED] 4. Árbitros
+        // [SEED] 3. Árbitros
         ArbitragemManager arb = ArbitragemManager.getInstance();
         arb.registarArbitro(new Arbitro(1, "artur@fifa.com", "Artur Soares Dias", "Portugal", TipoArbitro.PRINCIPAL));
         arb.registarArbitro(new Arbitro(2, "szymon@fifa.com", "Szymon Marciniak", "Polónia", TipoArbitro.PRINCIPAL));
@@ -152,7 +90,7 @@ public class MainGUI extends Application {
         arb.registarArbitro(new Arbitro(8, "ref8@fifa.com", "Michael Oliver", "Inglaterra", TipoArbitro.QUARTO));
         arb.registarArbitro(new Arbitro(9, "ref9@fifa.com", "Hernan Maidana", "Argentina", TipoArbitro.VAR));
 
-        // [SEED] 5. Hotéis e Alojamento (Logística)
+        // [SEED] 4. Hotéis e Alojamento (Logística)
         LogisticaManager log = LogisticaManager.getInstance();
         Hotel h1 = new Hotel(1, "Vila Galé Collection", "Faro, Portugal", 100);
         Hotel h2 = new Hotel(2, "Pestana Palace", "Lisboa, Portugal", 150);
@@ -160,7 +98,6 @@ public class MainGUI extends Application {
         Hotel h4 = new Hotel(4, "Tivoli Avenida", "Lisboa, Portugal", 120);
         Hotel h5 = new Hotel(5, "Intercontinental Porto", "Porto, Portugal", 180);
         Hotel h6 = new Hotel(6, "Sheraton Porto", "Porto, Portugal", 160);
-
         log.registarHotel(h1);
         log.registarHotel(h2);
         log.registarHotel(h3);
@@ -168,50 +105,195 @@ public class MainGUI extends Application {
         log.registarHotel(h5);
         log.registarHotel(h6);
 
-        // [SEED] Check-in inicial para popular dados de logística
-        log.alocarHotel(portugal, h2, "2026-06-08", "2026-07-20");
-        log.alocarHotel(espanha, h4, "2026-06-09", "2026-07-15");
-        log.alocarHotel(brasil, h6, "2026-06-07", "2026-07-18");
+        // Mapeamento de Treinadores e Seleções do Mundial
+        Map<String, String> treinadores = new HashMap<>();
+        treinadores.put("Portugal", "Roberto Martinez");
+        treinadores.put("Brasil", "Dorival Junior");
+        treinadores.put("França", "Didier Deschamps");
+        treinadores.put("Espanha", "Luis de la Fuente");
+        treinadores.put("Argentina", "Lionel Scaloni");
+        treinadores.put("Alemanha", "Julian Nagelsmann");
+        treinadores.put("Inglaterra", "Gareth Southgate");
+        treinadores.put("Cuba", "Yunielys Castillo");
+        treinadores.put("Japão", "Hajime Moriyasu");
+        treinadores.put("Senegal", "Aliou Cissé");
+        treinadores.put("Marrocos", "Walid Regragui");
+        treinadores.put("EUA", "Gregg Berhalter");
+        treinadores.put("Holanda", "Ronald Koeman");
+        treinadores.put("Itália", "Luciano Spalletti");
+        treinadores.put("Colômbia", "Néstor Lorenzo");
+        treinadores.put("Suíça", "Murat Yakin");
+        treinadores.put("Bélgica", "Domenico Tedesco");
+        treinadores.put("Coreia do Sul", "Kim Do-hoon");
+        treinadores.put("Uruguai", "Marcelo Bielsa");
+        treinadores.put("Gana", "Otto Addo");
+        treinadores.put("Croácia", "Zlatko Dalić");
+        treinadores.put("Canadá", "Jesse Marsch");
+        treinadores.put("Dinamarca", "Kasper Hjulmand");
+        treinadores.put("Sérvia", "Dragan Stojković");
+        treinadores.put("Polónia", "Michał Probierz");
+        treinadores.put("Austrália", "Graham Arnold");
+        treinadores.put("Áustria", "Ralf Rangnick");
+        treinadores.put("Nigéria", "Finidi George");
+        treinadores.put("Turquia", "Vincenzo Montella");
+        treinadores.put("Chile", "Ricardo Gareca");
+        treinadores.put("Ucrânia", "Serhiy Rebrov");
+        treinadores.put("Irão", "Amir Ghalenoei");
 
-        // [SEED] 6. Jogos e Construção do Bracket Simétrico
+        Map<String, Equipa> equipasCriadas = new HashMap<>();
+
+        // Registrar as equipas de forma dinâmica com plantéis ricos
+        for (Map.Entry<String, List<String>> entry : camp.getGrupos().entrySet()) {
+            for (String nomeEq : entry.getValue()) {
+                String coach = treinadores.getOrDefault(nomeEq, "Selecionador");
+                Equipa eq = new Equipa(nomeEq, coach);
+
+                if ("Portugal".equals(nomeEq)) {
+                    // Mantemos a sementeira manual rica de Portugal para demonstrar o plantel fiel
+                    // Titulares
+                    Jogador pj1 = new Jogador(1, 1, "Diogo Costa", "Guarda-Redes", EstadoJogador.APTO); pj1.setStarter(true); pj1.setEnergy(100); eq.adicionarJogador(pj1);
+                    Jogador pj2 = new Jogador(2, 2, "Nélson Semedo", "Defesa", EstadoJogador.APTO); pj2.setStarter(true); pj2.setEnergy(90); pj2.setYellowCards(1); eq.adicionarJogador(pj2);
+                    Jogador pj3 = new Jogador(3, 3, "Pepe", "Defesa", EstadoJogador.APTO); pj3.setStarter(true); pj3.setEnergy(82); pj3.addInjury("Lesão Muscular na Coxa (Outubro 2025)"); eq.adicionarJogador(pj3);
+                    Jogador pj4 = new Jogador(4, 4, "Rúben Dias", "Defesa", EstadoJogador.APTO); pj4.setStarter(true); pj4.setEnergy(98); eq.adicionarJogador(pj4);
+                    Jogador pj5 = new Jogador(5, 19, "Nuno Mendes", "Defesa", EstadoJogador.APTO); pj5.setStarter(true); pj5.setEnergy(88); pj5.addInjury("Entorse do Tornozelo (Janeiro 2026)"); eq.adicionarJogador(pj5);
+                    Jogador pj6 = new Jogador(6, 6, "João Palhinha", "Médio", EstadoJogador.APTO); pj6.setStarter(true); pj6.setEnergy(95); pj6.setYellowCards(2); eq.adicionarJogador(pj6);
+                    Jogador pj7 = new Jogador(7, 8, "Bruno Fernandes", "Médio", EstadoJogador.APTO); pj7.setStarter(true); pj7.setEnergy(97); pj7.setGoals(2); pj7.setAssists(3); eq.adicionarJogador(pj7);
+                    Jogador pj8 = new Jogador(8, 10, "Bernardo Silva", "Médio", EstadoJogador.APTO); pj8.setStarter(true); pj8.setEnergy(94); pj8.setGoals(1); pj8.setAssists(1); eq.adicionarJogador(pj8);
+                    Jogador pj9 = new Jogador(9, 7, "Cristiano Ronaldo", "Avançado", EstadoJogador.APTO); pj9.setStarter(true); pj9.setEnergy(92); pj9.setGoals(4); pj9.setAssists(1); eq.adicionarJogador(pj9);
+                    Jogador pj10 = new Jogador(10, 17, "Rafael Leão", "Avançado", EstadoJogador.APTO); pj10.setStarter(true); pj10.setEnergy(89); pj10.setGoals(1); pj10.addInjury("Mialgia de esforço (Fevereiro 2026)"); eq.adicionarJogador(pj10);
+                    Jogador pj11 = new Jogador(11, 11, "João Félix", "Avançado", EstadoJogador.APTO); pj11.setStarter(true); pj11.setEnergy(91); pj11.setGoals(1); eq.adicionarJogador(pj11);
+
+                    // Suplentes
+                    Jogador pj12 = new Jogador(12, 12, "Rui Patrício", "Guarda-Redes", EstadoJogador.APTO); eq.adicionarJogador(pj12);
+                    Jogador pj13 = new Jogador(13, 22, "José Sá", "Guarda-Redes", EstadoJogador.APTO); eq.adicionarJogador(pj13);
+                    Jogador pj14 = new Jogador(14, 5, "Diogo Dalot", "Defesa", EstadoJogador.APTO); eq.adicionarJogador(pj14);
+                    Jogador pj15 = new Jogador(15, 14, "Gonçalo Inácio", "Defesa", EstadoJogador.APTO); eq.adicionarJogador(pj15);
+                    Jogador pj16 = new Jogador(16, 24, "António Silva", "Defesa", EstadoJogador.APTO); eq.adicionarJogador(pj16);
+                    Jogador pj17 = new Jogador(17, 13, "Danilo Pereira", "Defesa", EstadoJogador.APTO); eq.adicionarJogador(pj17);
+                    Jogador pj18 = new Jogador(18, 15, "João Neves", "Médio", EstadoJogador.APTO); eq.adicionarJogador(pj18);
+                    Jogador pj19 = new Jogador(19, 16, "Vitinha", "Médio", EstadoJogador.APTO); eq.adicionarJogador(pj19);
+                    Jogador pj20 = new Jogador(20, 23, "Otávio", "Médio", EstadoJogador.APTO); eq.adicionarJogador(pj20);
+                    Jogador pj21 = new Jogador(21, 21, "Diogo Jota", "Avançado", EstadoJogador.APTO); pj21.setGoals(2); eq.adicionarJogador(pj21);
+                    Jogador pj22 = new Jogador(22, 9, "Gonçalo Ramos", "Avançado", EstadoJogador.LESIONADO); pj22.setEnergy(45); pj22.setEstado(EstadoJogador.LESIONADO); pj22.addInjury("Estiramento Ligamentar (Junho 2026)"); eq.adicionarJogador(pj22);
+                    Jogador pj23 = new Jogador(23, 18, "Rúben Neves", "Médio", EstadoJogador.SUSPENSO); pj23.setEstado(EstadoJogador.SUSPENSO); eq.adicionarJogador(pj23);
+                } else {
+                    // Criar plantel automático de 23 jogadores para as outras seleções
+                    for (int i = 1; i <= 23; i++) {
+                        int id = nomeEq.hashCode() * 31 + i;
+                        if (id < 0) id = -id;
+
+                        String posicao = "Avançado";
+                        if (i <= 3) posicao = "Guarda-Redes";
+                        else if (i <= 10) posicao = "Defesa";
+                        else if (i <= 17) posicao = "Médio";
+
+                        EstadoJogador estado = EstadoJogador.APTO;
+                        int energy = 80 + (i % 19);
+
+                        if (i == 22) {
+                            estado = EstadoJogador.LESIONADO;
+                            energy = 40;
+                        } else if (i == 23) {
+                            estado = EstadoJogador.SUSPENSO;
+                        }
+
+                        Jogador jog = new Jogador(id, i, nomeEq + " Player " + i, posicao, estado);
+                        jog.setEnergy(energy);
+                        jog.setStarter(i <= 11);
+                        if (i == 22) {
+                            jog.addInjury("Mialgia na perna (Junho 2026)");
+                        }
+                        eq.adicionarJogador(jog);
+                    }
+                }
+                camp.registarEquipa(eq);
+                equipasCriadas.put(nomeEq, eq);
+            }
+        }
+
+        // [SEED] 5. Construir os Jogos de Grupos e Simular Resultados
+        int gGameId = 100;
+        List<String> datasGrupo = Arrays.asList(
+            "2026-06-11", "2026-06-12", "2026-06-16", "2026-06-17", "2026-06-21", "2026-06-22"
+        );
+        List<String> horasGrupo = Arrays.asList("15:00", "18:00", "21:00");
+        List<Estadio> estadiosGrupo = Arrays.asList(luz, alvalade, dragao);
+
+        for (Map.Entry<String, List<String>> entry : camp.getGrupos().entrySet()) {
+            List<String> eqs = entry.getValue();
+            if (eqs.size() < 4) continue;
+
+            List<int[]> combinacoes = Arrays.asList(
+                new int[]{0, 1}, new int[]{2, 3},
+                new int[]{0, 2}, new int[]{1, 3},
+                new int[]{0, 3}, new int[]{1, 2}
+            );
+
+            for (int idx = 0; idx < combinacoes.size(); idx++) {
+                int[] comb = combinacoes.get(idx);
+                Equipa home = equipasCriadas.get(eqs.get(comb[0]));
+                Equipa away = equipasCriadas.get(eqs.get(comb[1]));
+
+                String data = datasGrupo.get(idx);
+                String hora = horasGrupo.get(idx % 3);
+                Estadio est = estadiosGrupo.get((idx + entry.getKey().hashCode()) % 3);
+
+                Jogo j = new Jogo(gGameId++, data, hora, est, home, away, "Grupos", null, null);
+                camp.registarJogo(j);
+
+                // Determinar vencedor determinístico para gerar a classificação estável
+                int gHome = (home.getNome().hashCode() & 3);
+                int gAway = (away.getNome().hashCode() & 3);
+                if (gHome == gAway) {
+                    gHome = (gHome + 1) % 4; // Desempatar para termos vencedores
+                }
+
+                Equipa vencedor = gHome > gAway ? home : away;
+                EstatisticaJogo stats = new EstatisticaJogo(55, 45, 12, 8, 4, 2);
+                camp.finalizarJogoECorrerBracket(j.getId(), vencedor, gHome, gAway, -1, -1, stats);
+            }
+        }
+
+        // [SEED] 6. Construir e Popular o Bracket Simétrico das Eliminatórias (Oitavos -> Final)
         // Final
         Jogo jFinal = new Jogo(40, "2026-07-19", "20:00", luz, null, null, "Final", null, null);
-        
+        camp.registarJogo(jFinal);
+
         // Meias-Finais
         Jogo jMeia1 = new Jogo(30, "2026-07-15", "20:00", luz, null, null, "Meias-Finais", jFinal, PosicaoBracket.HOME);
         Jogo jMeia2 = new Jogo(31, "2026-07-16", "20:00", alvalade, null, null, "Meias-Finais", jFinal, PosicaoBracket.AWAY);
-        
+        camp.registarJogo(jMeia1);
+        camp.registarJogo(jMeia2);
+
         // Quartos
         Jogo jQuartos1 = new Jogo(20, "2026-07-10", "18:00", dragao, null, null, "Quartos", jMeia1, PosicaoBracket.HOME);
         Jogo jQuartos2 = new Jogo(21, "2026-07-10", "21:00", luz, null, null, "Quartos", jMeia1, PosicaoBracket.AWAY);
         Jogo jQuartos3 = new Jogo(22, "2026-07-11", "18:00", alvalade, null, null, "Quartos", jMeia2, PosicaoBracket.HOME);
         Jogo jQuartos4 = new Jogo(23, "2026-07-11", "21:00", dragao, null, null, "Quartos", jMeia2, PosicaoBracket.AWAY);
-
-        // Oitavos
-        Jogo jOitavos1 = new Jogo(10, "2026-07-04", "18:00", luz, portugal, cuba, "Oitavos", jQuartos1, PosicaoBracket.HOME);
-        Jogo jOitavos2 = new Jogo(11, "2026-07-04", "21:00", dragao, espanha, argentina, "Oitavos", jQuartos1, PosicaoBracket.AWAY);
-        Jogo jOitavos3 = new Jogo(12, "2026-07-05", "18:00", alvalade, brasil, alemanha, "Oitavos", jQuartos2, PosicaoBracket.HOME);
-        Jogo jOitavos4 = new Jogo(13, "2026-07-05", "21:00", luz, franca, inglaterra, "Oitavos", jQuartos2, PosicaoBracket.AWAY);
-        
-        Jogo jOitavos5 = new Jogo(14, "2026-07-06", "18:00", dragao, null, null, "Oitavos", jQuartos3, PosicaoBracket.HOME);
-        Jogo jOitavos6 = new Jogo(15, "2026-07-06", "21:00", alvalade, null, null, "Oitavos", jQuartos3, PosicaoBracket.AWAY);
-        Jogo jOitavos7 = new Jogo(16, "2026-07-07", "18:00", luz, null, null, "Oitavos", jQuartos4, PosicaoBracket.HOME);
-        Jogo jOitavos8 = new Jogo(17, "2026-07-07", "21:00", dragao, null, null, "Oitavos", jQuartos4, PosicaoBracket.AWAY);
-
-        // Jogos de Grupos para testes de calendários e standings
-        Jogo jG1 = new Jogo(1, "2026-06-25", "15:00", luz, portugal, cuba, "Grupos", null, null);
-        Jogo jG2 = new Jogo(2, "2026-06-25", "18:00", luz, espanha, alemanha, "Grupos", null, null);
-        Jogo jG3 = new Jogo(3, "2026-06-26", "15:00", alvalade, brasil, franca, "Grupos", null, null);
-        Jogo jG4 = new Jogo(4, "2026-06-26", "18:00", alvalade, argentina, inglaterra, "Grupos", null, null);
-
-        // Registar todos no manager
-        camp.registarJogo(jFinal);
-        camp.registarJogo(jMeia1);
-        camp.registarJogo(jMeia2);
         camp.registarJogo(jQuartos1);
         camp.registarJogo(jQuartos2);
         camp.registarJogo(jQuartos3);
         camp.registarJogo(jQuartos4);
+
+        // Oitavos (Preencher com os vencedores reais dos grupos!)
+        List<ClassificacaoLinha> classA = camp.calcularClassificacaoGrupo("Grupo A");
+        List<ClassificacaoLinha> classB = camp.calcularClassificacaoGrupo("Grupo B");
+        List<ClassificacaoLinha> classC = camp.calcularClassificacaoGrupo("Grupo C");
+        List<ClassificacaoLinha> classD = camp.calcularClassificacaoGrupo("Grupo D");
+        List<ClassificacaoLinha> classE = camp.calcularClassificacaoGrupo("Grupo E");
+        List<ClassificacaoLinha> classF = camp.calcularClassificacaoGrupo("Grupo F");
+        List<ClassificacaoLinha> classG = camp.calcularClassificacaoGrupo("Grupo G");
+        List<ClassificacaoLinha> classH = camp.calcularClassificacaoGrupo("Grupo H");
+
+        Jogo jOitavos1 = new Jogo(10, "2026-07-04", "18:00", luz, classA.get(0).getEquipa(), classB.get(1).getEquipa(), "Oitavos", jQuartos1, PosicaoBracket.HOME);
+        Jogo jOitavos2 = new Jogo(11, "2026-07-04", "21:00", dragao, classC.get(0).getEquipa(), classD.get(1).getEquipa(), "Oitavos", jQuartos1, PosicaoBracket.AWAY);
+        Jogo jOitavos3 = new Jogo(12, "2026-07-05", "18:00", alvalade, classE.get(0).getEquipa(), classF.get(1).getEquipa(), "Oitavos", jQuartos2, PosicaoBracket.HOME);
+        Jogo jOitavos4 = new Jogo(13, "2026-07-05", "21:00", luz, classG.get(0).getEquipa(), classH.get(1).getEquipa(), "Oitavos", jQuartos2, PosicaoBracket.AWAY);
+        Jogo jOitavos5 = new Jogo(14, "2026-07-06", "18:00", dragao, classB.get(0).getEquipa(), classA.get(1).getEquipa(), "Oitavos", jQuartos3, PosicaoBracket.HOME);
+        Jogo jOitavos6 = new Jogo(15, "2026-07-06", "21:00", alvalade, classD.get(0).getEquipa(), classC.get(1).getEquipa(), "Oitavos", jQuartos3, PosicaoBracket.AWAY);
+        Jogo jOitavos7 = new Jogo(16, "2026-07-07", "18:00", luz, classF.get(0).getEquipa(), classE.get(1).getEquipa(), "Oitavos", jQuartos4, PosicaoBracket.HOME);
+        Jogo jOitavos8 = new Jogo(17, "2026-07-07", "21:00", dragao, classH.get(0).getEquipa(), classG.get(1).getEquipa(), "Oitavos", jQuartos4, PosicaoBracket.AWAY);
+
         camp.registarJogo(jOitavos1);
         camp.registarJogo(jOitavos2);
         camp.registarJogo(jOitavos3);
@@ -220,19 +302,34 @@ public class MainGUI extends Application {
         camp.registarJogo(jOitavos6);
         camp.registarJogo(jOitavos7);
         camp.registarJogo(jOitavos8);
-        camp.registarJogo(jG1);
-        camp.registarJogo(jG2);
-        camp.registarJogo(jG3);
-        camp.registarJogo(jG4);
 
-        // [SEED] 7. Simular compras de bilhetes iniciais para Bilheteira
-        // NOTA: venderBilhete() limita a 4 bilhetes por transação (regra anti-bot),
-        //       por isso fazemos múltiplas chamadas para simular volume realista.
+        // [SEED] 7. Alocar Hotéis para as 16 Seleções Qualificadas
+        List<Hotel> hoteis = Arrays.asList(h1, h2, h3, h4, h5, h6);
+        List<Equipa> qualificadas = Arrays.asList(
+            classA.get(0).getEquipa(), classA.get(1).getEquipa(),
+            classB.get(0).getEquipa(), classB.get(1).getEquipa(),
+            classC.get(0).getEquipa(), classC.get(1).getEquipa(),
+            classD.get(0).getEquipa(), classD.get(1).getEquipa(),
+            classE.get(0).getEquipa(), classE.get(1).getEquipa(),
+            classF.get(0).getEquipa(), classF.get(1).getEquipa(),
+            classG.get(0).getEquipa(), classG.get(1).getEquipa(),
+            classH.get(0).getEquipa(), classH.get(1).getEquipa()
+        );
+
+        for (int i = 0; i < qualificadas.size(); i++) {
+            Hotel hotel = hoteis.get(i % hoteis.size());
+            log.alocarHotel(qualificadas.get(i), hotel, "2026-07-01", "2026-07-15");
+        }
+
+        // [SEED] 8. Simular Venda de Bilhetes de Forma Volumosa
         BilheteiraManager bil = BilheteiraManager.getInstance();
-        for (int i = 0; i < 4; i++) bil.venderBilhete(jG1, "Premium", 4);      // 16 bilhetes Premium
-        for (int i = 0; i < 30; i++) bil.venderBilhete(jG1, "Economica", 4);   // 120 bilhetes Económica
-        for (int i = 0; i < 10; i++) bil.venderBilhete(jG2, "Intermedia", 4);  // 40 bilhetes Intermédia
-        for (int i = 0; i < 8; i++) bil.venderBilhete(jOitavos1, "Premium", 4);// 32 bilhetes Premium
+        for (Jogo j : camp.getJogos()) {
+            for (int k = 0; k < 3; k++) {
+                bil.venderBilhete(j, "Premium", 4);
+                bil.venderBilhete(j, "Intermedia", 4);
+                bil.venderBilhete(j, "Economica", 4);
+            }
+        }
     }
 
     public static void showLoginScreen() {

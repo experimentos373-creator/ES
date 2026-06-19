@@ -42,6 +42,7 @@ public class Main {
         auth.registarUtilizador(new Utilizador("arbitragem@fifa.com", "Gestor Arbitragem", TipoUtilizador.GESTOR_ARBITRAGEM, null));
         auth.registarUtilizador(new Utilizador("logistica@fifa.com", "Gestor Logistica", TipoUtilizador.GESTOR_LOGISTICA, null));
         auth.registarUtilizador(new Utilizador("equipa@fifa.com", "Gestor Equipa", TipoUtilizador.GESTOR_EQUIPA, "Portugal"));
+        auth.registarUtilizador(new Utilizador("bilheteira@fifa.com", "Gestor Bilheteira", TipoUtilizador.GESTOR_BILHETEIRA, null));
         auth.registarUtilizador(new Utilizador("adepto@wc2026.com", "Adepto Geral", TipoUtilizador.PUBLICO, null));
 
         // 2. Equipas e Jogadores (semente minima)

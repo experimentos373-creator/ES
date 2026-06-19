@@ -8,5 +8,6 @@ public enum TipoUtilizador {
     GESTOR_ARBITRAGEM,
     GESTOR_EQUIPA,
     GESTOR_LOGISTICA,
+    GESTOR_BILHETEIRA,
     PUBLICO
 }

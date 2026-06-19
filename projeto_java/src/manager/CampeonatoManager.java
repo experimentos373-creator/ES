@@ -90,10 +90,19 @@ public class CampeonatoManager {
         // Impedir agendar jogos para equipas que ja jogam na mesma data
         for (Jogo j : this.jogos) {
             if (j.getId() != jogo.getId() && j.getData().equals(jogo.getData())) {
-                boolean homeBusy = j.getHomeTeam().equals(jogo.getHomeTeam()) || j.getAwayTeam().equals(jogo.getHomeTeam());
-                boolean awayBusy = j.getHomeTeam().equals(jogo.getAwayTeam()) || j.getAwayTeam().equals(jogo.getAwayTeam());
-                if (homeBusy || awayBusy) {
-                    throw new IllegalArgumentException("Uma ou ambas as equipas ja tem jogo agendado na data: " + jogo.getData());
+                if (jogo.getHomeTeam() != null) {
+                    boolean homeBusy = (j.getHomeTeam() != null && j.getHomeTeam().equals(jogo.getHomeTeam())) || 
+                                       (j.getAwayTeam() != null && j.getAwayTeam().equals(jogo.getHomeTeam()));
+                    if (homeBusy) {
+                        throw new IllegalArgumentException("A equipa da casa ja tem jogo agendado na data: " + jogo.getData());
+                    }
+                }
+                if (jogo.getAwayTeam() != null) {
+                    boolean awayBusy = (j.getHomeTeam() != null && j.getHomeTeam().equals(jogo.getAwayTeam())) || 
+                                       (j.getAwayTeam() != null && j.getAwayTeam().equals(jogo.getAwayTeam()));
+                    if (awayBusy) {
+                        throw new IllegalArgumentException("A equipa de fora ja tem jogo agendado na data: " + jogo.getData());
+                    }
                 }
             }
         }
@@ -218,6 +227,10 @@ public class CampeonatoManager {
         Jogo jogo = procurarJogoPorId(jogoId);
         if (jogo == null) {
             throw new IllegalArgumentException("Jogo com ID " + jogoId + " nao encontrado.");
+        }
+
+        if (jogo.getHomeTeam() == null || jogo.getAwayTeam() == null) {
+            throw new IllegalArgumentException("Nao e possivel finalizar um jogo sem equipas definidas.");
         }
 
         boolean isEliminatoria = !"Grupos".equalsIgnoreCase(jogo.getPhase());
