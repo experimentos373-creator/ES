@@ -84,7 +84,7 @@ def create_pdf():
     pdf.cell(pdf.epw, 8, "UC: Engenharia de Software", align="C")
     pdf.ln(8)
     pdf.set_font("Arial", "", 11)
-    pdf.cell(pdf.epw, 8, "Docente: Professor Doutor Paulo Gomes", align="C")
+    pdf.cell(pdf.epw, 8, "Docente: Professor Pedro Gago", align="C")
     pdf.ln(8)
     
     # GitHub Repository Link
@@ -111,7 +111,7 @@ def create_pdf():
     
     pdf.set_font("Arial", "", 10)
     pdf.set_text_color(50, 50, 50)
-    pdf.cell(pdf.epw, 6, "Paulo Gomes (2024134892)", align="C")
+    pdf.cell(pdf.epw, 6, "Paulo Gomes (2024134892) (Administrador + Bracket + Integração)", align="C")
     pdf.ln(6)
     pdf.cell(pdf.epw, 6, "Leonardo Mendes (Gestão de Equipa + Arbitragem)", align="C")
     pdf.ln(6)
@@ -207,19 +207,22 @@ def create_pdf():
          "AlojamentoCapacidadeTest (Capacidade)\nAlojamentoCapacidadeTest (Exclusividade)\nAntiBotBilheteiraTest")
     ]
 
+    # Style header row colors
+    pdf.set_font("Arial", "B", 9)
+    pdf.set_text_color(255, 255, 255)
+    pdf.set_fill_color(24, 76, 120)
+
     with pdf.table(col_widths=(30, 90, 50), text_align="LEFT") as table:
         # Header Row
-        pdf.set_font("Arial", "B", 9)
-        pdf.set_text_color(255, 255, 255)
-        pdf.set_fill_color(24, 76, 120)
         row = table.row()
         row.cell("Membro do Grupo")
         row.cell("Módulos & Responsabilidades Técnicas")
         row.cell("Testes Unitários")
         
-        # Content Rows
+        # Style content rows colors (RESET fill to white, text to grey)
         pdf.set_font("Arial", "", 8.5)
         pdf.set_text_color(50, 50, 50)
+        pdf.set_fill_color(255, 255, 255)
         for name, responsibilities, tests_list in work_data:
             row = table.row()
             row.cell(name)
@@ -323,20 +326,23 @@ def create_pdf():
         ("Paulo", "GrupoClassificacaoTest\nCalendarioJogoTest\nAvancoBracketTest\nLotacaoEstadioTest\nScoreFIFATest\nSigiloArbitrosTest", "Admin, Calendário, Bracket, Bilheteira", "Desempates FIFA, progressão de bracket, sigilo de escalas, lotações.")
     ]
     
+    # Style header row colors
+    pdf.set_font("Arial", "B", 9)
+    pdf.set_text_color(255, 255, 255)
+    pdf.set_fill_color(24, 76, 120)
+    
     with pdf.table(col_widths=(25, 50, 45, 50), text_align="LEFT") as table:
         # Header Row
-        pdf.set_font("Arial", "B", 9)
-        pdf.set_text_color(255, 255, 255)
-        pdf.set_fill_color(24, 76, 120)
         row = table.row()
         row.cell("Elemento")
         row.cell("Testes Atribuídos")
         row.cell("Módulos")
         row.cell("Foco de Validação")
         
-        # Content Rows
+        # Style content rows colors (RESET fill to white, text to grey)
         pdf.set_font("Arial", "", 8.5)
         pdf.set_text_color(50, 50, 50)
+        pdf.set_fill_color(255, 255, 255)
         for elem, tests, modules, validation in table_data:
             row = table.row()
             row.cell(elem)
@@ -488,10 +494,16 @@ def create_pdf():
     )
     pdf.multi_cell(pdf.epw, 6, coerencia_text)
     
-    # Save the PDF
+    # Save the PDF with fallback if locked
     output_path = "documentacao_fase2/Relatorio_Fase2.pdf"
-    pdf.output(output_path)
-    print(f"PDF successfully generated: {output_path}")
+    fallback_path = "documentacao_fase2/Relatorio_Fase2_Pedro_Gago.pdf"
+    try:
+        pdf.output(output_path)
+        print(f"PDF successfully generated: {output_path}")
+    except PermissionError:
+        print(f"Permission denied on {output_path}. Falling back to {fallback_path}")
+        pdf.output(fallback_path)
+        print(f"PDF successfully generated fallback: {fallback_path}")
 
 if __name__ == "__main__":
     create_pdf()
