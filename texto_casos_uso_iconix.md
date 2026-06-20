@@ -2,7 +2,10 @@
 ## Sistema de Gestão do Campeonato do Mundo de Futebol 2026
 
 **Disciplina:** Engenharia de Software  
-**Aluno:** Paulo Gomes (2024134892)  
+**Grupo de Trabalho / Alunos:**  
+- Paulo Gomes (2024134892) — Responsável pelo Administrador (Geral), Gestor de Equipa, Gestor de Bilheteira, Bracket/Tabelas e Integração
+- Leonardo Mendes — Responsável pelo Gestor de Arbitragem e parte do Público (Adepto)
+- Arthur — Responsável pelo Gestor de Logística  
 **Fase:** 2  
 
 ---
