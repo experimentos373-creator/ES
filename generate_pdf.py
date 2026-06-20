@@ -111,11 +111,11 @@ def create_pdf():
     
     pdf.set_font("Arial", "", 10)
     pdf.set_text_color(50, 50, 50)
-    pdf.cell(pdf.epw, 6, "Paulo Gomes (2024134892) (Administrador + Bracket + Integração)", align="C")
+    pdf.cell(pdf.epw, 6, "Paulo Gomes (2024134892) (Admin + Gestor Equipa + Bracket + Integração) - 50%", align="C")
     pdf.ln(6)
-    pdf.cell(pdf.epw, 6, "Leonardo Mendes (Gestão de Equipa + Arbitragem)", align="C")
+    pdf.cell(pdf.epw, 6, "Leonardo Mendes (2241009) (Gestão de Arbitragem + Público) - 25%", align="C")
     pdf.ln(6)
-    pdf.cell(pdf.epw, 6, "Arthur (Gestão de Logística + Bilheteira)", align="C")
+    pdf.cell(pdf.epw, 6, "Arthur (2024107339) (Gestão de Logística + Bilheteira) - 25%", align="C")
     pdf.ln(6)
     
     # Date/Location
@@ -194,16 +194,16 @@ def create_pdf():
     
     # Division of Work Table using new FPDF2 table API
     work_data = [
-        ("Paulo Gomes\n(2024134892)", 
-         "Administrador (Geral), Bracket/Tabelas de Eliminatórias, Integração Geral e Gestor de Bilheteira (Performance).\nImplementação Java da persistência Singleton (base dados simulada), classes de classificação de grupos e bracket.", 
+        ("Paulo Gomes\n(2024134892)\n[50%]", 
+         "Administrador (Geral), Gestor de Equipa, Bracket/Tabelas de Eliminatórias, Integração Geral e Gestor de Bilheteira (Performance).\nImplementação Java da persistência Singleton (base dados simulada), classes de classificação de grupos e lógica de brackets.", 
          "GrupoClassificacaoTest\nCalendarioJogoTest\nAvancoBracketTest\nLotacaoEstadioTest\nScoreFIFATest\nSigiloArbitrosTest"),
          
-        ("Leonardo Mendes", 
-         "Gestor de Arbitragem (Escala, Avaliação de Árbitros) e Público/Adepto (Calendário de Jogos e Resultados).\nImplementação Java da lógica de regras éticas e de descanso de árbitros.", 
+        ("Leonardo Mendes\n(2241009)\n[25%]", 
+         "Gestor de Arbitragem (Escala, Avaliação de Árbitros) e Público/Adepto (Calendário de Jogos e Resultados) (partilhado).\nImplementação Java da lógica de regras éticas e de descanso de árbitros.", 
          "JogadorStateTest\nNeutralidadeArbitroTest\nIntervaloArbitroTest"),
          
-        ("Arthur", 
-         "Gestor de Logística (Alojamentos de Seleções/Hotéis, Transportes) e Público/Adepto (Compra de Bilhetes - Regras anti-bot).\nImplementação Java de controlo de capacidades de hotelaria e anti-bot.", 
+        ("Arthur\n(2024107339)\n[25%]", 
+         "Gestor de Logística (Alojamentos de Seleções/Hotéis, Transportes) e Público/Adepto (Compra de Bilhetes - Regras anti-bot) (partilhado).\nImplementação Java de controlo de capacidades de hotelaria e anti-bot.", 
          "AlojamentoCapacidadeTest (Capacidade)\nAlojamentoCapacidadeTest (Exclusividade)\nAntiBotBilheteiraTest")
     ]
 
@@ -321,9 +321,9 @@ def create_pdf():
     pdf.ln(10)
     
     table_data = [
-        ("Leonardo", "JogadorStateTest\nNeutralidadeArbitroTest\nIntervaloArbitroTest", "Equipa + Arbitragem", "Elegibilidade e repouso de árbitros, transição de lesões."),
+        ("Leonardo", "JogadorStateTest\nNeutralidadeArbitroTest\nIntervaloArbitroTest", "Arbitragem + Público", "Elegibilidade e repouso de árbitros, transição de lesões."),
         ("Arthur", "AlojamentoCapacidadeTest (x2)\nAntiBotBilheteiraTest", "Logística + Bilheteira", "Exclusividade de hotel, limites na compra de bilhetes (1-4)."),
-        ("Paulo", "GrupoClassificacaoTest\nCalendarioJogoTest\nAvancoBracketTest\nLotacaoEstadioTest\nScoreFIFATest\nSigiloArbitrosTest", "Admin, Calendário, Bracket, Bilheteira", "Desempates FIFA, progressão de bracket, sigilo de escalas, lotações.")
+        ("Paulo", "GrupoClassificacaoTest\nCalendarioJogoTest\nAvancoBracketTest\nLotacaoEstadioTest\nScoreFIFATest\nSigiloArbitrosTest", "Admin, Equipa, Bracket,\nBilheteira, Calendário", "Desempates FIFA, progressão de bracket, sigilo de escalas, lotações.")
     ]
     
     # Style header row colors
@@ -477,33 +477,30 @@ def create_pdf():
         "Pontos Críticos de Alinhamento e Coerência:\n\n"
         "1. Gestão e Registo de Escalas (CU06):\n"
         "   - O fluxo do caso de uso exige que o sistema registe o 'EscalaoArbitral' na base de dados associado a um Jogo.\n"
-        "   - No código-fonte, a classe correspondente 'EscalaoArbitral' valida e guarda a associação de 5 árbitros por partida, "
-        "garantindo que não existem conflitos éticos. Os testes unitários (como NeutralidadeArbitroTest e IntervaloArbitroTest) "
-        "validam exatamente esta restrição de integridade no ato da atribuição.\n\n"
+        "   - No código-fonte, a classe correspondente 'EscalaoArbitral' atua puramente como um Value Object (VO) para "
+        "encapsular os 5 árbitros escalados por partida. A validação lógica dos critérios éticos e regulamentares "
+        "(conflitos de nacionalidade e intervalo de descanso regulamentar de 48 horas) é centralizada e executada no "
+        "'ArbitragemManager' antes do registo da escala. Os testes unitários (como NeutralidadeArbitroTest e IntervaloArbitroTest) "
+        "comprovam o funcionamento correto desta classe gestora.\n\n"
         "2. Lotações de Estádios e Vendas de Ingressos (CU14, CU16, CU23):\n"
         "   - O caso de uso CU23 (Comprar Bilhetes) descreve o controlo de lugares no Setor do Estadio e a regra anti-bot (compra limitada a 4 bilhetes).\n"
-        "   - No código, o método 'comprarBilhetes()' valida as restrições e lança exceções adequadas que impedem a transação, "
-        "conforme verificado pelo teste unitário 'AntiBotBilheteiraTest'.\n\n"
+        "   - No código, o método 'venderBilhete()' da classe 'BilheteiraManager' valida rigorosamente as restrições de quantidade e lotação, "
+        "lançando as devidas exceções para compras suspeitas ou setores esgotados, conforme verificado no teste unitário 'AntiBotBilheteiraTest'.\n\n"
         "3. Alojamento e Exclusividade Logística (CU19):\n"
         "   - O caso de uso exige que o Hotel tenha capacidade suficiente para albergar o plantel e que apenas uma seleção possa ser alocada por hotel.\n"
         "   - O código valida e impede check-ins simultâneos ou capacidade excedida, coerente com os testes 'AlojamentoCapacidadeTest'.\n\n"
         "4. Bracket de Eliminatórias (CU03):\n"
         "   - A finalização do jogo (CU03) desencadeia a progressão automática no bracket de eliminatórias.\n"
-        "   - A classe 'Bracket' e o modelo de dados atualizam dinamicamente a próxima fase do torneio ao finalizar um Jogo, "
-        "o que foi demonstrado pelo teste 'AvancoBracketTest'."
+        "   - No código-fonte, a progressão das fases do torneio é suportada pela auto-associação da própria classe 'Jogo' com outra instância "
+        "de 'Jogo' (através dos atributos 'proximoJogo' e 'posicaoNoProximoJogo'), em vez de uma entidade separada. Desta forma, ao concluir "
+        "um jogo de oitavos, a equipa vencedora avança de imediato para a posição devida no jogo seguinte, como validado pelo teste 'AvancoBracketTest'."
     )
     pdf.multi_cell(pdf.epw, 6, coerencia_text)
     
-    # Save the PDF with fallback if locked
-    output_path = "documentacao_fase2/Relatorio_Fase2.pdf"
-    fallback_path = "documentacao_fase2/Relatorio_Fase2_Pedro_Gago.pdf"
-    try:
-        pdf.output(output_path)
-        print(f"PDF successfully generated: {output_path}")
-    except PermissionError:
-        print(f"Permission denied on {output_path}. Falling back to {fallback_path}")
-        pdf.output(fallback_path)
-        print(f"PDF successfully generated fallback: {fallback_path}")
+    # Save the PDF
+    output_path = "documentacao_fase2/fase2_ficheiro_certo.pdf"
+    pdf.output(output_path)
+    print(f"PDF successfully generated: {output_path}")
 
 if __name__ == "__main__":
     create_pdf()
