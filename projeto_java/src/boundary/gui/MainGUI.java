@@ -20,8 +20,9 @@ public class MainGUI extends Application {
         // Forçar sempre a nova sementeira rica de demonstração
         semearDados();
 
-        // Initialize UI
-        showLoginScreen();
+        // Iniciar como PUBLICO por defeito para ir direto ao portal do adepto
+        AutenticacaoManager.getInstance().autenticar("adepto@wc2026.com");
+        showDashboard();
 
         primaryStage.setTitle("Gestão WC 2026 - Premium GUI");
         primaryStage.setMinWidth(1100);
@@ -328,6 +329,32 @@ public class MainGUI extends Application {
                 bil.venderBilhete(j, "Premium", 4);
                 bil.venderBilhete(j, "Intermedia", 4);
                 bil.venderBilhete(j, "Economica", 4);
+            }
+        }
+
+        // [SEED] 9. Associar Escala de Árbitros aos Jogos Finalizados
+        List<Arbitro> refs = arb.getArbitros();
+        List<Arbitro> prs = new ArrayList<>();
+        List<Arbitro> asts = new ArrayList<>();
+        List<Arbitro> fths = new ArrayList<>();
+        List<Arbitro> vrs = new ArrayList<>();
+        for (Arbitro r : refs) {
+            if (r.getTipo() == TipoArbitro.PRINCIPAL) prs.add(r);
+            else if (r.getTipo() == TipoArbitro.ASSISTENTE) asts.add(r);
+            else if (r.getTipo() == TipoArbitro.QUARTO) fths.add(r);
+            else if (r.getTipo() == TipoArbitro.VAR) vrs.add(r);
+        }
+
+        int gameCount = 0;
+        for (Jogo j : camp.getJogos()) {
+            if (domain.StatusJogo.FINALIZADO.equals(j.getStatus())) {
+                Arbitro p = prs.isEmpty() ? null : prs.get(gameCount % prs.size());
+                Arbitro a1 = asts.isEmpty() ? null : asts.get((gameCount) % asts.size());
+                Arbitro a2 = asts.size() < 2 ? a1 : asts.get((gameCount + 1) % asts.size());
+                Arbitro q = fths.isEmpty() ? null : fths.get(gameCount % fths.size());
+                Arbitro v = vrs.isEmpty() ? null : vrs.get(gameCount % vrs.size());
+                j.associarEscalaArbitros(new domain.EscalaoArbitral(p, a1, a2, q, v));
+                gameCount++;
             }
         }
     }

@@ -9,9 +9,9 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import manager.AutenticacaoManager;
-import domain.Utilizador;
-import domain.TipoUtilizador;
-
+import manager.CampeonatoManager;
+import domain.*;
+import javafx.scene.control.ComboBox;
 import java.net.URL;
 
 public class LoginController {
@@ -44,14 +44,44 @@ public class LoginController {
         userField.getStyleClass().add("text-field");
 
         PasswordField passField = new PasswordField();
-        passField.setPromptText("Palavra-passe (opcional)");
+        passField.setPromptText("Palavra-passe (use 123)");
         passField.getStyleClass().add("password-field");
 
-        Button loginBtn = new Button("Entrar");
+        Label lblEquipa = new Label("Selecione a sua Equipa:");
+        lblEquipa.setStyle("-fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #374151;");
+        lblEquipa.setVisible(false);
+        lblEquipa.setManaged(false);
+
+        ComboBox<String> cmbEquipas = new ComboBox<>();
+        for (Equipa eq : CampeonatoManager.getInstance().getEquipas()) {
+            cmbEquipas.getItems().add(eq.getNome());
+        }
+        cmbEquipas.setStyle("-fx-font-size: 12px; -fx-background-color: #FFFFFF; -fx-border-color: #D1D5DB; -fx-border-radius: 6px; -fx-background-radius: 6px;");
+        cmbEquipas.setMaxWidth(Double.MAX_VALUE);
+        cmbEquipas.setVisible(false);
+        cmbEquipas.setManaged(false);
+
+        userField.textProperty().addListener((obs, oldText, newText) -> {
+            String email = newText.trim();
+            Utilizador u = AutenticacaoManager.getInstance().procurarUtilizadorPorEmail(email);
+            if (u != null && u.getCargo() == TipoUtilizador.GESTOR_EQUIPA) {
+                lblEquipa.setVisible(true);
+                lblEquipa.setManaged(true);
+                cmbEquipas.setVisible(true);
+                cmbEquipas.setManaged(true);
+            } else {
+                lblEquipa.setVisible(false);
+                lblEquipa.setManaged(false);
+                cmbEquipas.setVisible(false);
+                cmbEquipas.setManaged(false);
+            }
+        });
+
+        Button loginBtn = new Button("Login");
         loginBtn.getStyleClass().add("btn-primary");
         loginBtn.setMaxWidth(Double.MAX_VALUE);
         
-        Button guestBtn = new Button("Entrar como Público");
+        Button guestBtn = new Button("Portal Público (Adepto)");
         guestBtn.getStyleClass().add("btn-secondary");
         guestBtn.setMaxWidth(Double.MAX_VALUE);
 
@@ -59,16 +89,45 @@ public class LoginController {
         errorLabel.setStyle("-fx-text-fill: #EF4444;"); // Red color for errors
         errorLabel.setVisible(false);
 
+        Label professorWarning = new Label("⚠️ Nota para o Professor: A palavra-passe é '123' para todos os perfis.");
+        professorWarning.setStyle("-fx-text-fill: #92400E; -fx-background-color: #FEF3C7; -fx-padding: 8px 12px; -fx-border-color: #F59E0B; -fx-border-width: 1px; -fx-border-radius: 6px; -fx-background-radius: 6px; -fx-font-size: 11px; -fx-font-weight: bold;");
+        professorWarning.setMaxWidth(Double.MAX_VALUE);
+
         loginBtn.setOnAction(e -> {
             String email = userField.getText().trim();
+            String pass = passField.getText().trim();
+            
             if (email.isEmpty()) {
                 errorLabel.setText("Por favor, introduza o email!");
                 errorLabel.setVisible(true);
                 return;
             }
-            boolean ok = AutenticacaoManager.getInstance().autenticar(email);
-            if (ok) {
-                MainGUI.showDashboard();
+            
+            if (!"123".equals(pass)) {
+                errorLabel.setText("Palavra-passe incorreta! (Use '123')");
+                errorLabel.setVisible(true);
+                return;
+            }
+
+            Utilizador u = AutenticacaoManager.getInstance().procurarUtilizadorPorEmail(email);
+            if (u != null) {
+                if (u.getCargo() == TipoUtilizador.GESTOR_EQUIPA) {
+                    String selectedTeam = cmbEquipas.getValue();
+                    if (selectedTeam == null) {
+                        errorLabel.setText("Por favor, selecione uma equipa!");
+                        errorLabel.setVisible(true);
+                        return;
+                    }
+                    u.setEquipaAssociada(selectedTeam);
+                }
+                
+                boolean ok = AutenticacaoManager.getInstance().autenticar(email);
+                if (ok) {
+                    MainGUI.showDashboard();
+                } else {
+                    errorLabel.setText("Falha na autenticação!");
+                    errorLabel.setVisible(true);
+                }
             } else {
                 errorLabel.setText("Email não encontrado!");
                 errorLabel.setVisible(true);
@@ -76,13 +135,15 @@ public class LoginController {
         });
 
         guestBtn.setOnAction(e -> {
-            Utilizador publico = new Utilizador("publico@wc2026.com", "Público Geral", TipoUtilizador.PUBLICO, null);
-            AutenticacaoManager.getInstance().registarUtilizador(publico);
-            AutenticacaoManager.getInstance().autenticar("publico@wc2026.com");
+            AutenticacaoManager.getInstance().autenticar("adepto@wc2026.com");
             MainGUI.showDashboard();
         });
 
-        card.getChildren().addAll(title, subtitle, userField, passField, loginBtn, guestBtn, errorLabel);
+        card.getChildren().addAll(
+            title, subtitle, professorWarning,
+            userField, passField, lblEquipa, cmbEquipas, loginBtn, guestBtn, 
+            errorLabel
+        );
         root.getChildren().add(card);
 
         Scene newScene = new Scene(root, 1000, 700);

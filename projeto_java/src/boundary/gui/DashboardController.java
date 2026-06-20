@@ -20,6 +20,9 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Arrays;
 
 public class DashboardController {
 
@@ -62,15 +65,67 @@ public class DashboardController {
 
         rootPane.getStyleClass().add("root");
 
+        TipoUtilizador cargo = utilizadorLogado.getCargo();
+
         // Topbar
-        HBox topbar = new HBox();
+        HBox topbar = new HBox(20);
         topbar.setAlignment(Pos.CENTER_RIGHT);
         topbar.setPadding(new Insets(15, 30, 15, 30));
         topbar.setStyle("-fx-background-color: #FFFFFF; -fx-border-color: transparent transparent #E5E7EB transparent; -fx-border-width: 1px;");
         
+        Label lblPerfil = new Label("Mudar Perfil:");
+        lblPerfil.setStyle("-fx-text-fill: #4B5563; -fx-font-size: 13px; -fx-font-weight: bold;");
+        
+        ComboBox<String> cmbPerfil = new ComboBox<>();
+        cmbPerfil.setStyle("-fx-font-size: 12px; -fx-background-color: #F3F4F6; -fx-border-color: #D1D5DB; -fx-border-radius: 6px; -fx-background-radius: 6px;");
+        cmbPerfil.getItems().addAll(
+            "Adepto Geral (Público)",
+            "Administrador FIFA",
+            "Gestor Arbitragem",
+            "Gestor Equipa (Portugal)",
+            "Gestor Logística",
+            "Gestor Bilheteira"
+        );
+        
+        switch (cargo) {
+            case PUBLICO -> cmbPerfil.setValue("Adepto Geral (Público)");
+            case ADMIN -> cmbPerfil.setValue("Administrador FIFA");
+            case GESTOR_ARBITRAGEM -> cmbPerfil.setValue("Gestor Arbitragem");
+            case GESTOR_EQUIPA -> cmbPerfil.setValue("Gestor Equipa (Portugal)");
+            case GESTOR_LOGISTICA -> cmbPerfil.setValue("Gestor Logística");
+            case GESTOR_BILHETEIRA -> cmbPerfil.setValue("Gestor Bilheteira");
+        }
+        
+        cmbPerfil.valueProperty().addListener((obs, oldV, newV) -> {
+            if (newV != null) {
+                String targetEmail = switch (newV) {
+                    case "Administrador FIFA" -> "admin@fifa.com";
+                    case "Gestor Arbitragem" -> "arbitragem@fifa.com";
+                    case "Gestor Equipa (Portugal)" -> "equipa@fifa.com";
+                    case "Gestor Logística" -> "logistica@fifa.com";
+                    case "Gestor Bilheteira" -> "bilheteira@fifa.com";
+                    default -> "adepto@wc2026.com";
+                };
+                if ("Gestor Equipa (Portugal)".equals(newV)) {
+                    Utilizador u = AutenticacaoManager.getInstance().procurarUtilizadorPorEmail(targetEmail);
+                    if (u != null) {
+                        u.setEquipaAssociada("Portugal");
+                    }
+                }
+                if (!targetEmail.equalsIgnoreCase(utilizadorLogado.getEmail())) {
+                    boolean ok = AutenticacaoManager.getInstance().autenticar(targetEmail);
+                    if (ok) {
+                        MainGUI.showDashboard();
+                    }
+                } else if ("Gestor Equipa (Portugal)".equals(newV)) {
+                    MainGUI.showDashboard();
+                }
+            }
+        });
+
         Label userLabel = new Label("Utilizador: " + utilizadorLogado.getNome() + " (" + utilizadorLogado.getCargo() + ")");
         userLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #1A202C; -fx-font-size: 14px;");
-        topbar.getChildren().add(userLabel);
+        topbar.getChildren().addAll(lblPerfil, cmbPerfil, userLabel);
         rootPane.setTop(topbar);
 
         // Sidebar Navigation
@@ -85,10 +140,9 @@ public class DashboardController {
         sidebar.getChildren().add(logo);
 
         List<Button> navButtons = new ArrayList<>();
+        Button btnClassificacao = null;
 
         // Conditionally show buttons based on Role
-        TipoUtilizador cargo = utilizadorLogado.getCargo();
-
         if (cargo != TipoUtilizador.PUBLICO) {
             Button btnVisaoGeral = createNavButton("Visão Geral", navButtons);
             btnVisaoGeral.setOnAction(e -> {
@@ -138,16 +192,19 @@ public class DashboardController {
             sidebar.getChildren().add(btnLogistica);
         }
 
-        Button btnBilhetes = createNavButton("Bilheteira", navButtons);
-        btnBilhetes.setOnAction(e -> {
-            setActiveButton(btnBilhetes, navButtons);
-            showBilheteira();
-        });
-        sidebar.getChildren().add(btnBilhetes);
+        if (cargo == TipoUtilizador.PUBLICO || cargo == TipoUtilizador.ADMIN || cargo == TipoUtilizador.GESTOR_BILHETEIRA) {
+            Button btnBilhetes = createNavButton("Bilheteira", navButtons);
+            btnBilhetes.setOnAction(e -> {
+                setActiveButton(btnBilhetes, navButtons);
+                showBilheteira();
+            });
+            sidebar.getChildren().add(btnBilhetes);
+        }
 
-        Button btnClassificacao = createNavButton("Tabelas e Bracket", navButtons);
+        btnClassificacao = createNavButton("Tabelas e Bracket", navButtons);
+        final Button finalBtnClass = btnClassificacao;
         btnClassificacao.setOnAction(e -> {
-            setActiveButton(btnClassificacao, navButtons);
+            setActiveButton(finalBtnClass, navButtons);
             showStandingsAndBracket();
         });
         sidebar.getChildren().add(btnClassificacao);
@@ -217,7 +274,7 @@ public class DashboardController {
         rootPane.setLeft(sidebar);
 
         // Initial view
-        if (cargo == TipoUtilizador.PUBLICO) {
+        if (cargo == TipoUtilizador.PUBLICO && btnClassificacao != null) {
             setActiveButton(btnClassificacao, navButtons);
             showStandingsAndBracket();
         } else {
@@ -271,17 +328,32 @@ public class DashboardController {
         VBox content = new VBox(20);
         content.setPadding(new Insets(30));
 
-        Label title = new Label("Visão Geral do Campeonato");
+        TipoUtilizador cargo = utilizadorLogado.getCargo();
+
+        Label title = new Label();
         title.getStyleClass().add("label-title");
 
-        Label subtitle = new Label("Acompanhamento das estatísticas operacionais do torneio.");
+        Label subtitle = new Label();
         subtitle.getStyleClass().add("label-subtitle");
 
         GridPane grid = new GridPane();
         grid.setHgap(20);
         grid.setVgap(20);
 
-        // Fetch dynamic stats from managers
+        switch (cargo) {
+            case ADMIN -> showAdminOverview(content, title, subtitle, grid);
+            case GESTOR_EQUIPA -> showEquipaOverview(content, title, subtitle, grid);
+            case GESTOR_ARBITRAGEM -> showArbitragemOverview(content, title, subtitle, grid);
+            case GESTOR_LOGISTICA -> showLogisticaOverview(content, title, subtitle, grid);
+            case GESTOR_BILHETEIRA -> showBilheteiraOverview(content, title, subtitle, grid);
+            default -> showAdminOverview(content, title, subtitle, grid);
+        }
+    }
+
+    private void showAdminOverview(VBox content, Label title, Label subtitle, GridPane grid) {
+        title.setText("Visão Geral do Campeonato (Administrador)");
+        subtitle.setText("Acompanhamento global das estatísticas operacionais do torneio.");
+
         int numTeams = campManager.getEquipas().size();
         int numGames = campManager.getJogos().size();
         int numRefs = arbManager.getArbitros().size();
@@ -292,7 +364,6 @@ public class DashboardController {
         grid.add(createStatCard("Árbitros Credenciados", String.valueOf(numRefs)), 0, 1);
         grid.add(createStatCard("Bilhetes Vendidos", String.valueOf(numTickets)), 1, 1);
 
-        // Quick overview list of games
         VBox recentGamesCard = new VBox(15);
         recentGamesCard.getStyleClass().add("card");
         Label gamesTitle = new Label("Próximos Jogos Agendados");
@@ -303,7 +374,7 @@ public class DashboardController {
         List<Jogo> scheduled = campManager.getJogos();
         int count = 0;
         for (Jogo j : scheduled) {
-            if (count >= 4) break;
+            if (count >= 5) break;
             HBox gameRow = new HBox(10);
             gameRow.setStyle("-fx-padding: 8px; -fx-background-color: #F3F4F6; -fx-background-radius: 8px;");
             
@@ -331,6 +402,319 @@ public class DashboardController {
         recentGamesCard.getChildren().addAll(gamesTitle, gamesList);
 
         content.getChildren().addAll(title, subtitle, grid, recentGamesCard);
+        setContent(content);
+    }
+
+    private void showEquipaOverview(VBox content, Label title, Label subtitle, GridPane grid) {
+        String teamName = utilizadorLogado.getEquipaAssociada();
+        if (teamName == null || teamName.isEmpty()) {
+            teamName = "Portugal"; // Fallback to Portugal if none selected
+        }
+        title.setText("Painel da Seleção - " + teamName);
+        subtitle.setText("Estatísticas operacionais e planeamento para a comitiva de " + teamName + ".");
+
+        Equipa equipa = campManager.procurarEquipaPorNome(teamName);
+        
+        int totalMatches = 0;
+        for (Jogo j : campManager.getJogos()) {
+            if ((j.getHomeTeam() != null && j.getHomeTeam().getNome().equalsIgnoreCase(teamName)) ||
+                (j.getAwayTeam() != null && j.getAwayTeam().getNome().equalsIgnoreCase(teamName))) {
+                totalMatches++;
+            }
+        }
+        
+        int aptosCount = 0;
+        int totalPlayers = 0;
+        int teamGoals = 0;
+        int yellows = 0;
+        int reds = 0;
+        if (equipa != null) {
+            totalPlayers = equipa.getJogadores().size();
+            for (Jogador jog : equipa.getJogadores()) {
+                if (EstadoJogador.APTO.equals(jog.getEstado())) {
+                    aptosCount++;
+                }
+                teamGoals += jog.getGoals();
+                yellows += jog.getYellowCards();
+                reds += jog.getRedCards();
+            }
+        }
+
+        grid.add(createStatCard("Total de Jogos", String.valueOf(totalMatches)), 0, 0);
+        grid.add(createStatCard("Jogadores Aptos", aptosCount + " / " + totalPlayers), 1, 0);
+        grid.add(createStatCard("Golos Marcados", String.valueOf(teamGoals)), 0, 1);
+        grid.add(createStatCard("Cartões da Equipa", yellows + " 🟨 | " + reds + " 🟥"), 1, 1);
+
+        // Base Camp (Hotel) Card
+        VBox baseCampCard = new VBox(10);
+        baseCampCard.getStyleClass().add("card");
+        baseCampCard.setStyle("-fx-background-color: linear-gradient(to right, #111827, #1F2937); -fx-padding: 20px;");
+        
+        Hotel allocated = null;
+        for (Hotel h : logManager.getHoteis()) {
+            if (h.getEquipaHospedada() != null && h.getEquipaHospedada().getNome().equalsIgnoreCase(teamName)) {
+                allocated = h;
+                break;
+            }
+        }
+        
+        Label baseCampTitle = new Label("🏨 Base de Estágio / Alojamento");
+        baseCampTitle.setStyle("-fx-text-fill: #9CA3AF; -fx-font-weight: bold; -fx-font-size: 12px;");
+        Label baseCampDetail;
+        if (allocated != null) {
+            baseCampDetail = new Label(allocated.getNome() + " (" + allocated.getLocalizacao() + ") | Check-In: " + allocated.getCheckInDate() + " | Check-Out: " + allocated.getCheckOutDate());
+            baseCampDetail.setStyle("-fx-text-fill: #34D399; -fx-font-weight: bold; -fx-font-size: 14px;");
+        } else {
+            baseCampDetail = new Label("Sem alojamento oficial alocado de momento.");
+            baseCampDetail.setStyle("-fx-text-fill: #F87171; -fx-font-weight: bold; -fx-font-size: 14px;");
+        }
+        baseCampCard.getChildren().addAll(baseCampTitle, baseCampDetail);
+
+        VBox teamGamesCard = new VBox(15);
+        teamGamesCard.getStyleClass().add("card");
+        Label gamesTitle = new Label("Próximos Jogos de " + teamName);
+        gamesTitle.getStyleClass().add("label-subtitle");
+        gamesTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1A202C;");
+
+        VBox gamesList = new VBox(10);
+        int count = 0;
+        for (Jogo j : campManager.getJogos()) {
+            boolean isTeamMatch = (j.getHomeTeam() != null && j.getHomeTeam().getNome().equalsIgnoreCase(teamName)) ||
+                                  (j.getAwayTeam() != null && j.getAwayTeam().getNome().equalsIgnoreCase(teamName));
+            if (isTeamMatch) {
+                if (count >= 5) break;
+                HBox gameRow = new HBox(10);
+                gameRow.setStyle("-fx-padding: 8px; -fx-background-color: #F3F4F6; -fx-background-radius: 8px;");
+                
+                Label l1 = new Label(j.getData() + " " + j.getHora() + " | " + j.getPhase());
+                l1.setStyle("-fx-text-fill: #6B7280;");
+                
+                String home = j.getHomeTeam() != null ? j.getHomeTeam().getNome() : "A definir";
+                String away = j.getAwayTeam() != null ? j.getAwayTeam().getNome() : "A definir";
+                Label l2 = new Label(home + " vs " + away);
+                l2.setStyle("-fx-font-weight: bold; -fx-text-fill: #1A202C;");
+                
+                Region s = new Region();
+                HBox.setHgrow(s, Priority.ALWAYS);
+                
+                Label l3 = new Label(j.getStatus().toString());
+                l3.setStyle("-fx-text-fill: #00D26A; -fx-font-weight: bold;");
+
+                gameRow.getChildren().addAll(l1, l2, s, l3);
+                gamesList.getChildren().add(gameRow);
+                count++;
+            }
+        }
+        if (count == 0) {
+            gamesList.getChildren().add(new Label("Nenhum jogo agendado para esta equipa."));
+        }
+        teamGamesCard.getChildren().addAll(gamesTitle, gamesList);
+
+        content.getChildren().addAll(title, subtitle, grid, baseCampCard, teamGamesCard);
+        setContent(content);
+    }
+
+    private void showArbitragemOverview(VBox content, Label title, Label subtitle, GridPane grid) {
+        title.setText("Painel de Gestão de Arbitragem");
+        subtitle.setText("Controlo de elegibilidade, repouso regulamentar e escalação de equipas de arbitragem.");
+
+        int totalRefs = arbManager.getArbitros().size();
+        int totalMatches = campManager.getJogos().size();
+        
+        int allocatedMatches = 0;
+        int unallocatedMatches = 0;
+        for (Jogo j : campManager.getJogos()) {
+            if (j.getEscalaArbitros() != null && j.getEscalaArbitros().getPrincipal() != null) {
+                allocatedMatches++;
+            } else {
+                unallocatedMatches++;
+            }
+        }
+
+        grid.add(createStatCard("Árbitros Credenciados", String.valueOf(totalRefs)), 0, 0);
+        grid.add(createStatCard("Jogos Totais", String.valueOf(totalMatches)), 1, 0);
+        grid.add(createStatCard("Escalações Efetuadas", String.valueOf(allocatedMatches)), 0, 1);
+        grid.add(createStatCard("Jogos sem Escala", String.valueOf(unallocatedMatches)), 1, 1);
+
+        VBox pendingRefCard = new VBox(15);
+        pendingRefCard.getStyleClass().add("card");
+        Label pendingTitle = new Label("Jogos Pendentes de Escala de Arbitragem");
+        pendingTitle.getStyleClass().add("label-subtitle");
+        pendingTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1A202C;");
+
+        VBox pendingList = new VBox(10);
+        int count = 0;
+        for (Jogo j : campManager.getJogos()) {
+            if (j.getEscalaArbitros() == null || j.getEscalaArbitros().getPrincipal() == null) {
+                if (count >= 5) break;
+                HBox gameRow = new HBox(10);
+                gameRow.setStyle("-fx-padding: 8px; -fx-background-color: #FEF3C7; -fx-background-radius: 8px; -fx-border-color: #F59E0B; -fx-border-width: 1px; -fx-border-radius: 8px;");
+                
+                Label l1 = new Label(j.getData() + " " + j.getHora() + " | " + j.getPhase());
+                l1.setStyle("-fx-text-fill: #92400E;");
+                
+                String home = j.getHomeTeam() != null ? j.getHomeTeam().getNome() : "A definir";
+                String away = j.getAwayTeam() != null ? j.getAwayTeam().getNome() : "A definir";
+                Label l2 = new Label(home + " vs " + away);
+                l2.setStyle("-fx-font-weight: bold; -fx-text-fill: #92400E;");
+                
+                Region s = new Region();
+                HBox.setHgrow(s, Priority.ALWAYS);
+                
+                Label l3 = new Label("Pendente");
+                l3.setStyle("-fx-text-fill: #DC2626; -fx-font-weight: bold;");
+
+                gameRow.getChildren().addAll(l1, l2, s, l3);
+                pendingList.getChildren().add(gameRow);
+                count++;
+            }
+        }
+        if (count == 0) {
+            pendingList.getChildren().add(new Label("Todos os jogos têm árbitros principais atribuídos."));
+        }
+        pendingRefCard.getChildren().addAll(pendingTitle, pendingList);
+
+        content.getChildren().addAll(title, subtitle, grid, pendingRefCard);
+        setContent(content);
+    }
+
+    private void showLogisticaOverview(VBox content, Label title, Label subtitle, GridPane grid) {
+        title.setText("Painel de Operações e Logística");
+        subtitle.setText("Gestão de alojamentos, frotas, transporte e viagens das comitivas.");
+
+        int totalHotels = logManager.getHoteis().size();
+        int occupiedHotels = 0;
+        int totalCapacity = 0;
+        int occupiedCapacity = 0;
+        for (Hotel h : logManager.getHoteis()) {
+            totalCapacity += h.getCapacidadeQuartos();
+            if (h.getEquipaHospedada() != null) {
+                occupiedHotels++;
+                occupiedCapacity += h.getCapacidadeQuartos();
+            }
+        }
+        int totalViagens = logManager.getViagens().size();
+        
+        int busCount = 0;
+        int flightCount = 0;
+        for (Viagem v : logManager.getViagens()) {
+            if (v.getMeioTransporte() != null && (v.getMeioTransporte().toLowerCase().contains("voo") || v.getMeioTransporte().toLowerCase().contains("avi"))) {
+                flightCount++;
+            } else {
+                busCount++;
+            }
+        }
+
+        grid.add(createStatCard("Hotéis Ocupados", occupiedHotels + " / " + totalHotels), 0, 0);
+        grid.add(createStatCard("Capacidade Quartos", occupiedCapacity + " / " + totalCapacity), 1, 0);
+        grid.add(createStatCard("Viagens Planeadas", String.valueOf(totalViagens)), 0, 1);
+        grid.add(createStatCard("Frota (Autocarro | Voo)", busCount + " 🚌 | " + flightCount + " ✈️"), 1, 1);
+
+        VBox travelsCard = new VBox(15);
+        travelsCard.getStyleClass().add("card");
+        Label travelsTitle = new Label("Próximas Viagens Agendadas");
+        travelsTitle.getStyleClass().add("label-subtitle");
+        travelsTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1A202C;");
+
+        VBox travelsList = new VBox(10);
+        int count = 0;
+        for (Viagem v : logManager.getViagens()) {
+            if (count >= 5) break;
+            HBox travelRow = new HBox(10);
+            travelRow.setStyle("-fx-padding: 8px; -fx-background-color: #F3F4F6; -fx-background-radius: 8px;");
+            
+            Label l1 = new Label(v.getDataPartida() + " -> " + v.getDataChegada());
+            l1.setStyle("-fx-text-fill: #6B7280;");
+            
+            Label l2 = new Label(v.getOrigem() + " para " + v.getDestino());
+            l2.setStyle("-fx-font-weight: bold; -fx-text-fill: #1A202C;");
+            
+            Region s = new Region();
+            HBox.setHgrow(s, Priority.ALWAYS);
+            
+            Label l3 = new Label(v.getMeioTransporte());
+            l3.setStyle("-fx-text-fill: #00D26A; -fx-font-weight: bold;");
+
+            travelRow.getChildren().addAll(l1, l2, s, l3);
+            travelsList.getChildren().add(travelRow);
+            count++;
+        }
+        if (count == 0) {
+            travelsList.getChildren().add(new Label("Nenhuma viagem agendada de momento."));
+        }
+        travelsCard.getChildren().addAll(travelsTitle, travelsList);
+
+        content.getChildren().addAll(title, subtitle, grid, travelsCard);
+        setContent(content);
+    }
+
+    private void showBilheteiraOverview(VBox content, Label title, Label subtitle, GridPane grid) {
+        title.setText("Painel de Vendas e Bilheteira");
+        subtitle.setText("Estatísticas de vendas, receita acumulada e logs de auditoria de fraudes.");
+
+        double totalRev = 0.0;
+        for (Bilhete b : bilManager.getBilhetes()) {
+            totalRev += b.getPreco();
+        }
+        
+        int soldCount = bilManager.getBilhetes().size();
+        int activeStadiums = campManager.getEstadios().size();
+        int activeFrauds = fraudLogs.size();
+
+        grid.add(createStatCard("Bilhetes Vendidos", String.valueOf(soldCount)), 0, 0);
+        grid.add(createStatCard("Receita Total", String.format("%.2f €", totalRev)), 1, 0);
+        grid.add(createStatCard("Estádios Ativos", String.valueOf(activeStadiums)), 0, 1);
+        grid.add(createStatCard("Alertas de Fraude", String.valueOf(activeFrauds)), 1, 1);
+
+        VBox fraudCard = new VBox(15);
+        fraudCard.getStyleClass().add("card");
+        Label fraudTitle = new Label("Logs de Segurança e Auditoria de Fraudes Recentes");
+        fraudTitle.getStyleClass().add("label-subtitle");
+        fraudTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1A202C;");
+
+        TableView<FraudLog> tblFraud = new TableView<>();
+        
+        TableColumn<FraudLog, String> colTime = new TableColumn<>("Timestamp");
+        colTime.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getTimestamp()));
+        colTime.setPrefWidth(130);
+
+        TableColumn<FraudLog, String> colType = new TableColumn<>("Tipo");
+        colType.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getType()));
+        colType.setPrefWidth(120);
+
+        TableColumn<FraudLog, String> colDesc = new TableColumn<>("Descrição");
+        colDesc.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getDescription()));
+        colDesc.setPrefWidth(380);
+
+        TableColumn<FraudLog, Void> colBlock = new TableColumn<>("Ação");
+        colBlock.setPrefWidth(110);
+        colBlock.setCellFactory(column -> new TableCell<FraudLog, Void>() {
+            private final Button btn = new Button("Bloquear");
+            {
+                btn.setStyle("-fx-background-color: #EF4444; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8px; -fx-padding: 6px 12px; -fx-cursor: hand; -fx-font-size: 11px;");
+                btn.setOnAction(evt -> {
+                    FraudLog log = getTableView().getItems().get(getIndex());
+                    fraudLogs.remove(log);
+                    Alert a = new Alert(Alert.AlertType.INFORMATION, "Ação tomada: Transação/IP bloqueado preventivamente.");
+                    a.showAndWait();
+                    showOverview(); // Refresh the overview
+                });
+            }
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) setGraphic(null);
+                else setGraphic(btn);
+            }
+        });
+
+        tblFraud.getColumns().addAll(colTime, colType, colDesc, colBlock);
+        tblFraud.setItems(this.fraudLogs);
+        tblFraud.setPrefHeight(200);
+
+        fraudCard.getChildren().addAll(fraudTitle, tblFraud);
+
+        content.getChildren().addAll(title, subtitle, grid, fraudCard);
         setContent(content);
     }
 
@@ -837,6 +1221,10 @@ public class DashboardController {
         
         // Populate teams
         ObservableList<Equipa> teamsList = FXCollections.observableArrayList(campManager.getEquipas());
+        
+        ComboBox<String> cmbGroup = new ComboBox<>();
+        ComboBox<String> cmbRegion = new ComboBox<>();
+
         if (utilizadorLogado.getCargo() == TipoUtilizador.GESTOR_EQUIPA) {
             String assoc = utilizadorLogado.getEquipaAssociada();
             List<Equipa> filtered = new ArrayList<>();
@@ -846,11 +1234,24 @@ public class DashboardController {
                 }
             }
             lvTeams.setItems(FXCollections.observableArrayList(filtered));
+            left.getChildren().addAll(lblSelect, lvTeams);
         } else {
             lvTeams.setItems(teamsList);
+
+            Label lblFilterGroup = new Label("Filtrar por Grupo:");
+            lblFilterGroup.setStyle("-fx-font-size: 11px; -fx-text-fill: #6B7280; -fx-font-weight: bold;");
+            cmbGroup.getItems().addAll("Todos", "Grupo A", "Grupo B", "Grupo C", "Grupo D", "Grupo E", "Grupo F", "Grupo G", "Grupo H");
+            cmbGroup.setValue("Todos");
+            cmbGroup.setMaxWidth(Double.MAX_VALUE);
+
+            Label lblFilterRegion = new Label("Filtrar por Região:");
+            lblFilterRegion.setStyle("-fx-font-size: 11px; -fx-text-fill: #6B7280; -fx-font-weight: bold;");
+            cmbRegion.getItems().addAll("Todas", "Europa (UEFA)", "América do Sul (CONMEBOL)", "América do Norte/Central (CONCACAF)", "África (CAF)", "Ásia/Oceânia (AFC)");
+            cmbRegion.setValue("Todas");
+            cmbRegion.setMaxWidth(Double.MAX_VALUE);
+
+            left.getChildren().addAll(lblSelect, lblFilterGroup, cmbGroup, lblFilterRegion, cmbRegion, lvTeams);
         }
-        
-        left.getChildren().addAll(lblSelect, lvTeams);
 
         // Right side: Player details and stats
         VBox right = new VBox(15);
@@ -865,6 +1266,33 @@ public class DashboardController {
         right.getChildren().add(placeholder);
 
         split.getChildren().addAll(left, right);
+
+        // Filter Logic Setup (only if not gestor_equipa)
+        if (utilizadorLogado.getCargo() != TipoUtilizador.GESTOR_EQUIPA) {
+            Runnable updateFilter = () -> {
+                String selectedGroup = cmbGroup.getValue();
+                String selectedRegion = cmbRegion.getValue();
+
+                List<Equipa> result = new ArrayList<>();
+                for (Equipa eq : teamsList) {
+                    boolean matchesGroup = "Todos".equals(selectedGroup) || isTeamInGroup(eq.getNome(), selectedGroup);
+                    boolean matchesRegion = "Todas".equals(selectedRegion) || isTeamInRegion(eq.getNome(), selectedRegion);
+                    if (matchesGroup && matchesRegion) {
+                        result.add(eq);
+                    }
+                }
+                lvTeams.setItems(FXCollections.observableArrayList(result));
+                
+                Equipa selected = lvTeams.getSelectionModel().getSelectedItem();
+                if (selected == null || !result.contains(selected)) {
+                    right.getChildren().clear();
+                    right.getChildren().add(placeholder);
+                }
+            };
+
+            cmbGroup.valueProperty().addListener((obs, oldVal, newVal) -> updateFilter.run());
+            cmbRegion.valueProperty().addListener((obs, oldVal, newVal) -> updateFilter.run());
+        }
 
         TabPane tabPane = new TabPane();
         tabPane.setStyle("-fx-tab-min-width: 120px; -fx-tab-max-width: 200px;");
@@ -882,12 +1310,7 @@ public class DashboardController {
         content.getChildren().addAll(title, tabPane);
         setContent(content);
 
-        // Auto-select the associated team for GESTOR_EQUIPA
-        if (utilizadorLogado.getCargo() == TipoUtilizador.GESTOR_EQUIPA && !lvTeams.getItems().isEmpty()) {
-            lvTeams.getSelectionModel().selectFirst();
-        }
-
-        // Detail update listener
+        // Detail update listener (registered BEFORE auto-selecting so it fires correctly)
         lvTeams.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) {
                 right.getChildren().clear();
@@ -897,7 +1320,17 @@ public class DashboardController {
                 headerBox.setAlignment(Pos.CENTER_LEFT);
                 Label teamTitle = new Label("Seleção: " + newVal.getNome());
                 teamTitle.setStyle("-fx-font-size: 22px; -fx-font-weight: bold;");
-                Label coachLabel = new Label("Selecionador: " + newVal.getTreinador() + " | Grupo A");
+                
+                // Encontrar grupo dinamicamente para o header
+                String groupNameStr = "Grupo ?";
+                for (Map.Entry<String, List<String>> entry : campManager.getGrupos().entrySet()) {
+                    if (entry.getValue().contains(newVal.getNome())) {
+                        groupNameStr = entry.getKey();
+                        break;
+                    }
+                }
+                
+                Label coachLabel = new Label("Selecionador: " + newVal.getTreinador() + " | " + groupNameStr);
                 coachLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #6B7280;");
                 VBox headerTexts = new VBox(2, teamTitle, coachLabel);
                 headerBox.getChildren().add(headerTexts);
@@ -961,9 +1394,18 @@ public class DashboardController {
                     btnCheckout.setStyle("-fx-background-color: #EF4444; -fx-text-fill: white; -fx-padding: 6px 12px; -fx-font-size: 11px;");
                     Hotel finalAllocated = allocated;
                     btnCheckout.setOnAction(e -> {
-                        logManager.registarCheckout(finalAllocated);
-                        lvTeams.getSelectionModel().clearSelection();
-                        lvTeams.getSelectionModel().select(newVal); // Reload view
+                        ButtonType btnSim = new ButtonType("Sim", ButtonBar.ButtonData.YES);
+                        ButtonType btnNao = new ButtonType("Não", ButtonBar.ButtonData.NO);
+                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Confirmar Check-out de " + finalAllocated.getEquipaHospedada().getNome() + "?", btnSim, btnNao);
+                        alert.setTitle("Confirmação de Check-out");
+                        alert.setHeaderText("Realizar Check-out");
+                        alert.showAndWait().ifPresent(res -> {
+                            if (res == btnSim) {
+                                logManager.registarCheckout(finalAllocated);
+                                lvTeams.getSelectionModel().clearSelection();
+                                lvTeams.getSelectionModel().select(newVal); // Reload view
+                            }
+                        });
                     });
                     hotelBanner.getChildren().addAll(hotelTexts, btnCheckout);
                 } else {
@@ -1301,6 +1743,41 @@ public class DashboardController {
                 right.getChildren().add(placeholder);
             }
         });
+
+        // Auto-select the associated team for GESTOR_EQUIPA - after listener registration
+        if (utilizadorLogado.getCargo() == TipoUtilizador.GESTOR_EQUIPA && !lvTeams.getItems().isEmpty()) {
+            lvTeams.getSelectionModel().selectFirst();
+        }
+    }
+
+    private boolean isTeamInGroup(String teamName, String groupName) {
+        Map<String, List<String>> grps = campManager.getGrupos();
+        List<String> teams = grps.get(groupName);
+        return teams != null && teams.contains(teamName);
+    }
+
+    private boolean isTeamInRegion(String teamName, String regionName) {
+        if (teamName == null) return false;
+        String name = teamName.trim();
+        switch (regionName) {
+            case "Europa (UEFA)":
+                return java.util.Arrays.asList(
+                    "Portugal", "França", "Franca", "Espanha", "Inglaterra", "Holanda", "Alemanha", 
+                    "Itália", "Italia", "Suíça", "Suica", "Bélgica", "Belgica", "Croácia", "Croacia", 
+                    "Dinamarca", "Sérvia", "Servia", "Polónia", "Polonia", "Áustria", "Austria", 
+                    "Turquia", "Ucrânia", "Ucrania"
+                ).stream().anyMatch(name::equalsIgnoreCase);
+            case "América do Sul (CONMEBOL)":
+                return java.util.Arrays.asList("Brasil", "Argentina", "Uruguai", "Colômbia", "Colombia", "Chile").stream().anyMatch(name::equalsIgnoreCase);
+            case "América do Norte/Central (CONCACAF)":
+                return java.util.Arrays.asList("Cuba", "EUA", "Canadá", "Canada").stream().anyMatch(name::equalsIgnoreCase);
+            case "África (CAF)":
+                return java.util.Arrays.asList("Senegal", "Marrocos", "Gana", "Nigéria", "Nigeria").stream().anyMatch(name::equalsIgnoreCase);
+            case "Ásia/Oceânia (AFC)":
+                return java.util.Arrays.asList("Japão", "Japao", "Coreia do Sul", "Austrália", "Australia", "Irão", "Irao").stream().anyMatch(name::equalsIgnoreCase);
+            default:
+                return true;
+        }
     }
 
     private void setupTabAlojamento(Tab tabAlojamento) {
@@ -1421,9 +1898,13 @@ public class DashboardController {
         btnCheckout.getStyleClass().add("btn-secondary");
         btnCheckout.setStyle("-fx-background-color: #EF4444; -fx-text-fill: white; -fx-padding: 8px 16px; -fx-font-size: 12px; -fx-font-weight: bold; -fx-background-radius: 8px;");
         btnCheckout.setOnAction(e -> {
-            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Tem a certeza que deseja realizar o check-out da equipa " + teamName + "?", ButtonType.YES, ButtonType.NO);
+            ButtonType btnSim = new ButtonType("Sim", ButtonBar.ButtonData.YES);
+            ButtonType btnNao = new ButtonType("Não", ButtonBar.ButtonData.NO);
+            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Tem a certeza que deseja realizar o check-out da equipa " + teamName + "?", btnSim, btnNao);
+            confirm.setTitle("Confirmação de Check-out");
+            confirm.setHeaderText("Realizar Check-out");
             confirm.showAndWait();
-            if (confirm.getResult() == ButtonType.YES) {
+            if (confirm.getResult() == btnSim) {
                 logManager.registarCheckout(allocated);
                 setupTabAlojamento(tabAlojamento);
                 showEquipas();
@@ -1512,7 +1993,7 @@ public class DashboardController {
         try {
             LocalDateTime novoJogoTime = LocalDateTime.parse(jogo.getData() + " " + jogo.getHora(), formatter);
             for (Jogo j : todosJogos) {
-                if (j.getId() != jogo.getId() && temArbitroEscalado(j, arb)) {
+                if (j.getStatus() != StatusJogo.FINALIZADO && j.getId() != jogo.getId() && temArbitroEscalado(j, arb)) {
                     LocalDateTime outroJogoTime = LocalDateTime.parse(j.getData() + " " + j.getHora(), formatter);
                     long diffHours = ChronoUnit.HOURS.between(outroJogoTime, novoJogoTime);
                     if (Math.abs(diffHours) < 48) {
@@ -1548,6 +2029,11 @@ public class DashboardController {
     // ==========================================
     @SuppressWarnings("unchecked")
     private void showArbitragem() {
+        if (utilizadorLogado.getCargo() == TipoUtilizador.PUBLICO) {
+            showArbitrosPublico();
+            return;
+        }
+
         VBox content = new VBox(20);
         content.setPadding(new Insets(30));
 
@@ -1649,7 +2135,7 @@ public class DashboardController {
         List<String> refAlerts = new ArrayList<>();
         // Calculate conflicts
         for (Jogo j : campManager.getJogos()) {
-            if (j.getEscalaArbitros() != null) {
+            if (j.getStatus() != StatusJogo.FINALIZADO && j.getEscalaArbitros() != null) {
                 EscalaoArbitral esc = j.getEscalaArbitros();
                 // Neutrality checks
                 checkRefNationalityConflict(esc.getPrincipal(), j, refAlerts);
@@ -1950,7 +2436,7 @@ public class DashboardController {
         
         List<Jogo> finalizedMatches = new ArrayList<>();
         for (Jogo j : campManager.getJogos()) {
-            if (StatusJogo.FINALIZADO.equals(j.getStatus()) && j.getEscalaArbitros() != null) {
+            if (StatusJogo.FINALIZADO.equals(j.getStatus())) {
                 finalizedMatches.add(j);
             }
         }
@@ -1994,11 +2480,28 @@ public class DashboardController {
                 lblEvalSub.setText("Resultado: " + newVal.getGoalsHome() + " - " + newVal.getGoalsAway() + "\nEstádio: " + newVal.getEstadio().getNome());
                 
                 EscalaoArbitral esc = newVal.getEscalaArbitros();
-                cmbRatePrincipal.setDisable(esc.getPrincipal() == null);
-                cmbRateA1.setDisable(esc.getAssistente1() == null);
-                cmbRateA2.setDisable(esc.getAssistente2() == null);
-                cmbRateQuarto.setDisable(esc.getQuarto() == null);
-                cmbRateVar.setDisable(esc.getVar() == null);
+                if (esc == null) {
+                    evalCard.setDisable(true);
+                    lblEvalSub.setText(lblEvalSub.getText() + "\n\u26A0\uFE0F Este jogo não possui escala de árbitros para avaliar.");
+                    cmbRatePrincipal.setPromptText("Nota Principal (1-5)");
+                    cmbRateA1.setPromptText("Nota Assistente 1 (1-5)");
+                    cmbRateA2.setPromptText("Nota Assistente 2 (1-5)");
+                    cmbRateQuarto.setPromptText("Nota Quarto Árbitro (1-5)");
+                    cmbRateVar.setPromptText("Nota VAR (1-5)");
+                } else {
+                    evalCard.setDisable(false);
+                    cmbRatePrincipal.setDisable(esc.getPrincipal() == null);
+                    cmbRateA1.setDisable(esc.getAssistente1() == null);
+                    cmbRateA2.setDisable(esc.getAssistente2() == null);
+                    cmbRateQuarto.setDisable(esc.getQuarto() == null);
+                    cmbRateVar.setDisable(esc.getVar() == null);
+
+                    cmbRatePrincipal.setPromptText(esc.getPrincipal() != null ? esc.getPrincipal().getNome() + " (" + esc.getPrincipal().getNacionalidade() + ")" : "Sem árbitro");
+                    cmbRateA1.setPromptText(esc.getAssistente1() != null ? esc.getAssistente1().getNome() + " (" + esc.getAssistente1().getNacionalidade() + ")" : "Sem árbitro");
+                    cmbRateA2.setPromptText(esc.getAssistente2() != null ? esc.getAssistente2().getNome() + " (" + esc.getAssistente2().getNacionalidade() + ")" : "Sem árbitro");
+                    cmbRateQuarto.setPromptText(esc.getQuarto() != null ? esc.getQuarto().getNome() + " (" + esc.getQuarto().getNacionalidade() + ")" : "Sem árbitro");
+                    cmbRateVar.setPromptText(esc.getVar() != null ? esc.getVar().getNome() + " (" + esc.getVar().getNacionalidade() + ")" : "Sem árbitro");
+                }
             } else {
                 evalCard.setDisable(true);
                 lblEvalTitle.setText("Nenhum Jogo Selecionado");
@@ -2036,9 +2539,53 @@ public class DashboardController {
         setContent(content);
     }
 
+    private void showArbitrosPublico() {
+        VBox content = new VBox(20);
+        content.setPadding(new Insets(30));
+
+        Label title = new Label("Lista de Árbitros");
+        title.getStyleClass().add("label-title");
+        Label subtitle = new Label("Consulta oficial de árbitros, origem e classificações (Score FIFA).");
+        subtitle.getStyleClass().add("label-subtitle");
+
+        VBox tblBox = new VBox(15);
+        tblBox.getStyleClass().add("card");
+        tblBox.setStyle("-fx-padding: 20px;");
+
+        TableView<Arbitro> tblRefs = new TableView<>();
+        
+        TableColumn<Arbitro, Number> colId = new TableColumn<>("ID");
+        colId.setCellValueFactory(c -> new SimpleIntegerProperty(c.getValue().getId()));
+        colId.setPrefWidth(80);
+        
+        TableColumn<Arbitro, String> colNome = new TableColumn<>("Nome");
+        colNome.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getNome()));
+        colNome.setPrefWidth(280);
+        
+        TableColumn<Arbitro, String> colNac = new TableColumn<>("Origem");
+        colNac.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getNacionalidade()));
+        colNac.setPrefWidth(220);
+        
+        TableColumn<Arbitro, Number> colScore = new TableColumn<>("Pontuação");
+        colScore.setCellValueFactory(c -> new SimpleIntegerProperty(c.getValue().getScoreFIFA()));
+        colScore.setPrefWidth(180);
+
+        tblRefs.getColumns().addAll(colId, colNome, colNac, colScore);
+        tblRefs.setItems(FXCollections.observableArrayList(arbManager.getArbitros()));
+        tblRefs.setPrefHeight(450);
+
+        tblBox.getChildren().addAll(new Label("Árbitros do Campeonato Mundial:"), tblRefs);
+        content.getChildren().addAll(title, subtitle, tblBox);
+        setContent(content);
+    }
+
     // VIEW 5: Logística
     // ==========================================
     private void showLogistica() {
+        showLogistica(0);
+    }
+
+    private void showLogistica(int activeTab) {
         VBox content = new VBox(25);
         content.setPadding(new Insets(30));
 
@@ -2095,6 +2642,30 @@ public class DashboardController {
         btnAddHotel.setOnAction(e -> showAddHotelDialog());
         hotelsHeader.getChildren().addAll(lblSummary, sp1, btnAddHotel);
 
+        // Filters for Alojamento
+        HBox filterHotelsBox = new HBox(15);
+        filterHotelsBox.setAlignment(Pos.CENTER_LEFT);
+        filterHotelsBox.setStyle("-fx-padding: 12px; -fx-background-color: #F9FAFB; -fx-background-radius: 12px; -fx-border-color: #E5E7EB; -fx-border-width: 1px;");
+        
+        TextField txtSearchHotel = new TextField();
+        txtSearchHotel.setPromptText(" 🔍 Procurar hotel ou localização...");
+        txtSearchHotel.setPrefWidth(250);
+        txtSearchHotel.setStyle("-fx-font-size: 12px; -fx-background-radius: 8px; -fx-padding: 8px;");
+        
+        ComboBox<String> cmbStatusHotel = new ComboBox<>();
+        cmbStatusHotel.getItems().addAll("Todos os Estados", "Disponível", "Ocupado");
+        cmbStatusHotel.setValue("Todos os Estados");
+        cmbStatusHotel.setStyle("-fx-font-size: 12px; -fx-background-radius: 8px;");
+        cmbStatusHotel.setPrefWidth(150);
+        
+        ComboBox<String> cmbCapHotel = new ComboBox<>();
+        cmbCapHotel.getItems().addAll("Qualquer capacidade", ">= 10 pessoas", ">= 50 pessoas", ">= 100 pessoas");
+        cmbCapHotel.setValue("Qualquer capacidade");
+        cmbCapHotel.setStyle("-fx-font-size: 12px; -fx-background-radius: 8px;");
+        cmbCapHotel.setPrefWidth(180);
+        
+        filterHotelsBox.getChildren().addAll(new Label("Filtros:"), txtSearchHotel, cmbStatusHotel, cmbCapHotel);
+
         FlowPane hotelGrid = new FlowPane(20, 20);
         hotelGrid.setAlignment(Pos.TOP_LEFT);
         hotelGrid.setPrefWrapLength(950);
@@ -2103,6 +2674,33 @@ public class DashboardController {
         Runnable refreshHotels = () -> {
             hotelGrid.getChildren().clear();
             List<Hotel> currentHotels = logManager.getHoteis();
+            
+            String search = txtSearchHotel.getText().trim().toLowerCase();
+            String status = cmbStatusHotel.getValue();
+            String capSel = cmbCapHotel.getValue();
+            int minCap = 0;
+            if (">= 10 pessoas".equals(capSel)) minCap = 10;
+            else if (">= 50 pessoas".equals(capSel)) minCap = 50;
+            else if (">= 100 pessoas".equals(capSel)) minCap = 100;
+            
+            List<Hotel> filteredHotels = new ArrayList<>();
+            for (Hotel h : currentHotels) {
+                boolean matchesSearch = search.isEmpty() ||
+                                        (h.getNome() != null && h.getNome().toLowerCase().contains(search)) ||
+                                        (h.getLocalizacao() != null && h.getLocalizacao().toLowerCase().contains(search));
+                
+                boolean isOccupied = h.getEquipaHospedada() != null;
+                boolean matchesStatus = "Todos os Estados".equals(status) ||
+                                        ("Ocupado".equals(status) && isOccupied) ||
+                                        ("Disponível".equals(status) && !isOccupied);
+                                        
+                boolean matchesCap = h.getCapacidadeQuartos() >= minCap;
+                
+                if (matchesSearch && matchesStatus && matchesCap) {
+                    filteredHotels.add(h);
+                }
+            }
+            
             int occ = 0;
             for (Hotel h : currentHotels) {
                 if (h.getEquipaHospedada() != null) occ++;
@@ -2110,9 +2708,9 @@ public class DashboardController {
             lblTotalVal.setText(String.valueOf(currentHotels.size()));
             lblOccupiedVal.setText(String.valueOf(occ));
             lblAvailableVal.setText(String.valueOf(currentHotels.size() - occ));
-            lblSummary.setText(occ + " de " + currentHotels.size() + " hotéis ocupados");
+            lblSummary.setText(occ + " de " + currentHotels.size() + " hotéis ocupados (filtrados: " + filteredHotels.size() + ")");
             
-            for (Hotel h : currentHotels) {
+            for (Hotel h : filteredHotels) {
                 VBox card = new VBox(12);
                 boolean isOccupied = h.getEquipaHospedada() != null;
                 
@@ -2184,11 +2782,15 @@ public class DashboardController {
                     btnOut.setStyle("-fx-background-color: transparent; -fx-border-color: #FECACA; -fx-border-radius: 8px; -fx-text-fill: #DC2626; -fx-font-weight: bold; -fx-padding: 6px; -fx-cursor: hand; -fx-font-size: 11px;");
                     btnOut.setMaxWidth(Double.MAX_VALUE);
                     btnOut.setOnAction(evt -> {
-                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Confirmar Check-out de " + h.getEquipaHospedada().getNome() + "?", ButtonType.YES, ButtonType.NO);
+                        ButtonType btnSim = new ButtonType("Sim", ButtonBar.ButtonData.YES);
+                        ButtonType btnNao = new ButtonType("Não", ButtonBar.ButtonData.NO);
+                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Confirmar Check-out de " + h.getEquipaHospedada().getNome() + "?", btnSim, btnNao);
+                        alert.setTitle("Confirmação de Check-out");
+                        alert.setHeaderText("Realizar Check-out");
                         alert.showAndWait().ifPresent(res -> {
-                            if (res == ButtonType.YES) {
+                            if (res == btnSim) {
                                 logManager.registarCheckout(h);
-                                showLogistica(); // Refresh entire screen
+                                showLogistica(0); // Refresh entire screen
                             }
                         });
                     });
@@ -2213,12 +2815,16 @@ public class DashboardController {
         };
         refreshHotels.run();
         
+        txtSearchHotel.textProperty().addListener((obs, oldVal, newVal) -> refreshHotels.run());
+        cmbStatusHotel.valueProperty().addListener((obs, oldVal, newVal) -> refreshHotels.run());
+        cmbCapHotel.valueProperty().addListener((obs, oldVal, newVal) -> refreshHotels.run());
+        
         ScrollPane scrollHotels = new ScrollPane(hotelGrid);
         scrollHotels.setFitToWidth(true);
         scrollHotels.setStyle("-fx-background-color: transparent; -fx-padding: 5px;");
         scrollHotels.setPrefHeight(400);
 
-        vboxHotels.getChildren().addAll(hotelsHeader, scrollHotels);
+        vboxHotels.getChildren().addAll(hotelsHeader, filterHotelsBox, scrollHotels);
         tabHotels.setContent(vboxHotels);
 
         // ------------------------------------------
@@ -2240,6 +2846,24 @@ public class DashboardController {
         btnPlanTravel.setOnAction(e -> showPlanTravelDialog());
         transHeader.getChildren().addAll(lblTransTitle, sp2, btnPlanTravel);
 
+        // Filters for Transportes & Viagens
+        HBox filterTransportsBox = new HBox(15);
+        filterTransportsBox.setAlignment(Pos.CENTER_LEFT);
+        filterTransportsBox.setStyle("-fx-padding: 12px; -fx-background-color: #F9FAFB; -fx-background-radius: 12px; -fx-border-color: #E5E7EB; -fx-border-width: 1px;");
+        
+        TextField txtSearchTransport = new TextField();
+        txtSearchTransport.setPromptText("🔍 Procurar origem, destino, equipa, motorista...");
+        txtSearchTransport.setPrefWidth(320);
+        txtSearchTransport.setStyle("-fx-font-size: 12px; -fx-background-radius: 8px; -fx-padding: 8px;");
+        
+        ComboBox<String> cmbTypeTransport = new ComboBox<>();
+        cmbTypeTransport.getItems().addAll("Todos os Transportes", "Autocarro", "Avião");
+        cmbTypeTransport.setValue("Todos os Transportes");
+        cmbTypeTransport.setStyle("-fx-font-size: 12px; -fx-background-radius: 8px;");
+        cmbTypeTransport.setPrefWidth(180);
+        
+        filterTransportsBox.getChildren().addAll(new Label("Filtros:"), txtSearchTransport, cmbTypeTransport);
+
         HBox transStats = new HBox(15);
         transStats.getChildren().addAll(
             createEquipaMiniStatCard("Total Frota", "32", "🚌", "#EFF6FF", "#2563EB"),
@@ -2259,37 +2883,6 @@ public class DashboardController {
         lblFleetTitle.setStyle("-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #1A202C;");
         
         VBox fleetList = new VBox(8);
-        String[][] fleetData = {
-            {"BUS-001", "Portugal", "Carlos Silva", "Lisboa", "Em Rota"},
-            {"BUS-002", "Brasil", "Ricardo Gomes", "Porto", "Estacionado"},
-            {"BUS-003", "Espanha", "Mario Diaz", "Faro", "Em Rota"},
-            {"BUS-004", "Alemanha", "Hans Müller", "Porto", "Estacionado"}
-        };
-        for (String[] bus : fleetData) {
-            HBox busRow = new HBox(10);
-            busRow.setStyle("-fx-padding: 10px; -fx-border-color: #E5E7EB; -fx-border-width: 0 0 1px 0;");
-            busRow.setAlignment(Pos.CENTER_LEFT);
-            
-            VBox busInfo = new VBox(2);
-            Label lblBusName = new Label(bus[0] + " • " + bus[1]);
-            lblBusName.setStyle("-fx-font-weight: bold; -fx-font-size: 12px;");
-            Label lblBusSub = new Label("Motorista: " + bus[2] + " • " + bus[3]);
-            lblBusSub.setStyle("-fx-text-fill: #6B7280; -fx-font-size: 10px;");
-            busInfo.getChildren().addAll(lblBusName, lblBusSub);
-            
-            Region rSp = new Region();
-            HBox.setHgrow(rSp, Priority.ALWAYS);
-            
-            Label busBadge = new Label(bus[4]);
-            boolean inRoute = "Em Rota".equals(bus[4]);
-            busBadge.setStyle("-fx-background-color: " + (inRoute ? "#DBEAFE" : "#F3F4F6") + "; " +
-                             "-fx-text-fill: " + (inRoute ? "#1E40AF" : "#6B7280") + "; " +
-                             "-fx-background-radius: 50px; -fx-padding: 3px 8px; -fx-font-size: 9px; -fx-font-weight: bold;");
-            
-            busRow.getChildren().addAll(busInfo, rSp, busBadge);
-            fleetList.getChildren().add(busRow);
-        }
-        cardFleet.getChildren().addAll(lblFleetTitle, fleetList);
 
         // Column 2: Viagens Planeadas (dynamic list from logManager.getViagens())
         VBox cardTravels = new VBox(12);
@@ -2300,38 +2893,119 @@ public class DashboardController {
         lblTravelsTitle.setStyle("-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #1A202C;");
 
         VBox travelList = new VBox(8);
-        List<Viagem> viags = logManager.getViagens();
-        if (viags.isEmpty()) {
-            Label lblEmpty = new Label("Nenhuma viagem registada no sistema.");
-            lblEmpty.setStyle("-fx-text-fill: #6B7280; -fx-font-style: italic; -fx-font-size: 11px;");
-            travelList.getChildren().add(lblEmpty);
-        } else {
-            for (Viagem v : viags) {
-                HBox vRow = new HBox(10);
-                vRow.setStyle("-fx-padding: 10px; -fx-background-color: #F9FAFB; -fx-background-radius: 12px; -fx-border-color: #E5E7EB; -fx-border-width: 1px; -fx-border-radius: 12px;");
-                vRow.setAlignment(Pos.CENTER_LEFT);
-                
-                VBox vInfo = new VBox(2);
-                Label lblRoute = new Label(v.getOrigem() + " ➔ " + v.getDestino());
-                lblRoute.setStyle("-fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #1F2937;");
-                Label lblDetails = new Label("Partida: " + v.getDataPartida() + " • Chegada: " + v.getDataChegada());
-                lblDetails.setStyle("-fx-text-fill: #6B7280; -fx-font-size: 10px;");
-                vInfo.getChildren().addAll(lblRoute, lblDetails);
-                
-                Region rSp = new Region();
-                HBox.setHgrow(rSp, Priority.ALWAYS);
-                
-                Label vBadge = new Label(v.getMeioTransporte());
-                vBadge.setStyle("-fx-background-color: #E0F2FE; -fx-text-fill: #0369A1; -fx-background-radius: 50px; -fx-padding: 3px 8px; -fx-font-size: 9px; -fx-font-weight: bold;");
-                
-                vRow.getChildren().addAll(vInfo, rSp, vBadge);
-                travelList.getChildren().add(vRow);
+
+        Runnable refreshTransports = () -> {
+            fleetList.getChildren().clear();
+            travelList.getChildren().clear();
+            
+            String search = txtSearchTransport.getText().trim().toLowerCase();
+            String typeFilter = cmbTypeTransport.getValue();
+            
+            // 1. Populate fleetData (Simulação)
+            String[][] fleetData = {
+                {"BUS-001", "Portugal", "Carlos Silva", "Lisboa", "Em Rota", "Autocarro"},
+                {"BUS-002", "Brasil", "Ricardo Gomes", "Porto", "Estacionado", "Autocarro"},
+                {"BUS-003", "Espanha", "Mario Diaz", "Faro", "Em Rota", "Autocarro"},
+                {"BUS-004", "Alemanha", "Hans Müller", "Porto", "Estacionado", "Autocarro"}
+            };
+            
+            for (String[] bus : fleetData) {
+                boolean matchesSearch = search.isEmpty() ||
+                                        bus[0].toLowerCase().contains(search) ||
+                                        bus[1].toLowerCase().contains(search) ||
+                                        bus[2].toLowerCase().contains(search) ||
+                                        bus[3].toLowerCase().contains(search);
+                                        
+                boolean matchesType = "Todos os Transportes".equals(typeFilter) ||
+                                      ("Autocarro".equals(typeFilter) && "Autocarro".equalsIgnoreCase(bus[5])) ||
+                                      ("Avião".equals(typeFilter) && "Avião".equalsIgnoreCase(bus[5]));
+                                      
+                if (matchesSearch && matchesType) {
+                    HBox busRow = new HBox(10);
+                    busRow.setStyle("-fx-padding: 10px; -fx-border-color: #E5E7EB; -fx-border-width: 0 0 1px 0;");
+                    busRow.setAlignment(Pos.CENTER_LEFT);
+                    
+                    VBox busInfo = new VBox(2);
+                    Label lblBusName = new Label(bus[0] + " • " + bus[1]);
+                    lblBusName.setStyle("-fx-font-weight: bold; -fx-font-size: 12px;");
+                    Label lblBusSub = new Label("Motorista: " + bus[2] + " • " + bus[3]);
+                    lblBusSub.setStyle("-fx-text-fill: #6B7280; -fx-font-size: 10px;");
+                    busInfo.getChildren().addAll(lblBusName, lblBusSub);
+                    
+                    Region rSp = new Region();
+                    HBox.setHgrow(rSp, Priority.ALWAYS);
+                    
+                    Label busBadge = new Label(bus[4]);
+                    boolean inRoute = "Em Rota".equals(bus[4]);
+                    busBadge.setStyle("-fx-background-color: " + (inRoute ? "#DBEAFE" : "#F3F4F6") + "; " +
+                                     "-fx-text-fill: " + (inRoute ? "#1E40AF" : "#6B7280") + "; " +
+                                     "-fx-background-radius: 50px; -fx-padding: 3px 8px; -fx-font-size: 9px; -fx-font-weight: bold;");
+                    
+                    busRow.getChildren().addAll(busInfo, rSp, busBadge);
+                    fleetList.getChildren().add(busRow);
+                }
             }
-        }
+            if (fleetList.getChildren().isEmpty()) {
+                Label lblEmpty = new Label("Nenhum transporte corresponde aos filtros.");
+                lblEmpty.setStyle("-fx-text-fill: #6B7280; -fx-font-style: italic; -fx-font-size: 11px; -fx-padding: 10px;");
+                fleetList.getChildren().add(lblEmpty);
+            }
+            
+            // 2. Populate travels (Real)
+            List<Viagem> viags = logManager.getViagens();
+            List<Viagem> filteredViags = new ArrayList<>();
+            for (Viagem v : viags) {
+                boolean matchesSearch = search.isEmpty() ||
+                                        (v.getOrigem() != null && v.getOrigem().toLowerCase().contains(search)) ||
+                                        (v.getDestino() != null && v.getDestino().toLowerCase().contains(search));
+                
+                boolean matchesType = "Todos os Transportes".equals(typeFilter) ||
+                                      ("Autocarro".equals(typeFilter) && "Autocarro".equalsIgnoreCase(v.getMeioTransporte())) ||
+                                      ("Avião".equals(typeFilter) && "Avião".equalsIgnoreCase(v.getMeioTransporte()));
+                                      
+                if (matchesSearch && matchesType) {
+                    filteredViags.add(v);
+                }
+            }
+            
+            if (filteredViags.isEmpty()) {
+                Label lblEmpty = new Label("Nenhuma viagem registada com estes filtros.");
+                lblEmpty.setStyle("-fx-text-fill: #6B7280; -fx-font-style: italic; -fx-font-size: 11px;");
+                travelList.getChildren().add(lblEmpty);
+            } else {
+                for (Viagem v : filteredViags) {
+                    HBox vRow = new HBox(10);
+                    vRow.setStyle("-fx-padding: 10px; -fx-background-color: #F9FAFB; -fx-background-radius: 12px; -fx-border-color: #E5E7EB; -fx-border-width: 1px; -fx-border-radius: 12px;");
+                    vRow.setAlignment(Pos.CENTER_LEFT);
+                    
+                    VBox vInfo = new VBox(2);
+                    Label lblRoute = new Label(v.getOrigem() + " ➔ " + v.getDestino());
+                    lblRoute.setStyle("-fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #1F2937;");
+                    Label lblDetails = new Label("Partida: " + v.getDataPartida() + " • Chegada: " + v.getDataChegada());
+                    lblDetails.setStyle("-fx-text-fill: #6B7280; -fx-font-size: 10px;");
+                    vInfo.getChildren().addAll(lblRoute, lblDetails);
+                    
+                    Region rSp = new Region();
+                    HBox.setHgrow(rSp, Priority.ALWAYS);
+                    
+                    Label vBadge = new Label(v.getMeioTransporte());
+                    vBadge.setStyle("-fx-background-color: #E0F2FE; -fx-text-fill: #0369A1; -fx-background-radius: 50px; -fx-padding: 3px 8px; -fx-font-size: 9px; -fx-font-weight: bold;");
+                    
+                    vRow.getChildren().addAll(vInfo, rSp, vBadge);
+                    travelList.getChildren().add(vRow);
+                }
+            }
+        };
+        
+        refreshTransports.run();
+        txtSearchTransport.textProperty().addListener((obs, oldVal, newVal) -> refreshTransports.run());
+        cmbTypeTransport.valueProperty().addListener((obs, oldVal, newVal) -> refreshTransports.run());
+
+        cardFleet.getChildren().addAll(lblFleetTitle, fleetList);
         cardTravels.getChildren().addAll(lblTravelsTitle, travelList);
 
         transBody.getChildren().addAll(cardFleet, cardTravels);
-        vboxTransports.getChildren().addAll(transHeader, transStats, transBody);
+        vboxTransports.getChildren().addAll(transHeader, filterTransportsBox, transStats, transBody);
         tabTransports.setContent(vboxTransports);
 
         // ------------------------------------------
@@ -2354,6 +3028,61 @@ public class DashboardController {
                 new InventoryItem("Tablets VAR (Suporte)", "Tecnologia", 42, "Baixo")
             );
         }
+
+        // Filters for Inventário
+        HBox filterInvBox = new HBox(15);
+        filterInvBox.setAlignment(Pos.CENTER_LEFT);
+        filterInvBox.setStyle("-fx-padding: 12px; -fx-background-color: #F9FAFB; -fx-background-radius: 12px; -fx-border-color: #E5E7EB; -fx-border-width: 1px;");
+        
+        TextField txtSearchInv = new TextField();
+        txtSearchInv.setPromptText("🔍 Procurar item ou categoria...");
+        txtSearchInv.setPrefWidth(220);
+        txtSearchInv.setStyle("-fx-font-size: 12px; -fx-background-radius: 8px; -fx-padding: 8px;");
+        
+        ComboBox<String> cmbStatusInv = new ComboBox<>();
+        cmbStatusInv.getItems().addAll("Todos os Estados", "OK", "Baixo", "Crítico");
+        cmbStatusInv.setValue("Todos os Estados");
+        cmbStatusInv.setStyle("-fx-font-size: 12px; -fx-background-radius: 8px;");
+        cmbStatusInv.setPrefWidth(150);
+        
+        ToggleButton btnHighlightRep = new ToggleButton("⚠️ Reposição Necessária");
+        btnHighlightRep.setStyle("-fx-font-weight: bold; -fx-font-size: 12px; -fx-background-radius: 8px;");
+        
+        filterInvBox.getChildren().addAll(new Label("Filtros:"), txtSearchInv, cmbStatusInv, btnHighlightRep);
+
+        javafx.collections.transformation.FilteredList<InventoryItem> filteredInv = new javafx.collections.transformation.FilteredList<>(this.inventoryItems, p -> true);
+        
+        Runnable updateInvFilter = () -> {
+            String text = txtSearchInv.getText().trim().toLowerCase();
+            String status = cmbStatusInv.getValue();
+            boolean showReplenish = btnHighlightRep.isSelected();
+            
+            filteredInv.setPredicate(item -> {
+                boolean matchesText = text.isEmpty() ||
+                                      (item.getName() != null && item.getName().toLowerCase().contains(text)) ||
+                                      (item.getCategory() != null && item.getCategory().toLowerCase().contains(text));
+                                      
+                boolean matchesStatus = "Todos os Estados".equals(status) ||
+                                        status.equals(item.getStatus());
+                                        
+                boolean matchesReplenish = !showReplenish ||
+                                           "Baixo".equals(item.getStatus()) ||
+                                           "Crítico".equals(item.getStatus());
+                                           
+                return matchesText && matchesStatus && matchesReplenish;
+            });
+        };
+        
+        txtSearchInv.textProperty().addListener((obs, oldVal, newVal) -> updateInvFilter.run());
+        cmbStatusInv.valueProperty().addListener((obs, oldVal, newVal) -> updateInvFilter.run());
+        btnHighlightRep.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal) {
+                btnHighlightRep.setStyle("-fx-background-color: #FEE2E2; -fx-text-fill: #991B1B; -fx-border-color: #F87171; -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-font-weight: bold; -fx-font-size: 12px;");
+            } else {
+                btnHighlightRep.setStyle("-fx-font-weight: bold; -fx-font-size: 12px; -fx-background-radius: 8px;");
+            }
+            updateInvFilter.run();
+        });
 
         TableView<InventoryItem> tblInv = new TableView<>();
         
@@ -2406,11 +3135,16 @@ public class DashboardController {
                     tid.setTitle("Ajustar Stock - " + item.getName());
                     tid.setHeaderText("Ajustar stock atual de " + item.getName());
                     tid.setContentText("Novo Stock:");
+                    Button cancelBtn = (Button) tid.getDialogPane().lookupButton(ButtonType.CANCEL);
+                    if (cancelBtn != null) cancelBtn.setText("Cancelar");
+                    Button okBtn = (Button) tid.getDialogPane().lookupButton(ButtonType.OK);
+                    if (okBtn != null) okBtn.setText("Confirmar");
                     tid.showAndWait().ifPresent(val -> {
                         try {
                             int newStock = Integer.parseInt(val.trim());
                             item.setStock(newStock);
                             getTableView().refresh();
+                            updateInvFilter.run();
                         } catch (NumberFormatException ex) {
                             Alert err = new Alert(Alert.AlertType.ERROR, "Valor inválido!");
                             err.showAndWait();
@@ -2430,7 +3164,7 @@ public class DashboardController {
         });
 
         tblInv.getColumns().addAll(colItem, colCat, colStock, colStatus, colAction);
-        tblInv.setItems(this.inventoryItems);
+        tblInv.setItems(filteredInv);
         tblInv.setPrefHeight(350);
 
         VBox cardInv = new VBox(10);
@@ -2438,10 +3172,11 @@ public class DashboardController {
         cardInv.setStyle("-fx-padding: 15px;");
         cardInv.getChildren().addAll(tblInv);
 
-        vboxInventory.getChildren().addAll(lblInvTitle, cardInv);
+        vboxInventory.getChildren().addAll(lblInvTitle, filterInvBox, cardInv);
         tabInventory.setContent(vboxInventory);
 
         tabPane.getTabs().addAll(tabHotels, tabTransports, tabInventory);
+        tabPane.getSelectionModel().select(activeTab);
         content.getChildren().addAll(titleBox, statsGrid, tabPane);
         setContent(content);
     }
@@ -3398,6 +4133,11 @@ public class DashboardController {
         ButtonType btnConfirm = new ButtonType("Confirmar", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(btnConfirm, ButtonType.CANCEL);
         
+        Button cancelBtn = (Button) dialog.getDialogPane().lookupButton(ButtonType.CANCEL);
+        if (cancelBtn != null) {
+            cancelBtn.setText("Cancelar");
+        }
+        
         VBox vbox = new VBox(15);
         vbox.setPadding(new Insets(15));
         vbox.setPrefWidth(350);
@@ -3430,6 +4170,12 @@ public class DashboardController {
                     return;
                 }
                 
+                if (dpOut.getValue().isBefore(dpIn.getValue())) {
+                    Alert err = new Alert(Alert.AlertType.ERROR, "A data de check-out não pode ser anterior à data de check-in!");
+                    err.showAndWait();
+                    return;
+                }
+                
                 String inDate = dpIn.getValue().toString();
                 String outDate = dpOut.getValue().toString();
                 
@@ -3453,6 +4199,11 @@ public class DashboardController {
         
         ButtonType btnConfirm = new ButtonType("Registar", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(btnConfirm, ButtonType.CANCEL);
+        
+        Button cancelBtn = (Button) dialog.getDialogPane().lookupButton(ButtonType.CANCEL);
+        if (cancelBtn != null) {
+            cancelBtn.setText("Cancelar");
+        }
         
         VBox vbox = new VBox(12);
         vbox.setPadding(new Insets(15));
@@ -3487,6 +4238,25 @@ public class DashboardController {
                 
                 try {
                     int cap = Integer.parseInt(capStr);
+                    if (cap <= 0) {
+                        Alert err = new Alert(Alert.AlertType.ERROR, "Capacidade deve ser um número inteiro positivo");
+                        err.showAndWait();
+                        return;
+                    }
+                    
+                    boolean exists = false;
+                    for (Hotel existingH : logManager.getHoteis()) {
+                        if (existingH.getNome().equalsIgnoreCase(name)) {
+                            exists = true;
+                            break;
+                        }
+                    }
+                    if (exists) {
+                        Alert err = new Alert(Alert.AlertType.ERROR, "Já existe um hotel com esse nome!");
+                        err.showAndWait();
+                        return;
+                    }
+                    
                     int id = logManager.getHoteis().size() + 1;
                     while (logManager.procurarHotelPorId(id) != null) {
                         id++;
@@ -3499,7 +4269,7 @@ public class DashboardController {
                     okAlert.showAndWait();
                     showLogistica();
                 } catch (NumberFormatException e) {
-                    Alert err = new Alert(Alert.AlertType.ERROR, "Capacidade deve ser um número inteiro válido!");
+                    Alert err = new Alert(Alert.AlertType.ERROR, "Capacidade deve ser um número inteiro positivo");
                     err.showAndWait();
                 }
             }
@@ -3513,6 +4283,11 @@ public class DashboardController {
         
         ButtonType btnConfirm = new ButtonType("Agendar", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(btnConfirm, ButtonType.CANCEL);
+        
+        Button cancelBtn = (Button) dialog.getDialogPane().lookupButton(ButtonType.CANCEL);
+        if (cancelBtn != null) {
+            cancelBtn.setText("Cancelar");
+        }
         
         VBox vbox = new VBox(12);
         vbox.setPadding(new Insets(15));
@@ -3565,11 +4340,31 @@ public class DashboardController {
                     return;
                 }
                 
-                logManager.planearViagem(jogo, orig, dest, inT, outT, meio);
+                java.time.LocalTime depTime = null;
+                java.time.LocalTime arrTime = null;
+                try {
+                    depTime = java.time.LocalTime.parse(inT, java.time.format.DateTimeFormatter.ofPattern("H:m"));
+                    arrTime = java.time.LocalTime.parse(outT, java.time.format.DateTimeFormatter.ofPattern("H:m"));
+                } catch (java.time.format.DateTimeParseException e) {
+                    Alert err = new Alert(Alert.AlertType.ERROR, "As horas devem estar no formato HH:mm (ex: 14:30)!");
+                    err.showAndWait();
+                    return;
+                }
+                
+                if (!depTime.isBefore(arrTime)) {
+                    Alert err = new Alert(Alert.AlertType.ERROR, "A hora de partida deve ser mais cedo que a de chegada!");
+                    err.showAndWait();
+                    return;
+                }
+                
+                String formattedDep = depTime.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+                String formattedArr = arrTime.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+                
+                logManager.planearViagem(jogo, orig, dest, formattedDep, formattedArr, meio);
                 
                 Alert okAlert = new Alert(Alert.AlertType.INFORMATION, "Viagem agendada com sucesso!");
                 okAlert.showAndWait();
-                showLogistica();
+                showLogistica(1);
             }
         });
     }
@@ -3627,6 +4422,11 @@ public class DashboardController {
         
         ButtonType btnSave = new ButtonType("Guardar Alterações", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(btnSave, ButtonType.CANCEL);
+        
+        Button cancelBtn = (Button) dialog.getDialogPane().lookupButton(ButtonType.CANCEL);
+        if (cancelBtn != null) {
+            cancelBtn.setText("Cancelar");
+        }
         
         VBox vbox = new VBox(15);
         vbox.setPadding(new Insets(15));

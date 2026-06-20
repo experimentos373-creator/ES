@@ -6,6 +6,8 @@ import java.io.Serializable;
  * Representa o plano de transporte de uma comitiva/selecao (Value Object).
  */
 public class Viagem implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private String origem;
     private String destino;
     private String dataPartida;

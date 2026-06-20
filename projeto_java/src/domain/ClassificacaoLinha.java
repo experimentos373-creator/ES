@@ -6,6 +6,8 @@ import java.io.Serializable;
  * Representa uma linha de classificacao de uma equipa no grupo (Value Object).
  */
 public class ClassificacaoLinha implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private Equipa equipa;
     private int pontos;
     private int jogados;

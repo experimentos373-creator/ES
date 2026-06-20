@@ -37,6 +37,10 @@ public class Utilizador implements Serializable {
         return equipaAssociada;
     }
 
+    public void setEquipaAssociada(String equipaAssociada) {
+        this.equipaAssociada = equipaAssociada;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
