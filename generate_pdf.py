@@ -9,7 +9,7 @@ class WC2026PDF(FPDF):
             self.set_font("Arial", "I", 8)
             self.set_text_color(100, 100, 100)
             self.set_x(self.l_margin)
-            self.cell(self.epw, 10, "Sistema de Gestão do Campeonato do Mundo de Futebol 2026 | Fase 2", 0, 0, "R")
+            self.cell(self.epw, 10, "Sistema de Gestão do Campeonato do Mundo de Futebol 2026 | Fase 2", align="R")
             self.ln(12)
             # Add a thin line under header
             self.set_draw_color(200, 200, 200)
@@ -22,7 +22,7 @@ class WC2026PDF(FPDF):
             self.set_font("Arial", "I", 8)
             self.set_text_color(100, 100, 100)
             self.set_x(self.l_margin)
-            self.cell(self.epw, 10, f"Página {self.page_no()}", 0, 0, "C")
+            self.cell(self.epw, 10, f"Página {self.page_no()}", align="C")
 
 def create_pdf():
     pdf = WC2026PDF()
@@ -190,58 +190,43 @@ def create_pdf():
         "casos de uso, implementação de lógica e correspondentes testes unitários de acordo com o seguinte plano:"
     )
     pdf.multi_cell(pdf.epw, 6, divisao_intro)
-    pdf.ln(6)
-    
-    # Division of Work Table
-    pdf.set_font("Arial", "B", 9.5)
-    pdf.set_text_color(255, 255, 255)
-    pdf.set_fill_color(24, 76, 120)
-    
-    col_w_work = [35, 95, 55]
-    headers_work = ["Membro do Grupo", "Módulos & Responsabilidades Técnicas", "Testes Unitários de Lógica"]
-    
-    pdf.set_x(pdf.l_margin)
-    for i, hw in enumerate(headers_work):
-        pdf.cell(col_w_work[i], 8, hw, 1, 0, "C", fill=True)
     pdf.ln(8)
     
+    # Division of Work Table using new FPDF2 table API
     work_data = [
         ("Paulo Gomes\n(2024134892)", 
-         "Administrador (Geral), Bracket/Tabelas de Eliminatórias,\nIntegração Geral e Gestor de Bilheteira (Performance).\nImplementação Java da persistência Singleton (base dados simulada),\nclasses de classificação de grupos e bracket.", 
+         "Administrador (Geral), Bracket/Tabelas de Eliminatórias, Integração Geral e Gestor de Bilheteira (Performance).\nImplementação Java da persistência Singleton (base dados simulada), classes de classificação de grupos e bracket.", 
          "GrupoClassificacaoTest\nCalendarioJogoTest\nAvancoBracketTest\nLotacaoEstadioTest\nScoreFIFATest\nSigiloArbitrosTest"),
          
         ("Leonardo Mendes", 
-         "Gestor de Arbitragem (Escala, Avaliação de Árbitros)\ne Público/Adepto (Calendário de Jogos e Resultados).\nImplementação Java da lógica de regras éticas e de descanso de árbitros.", 
+         "Gestor de Arbitragem (Escala, Avaliação de Árbitros) e Público/Adepto (Calendário de Jogos e Resultados).\nImplementação Java da lógica de regras éticas e de descanso de árbitros.", 
          "JogadorStateTest\nNeutralidadeArbitroTest\nIntervaloArbitroTest"),
          
         ("Arthur", 
-         "Gestor de Logística (Alojamentos de Seleções/Hotéis, Transportes)\ne Público/Adepto (Compra de Bilhetes - Regras anti-bot).\nImplementação Java de controlo de capacidades de hotelaria e anti-bot.", 
+         "Gestor de Logística (Alojamentos de Seleções/Hotéis, Transportes) e Público/Adepto (Compra de Bilhetes - Regras anti-bot).\nImplementação Java de controlo de capacidades de hotelaria e anti-bot.", 
          "AlojamentoCapacidadeTest (Capacidade)\nAlojamentoCapacidadeTest (Exclusividade)\nAntiBotBilheteiraTest")
     ]
-    
-    pdf.set_font("Arial", "", 8.5)
-    pdf.set_text_color(50, 50, 50)
-    for row in work_data:
-        x, y = pdf.get_x(), pdf.get_y()
+
+    with pdf.table(col_widths=(30, 90, 50), text_align="LEFT") as table:
+        # Header Row
+        pdf.set_font("Arial", "B", 9)
+        pdf.set_text_color(255, 255, 255)
+        pdf.set_fill_color(24, 76, 120)
+        row = table.row()
+        row.cell("Membro do Grupo")
+        row.cell("Módulos & Responsabilidades Técnicas")
+        row.cell("Testes Unitários")
         
-        # Paulo row is larger
-        if row[0].startswith("Paulo"):
-            row_h = 32
-        else:
-            row_h = 20
+        # Content Rows
+        pdf.set_font("Arial", "", 8.5)
+        pdf.set_text_color(50, 50, 50)
+        for name, responsibilities, tests_list in work_data:
+            row = table.row()
+            row.cell(name)
+            row.cell(responsibilities)
+            row.cell(tests_list)
             
-        pdf.set_xy(pdf.l_margin, y)
-        pdf.multi_cell(col_w_work[0], row_h / 2 if "Paulo" in row[0] else row_h, row[0], 1, "C")
-        
-        pdf.set_xy(pdf.l_margin + col_w_work[0], y)
-        pdf.multi_cell(col_w_work[1], 4.5, row[1], 1, "L")
-        
-        pdf.set_xy(pdf.l_margin + col_w_work[0] + col_w_work[1], y)
-        pdf.multi_cell(col_w_work[2], 4.5, row[2], 1, "L")
-        
-        pdf.set_y(y + row_h)
-    
-    pdf.ln(5)
+    pdf.ln(10)
 
     # ================= PAGE 4: TEXTO CASOS DE USO =================
     pdf.add_page()
@@ -332,52 +317,34 @@ def create_pdf():
     pdf.cell(pdf.epw, 8, "Distribuição das Responsabilidades de Testes")
     pdf.ln(10)
     
-    # Table headers
-    pdf.set_font("Arial", "B", 9)
-    pdf.set_text_color(255, 255, 255)
-    pdf.set_fill_color(24, 76, 120)
-    
-    col_widths = [25, 55, 45, 45]
-    headers = ["Elemento", "Testes Atribuídos", "Módulos", "Foco de Validação"]
-    
-    pdf.set_x(pdf.l_margin)
-    for i, h in enumerate(headers):
-        pdf.cell(col_widths[i], 8, h, 1, 0, "C", fill=True)
-    pdf.ln(8)
-    
     table_data = [
         ("Leonardo", "JogadorStateTest\nNeutralidadeArbitroTest\nIntervaloArbitroTest", "Equipa + Arbitragem", "Elegibilidade e repouso de árbitros, transição de lesões."),
         ("Arthur", "AlojamentoCapacidadeTest (x2)\nAntiBotBilheteiraTest", "Logística + Bilheteira", "Exclusividade de hotel, limites na compra de bilhetes (1-4)."),
-        ("Paulo", "GrupoClassificacaoTest\nCalendarioJogoTest\nAvancoBracketTest\nLotacaoEstadioTest\nScoreFIFATest\nSigiloArbitrosTest", "Admin, Calendário,\nBracket, Bilheteira", "Desempates FIFA, progressão de bracket, sigilo de escalas, lotações.")
+        ("Paulo", "GrupoClassificacaoTest\nCalendarioJogoTest\nAvancoBracketTest\nLotacaoEstadioTest\nScoreFIFATest\nSigiloArbitrosTest", "Admin, Calendário, Bracket, Bilheteira", "Desempates FIFA, progressão de bracket, sigilo de escalas, lotações.")
     ]
     
-    pdf.set_font("Arial", "", 8.5)
-    pdf.set_text_color(50, 50, 50)
-    for row in table_data:
-        x, y = pdf.get_x(), pdf.get_y()
+    with pdf.table(col_widths=(25, 50, 45, 50), text_align="LEFT") as table:
+        # Header Row
+        pdf.set_font("Arial", "B", 9)
+        pdf.set_text_color(255, 255, 255)
+        pdf.set_fill_color(24, 76, 120)
+        row = table.row()
+        row.cell("Elemento")
+        row.cell("Testes Atribuídos")
+        row.cell("Módulos")
+        row.cell("Foco de Validação")
         
-        if row[0] == "Paulo":
-            row_h = 32
-        elif row[0] == "Leonardo":
-            row_h = 16
-        else:
-            row_h = 16
+        # Content Rows
+        pdf.set_font("Arial", "", 8.5)
+        pdf.set_text_color(50, 50, 50)
+        for elem, tests, modules, validation in table_data:
+            row = table.row()
+            row.cell(elem)
+            row.cell(tests)
+            row.cell(modules)
+            row.cell(validation)
             
-        pdf.set_xy(pdf.l_margin, y)
-        pdf.multi_cell(col_widths[0], row_h / 2 if row_h < 20 else row_h / 4, row[0], 1, "C")
-        
-        pdf.set_xy(pdf.l_margin + col_widths[0], y)
-        pdf.multi_cell(col_widths[1], 4.5, row[1], 1, "L")
-        
-        pdf.set_xy(pdf.l_margin + col_widths[0] + col_widths[1], y)
-        pdf.multi_cell(col_widths[2], 5, row[2], 1, "C")
-        
-        pdf.set_xy(pdf.l_margin + col_widths[0] + col_widths[1] + col_widths[2], y)
-        pdf.multi_cell(col_widths[3], 4.5, row[3], 1, "L")
-        
-        pdf.set_y(y + row_h)
-    
-    pdf.ln(5)
+    pdf.ln(10)
     
     # Detail tests by element
     pdf.add_page()
@@ -410,7 +377,10 @@ def create_pdf():
                 pdf.cell(pdf.epw, 8, line.replace("### ", ""))
                 pdf.ln(10)
             elif line.startswith("#### "):
-                clean_line = re.sub(r'\[(.*?)\]\(.*?\)', r'\1', line.replace("#### ", ""))
+                # Remove emoji like 👤 and link markup if present
+                clean_line = line.replace("#### ", "")
+                clean_line = clean_line.replace("👤 ", "")
+                clean_line = re.sub(r'\[(.*?)\]\(.*?\)', r'\1', clean_line)
                 pdf.ln(2)
                 pdf.set_font("Arial", "B", 10.5)
                 pdf.set_text_color(30, 30, 30)
