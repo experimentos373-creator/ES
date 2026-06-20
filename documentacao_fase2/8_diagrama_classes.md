@@ -14,11 +14,14 @@ Este diagrama é o ideal para a entrega principal ao professor, focando-se no do
 ![Diagrama de Classes do Domínio](imagens/diagrama_classes_dominio.png)
 
 ### Código PlantUML do Domínio
+
 ```plantuml
 @startuml
 skinparam classAttributeIconSize 0
 skinparam packageStyle rectangle
 skinparam linetype ortho
+skinparam nodesep 70
+skinparam ranksep 60
 
 class Jogador {
     - id: int
@@ -26,17 +29,17 @@ class Jogador {
     - nome: String
     - posicao: String
     - estado: EstadoJogador
-    - goals: int
-    - assists: int
-    - starter: boolean
-    - yellowCards: int
-    - redCards: int
-    - energy: int
-    - injuryHistory: List<String>
+    - golos: int
+    - assistencias: int
+    - titular: boolean
+    - cartoesAmarelos: int
+    - cartoesVermelhos: int
+    - energia: int
+    - historicoLesoes: List<String>
     + Jogador(id: int, numeroCamisola: int, nome: String, posicao: String, estado: EstadoJogador)
-    + addInjury(injury: String): void
-    + incrementGoals(): void
-    + incrementAssists(): void
+    + adicionarLesao(lesao: String): void
+    + incrementarGolos(): void
+    + incrementarAssistencias(): void
 }
 
 class Arbitro {
@@ -46,11 +49,11 @@ class Arbitro {
     - nacionalidade: String
     - tipo: TipoArbitro
     - estado: EstadoArbitro
-    - scoreFIFA: int
+    - pontuacaoFIFA: int
     - totalAvaliacoes: int
     + Arbitro(id: int, email: String, nome: String, nacionalidade: String, tipo: TipoArbitro, estado: EstadoArbitro)
-    + registarAvaliacao(score: int): void
-    + resetScore(): void
+    + registarAvaliacao(pontuacao: int): void
+    + reporPontuacao(): void
 }
 
 class Jogo {
@@ -58,25 +61,25 @@ class Jogo {
     - data: String
     - hora: String
     - estadio: Estadio
-    - homeTeam: Equipa
-    - awayTeam: Equipa
-    - status: StatusJogo
-    - phase: String
-    - winner: Equipa
-    - goalsHome: int
-    - goalsAway: int
-    - penaltiesHome: int
-    - penaltiesAway: int
+    - equipaCasa: Equipa
+    - equipaFora: Equipa
+    - estado: EstadoJogo
+    - fase: String
+    - vencedor: Equipa
+    - golosCasa: int
+    - golosFora: int
+    - penaltisCasa: int
+    - penaltisFora: int
     - escalaArbitros: EscalaoArbitral
     - eventos: List<EventoJogo>
     - estatisticas: EstatisticaJogo
     - proximoJogo: Jogo
     - posicaoNoProximoJogo: PosicaoBracket
-    + Jogo(id: int, data: String, hora: String, estadio: Estadio, homeTeam: Equipa, awayTeam: Equipa, phase: String, status: StatusJogo)
-    + getEscalaArbitrosPublica(): EscalaoArbitral
+    + Jogo(id: int, data: String, hora: String, estadio: Estadio, equipaCasa: Equipa, equipaFora: Equipa, fase: String, estado: EstadoJogo)
+    + obterEscalaArbitrosPublica(): EscalaoArbitral
     + associarEscalaArbitros(escala: EscalaoArbitral): void
     + adicionarEvento(evento: EventoJogo): void
-    + finalizar(vencedor: Equipa, gh: int, ga: int, ph: int, pa: int, stats: EstatisticaJogo): void
+    + finalizar(vencedor: Equipa, golosCasa: int, golosFora: int, penaltisCasa: int, penaltisFora: int, estatisticas: EstatisticaJogo): void
 }
 
 class Equipa {
@@ -94,7 +97,7 @@ class Estadio {
     - setores: List<SetorEstadio>
     + Estadio(nome: String, localizacao: String)
     + adicionarSetor(setor: SetorEstadio): void
-    + getSetorPorNome(nome: String): SetorEstadio
+    + obterSetorPorNome(nome: String): SetorEstadio
 }
 
 class SetorEstadio {
@@ -122,13 +125,13 @@ class EventoJogo {
 }
 
 class EstatisticaJogo {
-    - posseBolaHome: int
-    - posseBolaAway: int
-    - rematesHome: int
-    - rematesAway: int
-    - cantosHome: int
-    - cantosAway: int
-    + EstatisticaJogo(posseBolaHome: int, posseBolaAway: int, rematesHome: int, rematesAway: int, cantosHome: int, cantosAway: int)
+    - posseBolaCasa: int
+    - posseBolaFora: int
+    - rematesCasa: int
+    - rematesFora: int
+    - cantosCasa: int
+    - cantosFora: int
+    + EstatisticaJogo(posseBolaCasa: int, posseBolaFora: int, rematesCasa: int, rematesFora: int, cantosCasa: int, cantosFora: int)
 }
 
 class EscalaoArbitral {
@@ -193,7 +196,7 @@ enum TipoUtilizador {
     PUBLICO
 }
 
-enum StatusJogo {
+enum EstadoJogo {
     AGENDADO
     EM_CURSO
     FINALIZADO
@@ -234,8 +237,8 @@ enum PosicaoBracket {
 ' === Relacionamentos ===
 Equipa "1" *-- "0..26" Jogador : jogadores
 Estadio "1" *-- "1..*" SetorEstadio : setores
-Jogo "0..*" o-- "0..1" Equipa : homeTeam
-Jogo "0..*" o-- "0..1" Equipa : awayTeam
+Jogo "0..*" o-- "0..1" Equipa : equipaCasa
+Jogo "0..*" o-- "0..1" Equipa : equipaFora
 Jogo "0..*" o-- "1" Estadio : estadio
 Jogo "1" *-- "0..*" EventoJogo : eventos
 Jogo "1" o-- "0..1" EstatisticaJogo : estatisticas
@@ -251,11 +254,17 @@ EventoJogo "0..*" o-- "1" Equipa : equipa
 Hotel "0..*" o-- "0..1" Equipa : equipaHospedada
 ClassificacaoLinha "0..*" o-- "1" Equipa : equipa
 
+' Associacoes adicionais para classes anteriormente isoladas
+Bilhete "0..*" ..> Jogo : refere-se a (jogoId)
+Utilizador "0..*" ..> Equipa : associado a
+Viagem "0..*" ..> Equipa : transporte de
+Viagem "0..*" ..> Jogo : para
+
 Utilizador ..> TipoUtilizador
 Jogador ..> EstadoJogador
 Arbitro ..> EstadoArbitro
 Arbitro ..> TipoArbitro
-Jogo ..> StatusJogo
+Jogo ..> EstadoJogo
 Jogo ..> PosicaoBracket
 EventoJogo ..> TipoEvento
 @enduml
