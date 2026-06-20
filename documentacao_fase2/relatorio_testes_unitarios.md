@@ -8,7 +8,7 @@
 - Arthur  
 **Fase:** 2  
 
-Este documento apresenta os testes unitários realizados pelo grupo para garantir o rigor das regras de negócio do campeonato, divididos estritamente em **3 testes por elemento do grupo**, sem qualquer dependência de interfaces gráficas.
+Este documento apresenta os testes unitários realizados pelo grupo para garantir o rigor das regras de negócio do campeonato, distribuídos em conformidade com as quotas do professor, sem qualquer dependência de interfaces gráficas.
 
 ---
 
@@ -18,7 +18,7 @@ Este documento apresenta os testes unitários realizados pelo grupo para garanti
 | :--- | :--- | :--- | :--- |
 | **Leonardo** | 1. [JogadorStateTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/JogadorStateTest.java)<br>2. [NeutralidadeArbitroTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/NeutralidadeArbitroTest.java)<br>3. [IntervaloArbitroTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/IntervaloArbitroTest.java) | Gestor de Equipa + Arbitragem | Gestão e transição de estados dos atletas, elegibilidade ética por nacionalidade e repouso regulamentar de árbitros. |
 | **Arthur** | 1. [AlojamentoCapacidadeTest (Capacidade)](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/AlojamentoCapacidadeTest.java)<br>2. [AlojamentoCapacidadeTest (Exclusividade)](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/AlojamentoCapacidadeTest.java)<br>3. [AntiBotBilheteiraTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/AntiBotBilheteiraTest.java) | Gestor de Logística + Bilheteira | Lotação máxima de quartos por hotel, regra de exclusividade (1 equipa por hotel) e limites anti-bot na compra de bilhetes. |
-| **Paulo** | 1. [GrupoClassificacaoTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/GrupoClassificacaoTest.java)<br>2. [CalendarioJogoTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/CalendarioJogoTest.java)<br>3. [AvancoBracketTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/AvancoBracketTest.java) | Admin + Calendário + Bracket | Cálculo de pontos de grupos com critérios de desempate, agendamento sem conflitos e avanço automático no bracket. |
+| **Paulo** | 1. [GrupoClassificacaoTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/GrupoClassificacaoTest.java)<br>2. [CalendarioJogoTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/CalendarioJogoTest.java)<br>3. [AvancoBracketTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/AvancoBracketTest.java)<br>4. [LotacaoEstadioTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/LotacaoEstadioTest.java)<br>5. [ScoreFIFATest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/ScoreFIFATest.java)<br>6. [SigiloArbitrosTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/SigiloArbitrosTest.java) | Admin + Calendário + Bracket + Arbitragem | Classificações de grupos, agendamento de jogos, Bracket, lotação de estádios, sigilo e reavaliação de árbitros. |
 
 ---
 
@@ -29,15 +29,15 @@ Este documento apresenta os testes unitários realizados pelo grupo para garanti
 #### 1.1 [JogadorStateTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/JogadorStateTest.java)
 * **Objetivo:** Garantir a correta transição de estados disciplinares/físicos dos jogadores do plantel.
 * **Cenário de Teste:**
-  - **Arrange:** Criação de um `Jogador` com estado inicial `APTO` e energia 100%.
+  - **Arrange:** Criação de um jogador com estado inicial `APTO` e energia 100%.
   - **Act:** Modificação do estado para `LESIONADO`, decréscimo de energia e registo de uma nova ocorrência médica.
-  - **Assert:** Verifica se o estado mudou para `LESIONADO`, se a energia reduziu e se a ocorrência foi registada no histórico clínico do jogador.
+  - **Assert:** Verifica se o estado mudou para `LESIONADO`, se a energia reduziu e se a ocorrência foi registada no histórico clínico.
 
 #### 1.2 [NeutralidadeArbitroTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/NeutralidadeArbitroTest.java)
 * **Objetivo:** Validar a regra de neutralidade nacional da FIFA para árbitros escalados.
 * **Cenário de Teste:**
-  - **Arrange:** Jogo entre Portugal e Brasil. Criação de um `Arbitro` principal de nacionalidade portuguesa.
-  - **Act:** Tentar escalar o `Arbitro` português para o jogo.
+  - **Arrange:** Jogo entre Portugal e Brasil. Criação de um árbitro principal de nacionalidade portuguesa.
+  - **Act:** Tentar escalar o árbitro português para o jogo.
   - **Assert:** Confirma que a escala foi rejeitada (retorna `false`), impedindo potenciais conflitos de interesse éticos.
 
 #### 1.3 [IntervaloArbitroTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/IntervaloArbitroTest.java)
@@ -54,27 +54,27 @@ Este documento apresenta os testes unitários realizados pelo grupo para garanti
 #### 2.1 [AlojamentoCapacidadeTest (Capacidade)](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/AlojamentoCapacidadeTest.java)
 * **Objetivo:** Evitar a alocação de uma comitiva em hotéis que não comportem a sua dimensão.
 * **Cenário de Teste:**
-  - **Arrange:** Equipa com 26 convocados registados e um `Hotel` com capacidade máxima de 25 quartos.
+  - **Arrange:** Equipa com 26 convocados registados e um hotel com capacidade máxima de 25 quartos.
   - **Act:** Realizar a tentativa de alocação (check-in) da equipa no hotel.
   - **Assert:** Confirma que a atribuição foi negada por falta de espaço suficiente para o plantel.
 
 #### 2.2 [AlojamentoCapacidadeTest (Exclusividade)](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/AlojamentoCapacidadeTest.java)
 * **Objetivo:** Validar o princípio ético e logístico de exclusividade (apenas uma seleção por hotel).
 * **Cenário de Teste:**
-  - **Arrange:** Duas seleções nacionais distintas (Equipa A e Equipa B) e um `Hotel`.
+  - **Arrange:** Duas seleções nacionais distintas (Equipa A e Equipa B) e um hotel.
   - **Act:** Alocar a Equipa A com sucesso e tentar alocar a Equipa B no mesmo estabelecimento.
   - **Assert:** O sistema impede a segunda alocação, garantindo a privacidade das seleções.
 
 #### 2.3 [AntiBotBilheteiraTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/AntiBotBilheteiraTest.java)
 * **Objetivo:** Impedir a especulação de bilhetes limitando a compra online entre 1 e 4 ingressos.
 * **Cenário de Teste:**
-  - **Arrange:** Um `Jogo` agendado e um setor de estádio com lugares vagos.
+  - **Arrange:** Um jogo agendado e um setor de estádio com lugares vagos.
   - **Act:** Simular tentativas de compra com quantidades inválidas (0, -1, 5) e quantidades válidas (1, 4).
   - **Assert:** Verifica que as compras inválidas são bloqueadas e as válidas são processadas com sucesso.
 
 ---
 
-### 👤 3. Paulo Gomes (Admin + Calendário + Bracket)
+### 👤 3. Paulo Gomes (Admin + Calendário + Bracket + Arbitragem + Bilheteira)
 
 #### 3.1 [GrupoClassificacaoTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/GrupoClassificacaoTest.java)
 * **Objetivo:** Validar a tabela de grupos e a correta aplicação dos critérios de desempate da FIFA.
@@ -96,6 +96,27 @@ Este documento apresenta os testes unitários realizados pelo grupo para garanti
   - **Arrange:** Criação de um jogo de oitavos-de-final ligado a um jogo posterior (quartos-de-final) no bracket.
   - **Act:** Finalizar o jogo introduzindo golos e definindo uma equipa vencedora.
   - **Assert:** Verifica se a equipa vencedora foi automaticamente transportada para o slot correto no jogo dos quartos-de-final.
+
+#### 3.4 [LotacaoEstadioTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/LotacaoEstadioTest.java)
+* **Objetivo:** Evitar a sobrelotação dos estádios nas vendas online e presenciais.
+* **Cenário de Teste:**
+  - **Arrange:** Um jogo agendado num estádio com capacidade máxima de 10 lugares num determinado setor.
+  - **Act:** Efetuar a venda sucessiva de bilhetes até tentar ultrapassar a capacidade limite do setor.
+  - **Assert:** Garante que a transação é rejeitada quando a venda excede a lotação máxima disponível.
+
+#### 3.5 [ScoreFIFATest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/ScoreFIFATest.java)
+* **Objetivo:** Validar o recálculo do score ético e técnico dos árbitros com base no histórico de classificações.
+* **Cenário de Teste:**
+  - **Arrange:** Um árbitro com pontuação inicial de 50 no score FIFA.
+  - **Act:** Submeter novas avaliações ao árbitro.
+  - **Assert:** Garante que o sistema calcula a nova média ponderada na base de dados após cada submissão.
+
+#### 3.6 [SigiloArbitrosTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/SigiloArbitrosTest.java)
+* **Objetivo:** Proteger a integridade e evitar manipulação de resultados mantendo a escala de arbitragem em sigilo antes do início do jogo.
+* **Cenário de Teste:**
+  - **Arrange:** Jogo agendado com equipa de arbitragem escalada.
+  - **Act:** Consultar a escala de arbitragem como público adepto.
+  - **Assert:** O sistema retorna `null` para a escala pública de arbitragem, mantendo a confidencialidade necessária até ao início do jogo.
 
 ---
 
@@ -154,6 +175,6 @@ Este documento apresenta os testes unitários realizados pelo grupo para garanti
 
 | # | Entregável | Caminho do Ficheiro | Estado |
 |---|---|---|---|
-| 1 | **Diagrama de Classes** | [8_diagrama_classes.md](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/documentacao_fase2/8_diagrama_classes.md) / imagens em [imagens/](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/documentacao_fase2/imagens/) | ✅ Concluído e Renderizado |
+| 1 | **Diagrama de Classes** | [8_diagrama_classes.md](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/documentacao_fase2/8_diagrama_classes.md) | ✅ Concluído e Renderizado |
 | 2 | **Texto dos Casos de Uso** | [texto_casos_uso_iconix.md](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/texto_casos_uso_iconix.md) | ✅ Corrigido (Estilo ICONIX exato) |
 | 3 | **Relatório de Testes Unitários** | [relatorio_testes_unitarios.md](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/documentacao_fase2/relatorio_testes_unitarios.md) | ✅ Concluído |
