@@ -496,7 +496,58 @@ def create_pdf():
         "um jogo de oitavos, a equipa vencedora avança de imediato para a posição devida no jogo seguinte, como validado pelo teste 'AvancoBracketTest'."
     )
     pdf.multi_cell(pdf.epw, 6, coerencia_text)
+    pdf.ln(10)
     
+    # ================= PAGE: INSTRUÇÕES DE EXECUÇÃO =================
+    pdf.add_page()
+    pdf.set_y(30)
+    pdf.set_font("Arial", "B", 16)
+    pdf.set_text_color(24, 76, 120)
+    pdf.cell(pdf.epw, 10, "5. Instruções de Execução da Aplicação no IntelliJ IDEA")
+    pdf.ln(12)
+    
+    pdf.set_font("Arial", "", 10)
+    pdf.set_text_color(40, 40, 40)
+    
+    instrucoes_text = (
+        "Para que o docente possa executar e testar a aplicação JavaFX no IntelliJ IDEA com total facilidade, "
+        "deverá seguir os seguintes passos:\n\n"
+        "Passo 1: Importar o Projeto\n"
+        "- Abrir o IntelliJ IDEA e selecionar a opção 'Open' ou 'Import Project'.\n"
+        "- Selecionar a diretório 'projeto_java' (ou o ficheiro 'pom.xml' contido na pasta).\n"
+        "- Escolher 'Open as Project'. O IntelliJ importará automaticamente todas as dependências Maven necessárias.\n\n"
+        "Passo 2: Configurar o JDK\n"
+        "- Aceder a 'File' -> 'Project Structure...' -> 'Project'.\n"
+        "- Garantir que a versão do SDK (JDK) é a versão 21 (ou compatível com JavaFX 21).\n\n"
+        "Passo 3: Executar a Aplicação via Maven (Recomendado)\n"
+        "- No painel lateral direito do IntelliJ, abrir a aba 'Maven'.\n"
+        "- Expandir o menu 'Plugins' -> 'javafx' -> clicar duas vezes em 'javafx:run'.\n"
+        "- Em alternativa, abrir a consola (Terminal) do IntelliJ dentro do diretório 'projeto_java' e executar o seguinte comando:\n"
+    )
+    pdf.multi_cell(pdf.epw, 6, instrucoes_text)
+    pdf.ln(4)
+    
+    # Draw a small Courier box for the Maven command
+    pdf.set_fill_color(245, 245, 245)
+    pdf.set_font("CourierNew", "B", 10)
+    pdf.set_text_color(30, 30, 30)
+    
+    x, y = pdf.get_x(), pdf.get_y()
+    pdf.rect(x, y, pdf.epw, 10, "F")
+    pdf.set_xy(x + 5, y + 3.5)
+    pdf.cell(pdf.epw - 10, 5, "mvn javafx:run")
+    pdf.ln(12)
+    
+    pdf.set_font("Arial", "", 10)
+    pdf.set_text_color(40, 40, 40)
+    instrucoes_text_2 = (
+        "Passo 4: Executar a Classe Principal (Alternativa)\n"
+        "- Navegar no painel do projeto até o ficheiro:\n"
+        "  'projeto_java/src/Main.java'\n"
+        "- Clicar com o botão direito sobre o ficheiro 'Main.java' e selecionar 'Run 'Main.main()''."
+    )
+    pdf.multi_cell(pdf.epw, 6, instrucoes_text_2)
+
     # Save the PDF
     output_path = "documentacao_fase2/fase2_ficheiro_certo.pdf"
     pdf.output(output_path)

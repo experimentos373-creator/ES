@@ -3,14 +3,14 @@
 
 **Disciplina:** Engenharia de Software  
 **Grupo de Trabalho / Alunos:**  
-- Paulo Gomes (2024134892) — Responsável pelo Administrador (Geral), Gestor de Equipa, Gestor de Bilheteira, Bracket/Tabelas e Integração
-- Leonardo Mendes — Responsável pelo Gestor de Arbitragem e parte do Público (Adepto)
-- Arthur — Responsável pelo Gestor de Logística  
+- Paulo Gomes (2024134892) — Responsável pelo Administrador (Geral), Gestor de Equipa, Gestor de Bilheteira, Bracket/Tabelas e Integração (50% do trabalho)
+- Leonardo Mendes (2241009) — Responsável pelo Gestor de Arbitragem e parte do Público (Adepto) (25% do trabalho)
+- Arthur (2024107339) — Responsável pelo Gestor de Logística (25% do trabalho)  
 **Fase:** 2  
 
 ---
 
-## Módulo 1 — Administrador
+## Módulo 1 — Administrador (Responsável: Paulo Gomes - 2024134892)
 
 ### CU01: Consultar Visão Geral do Torneio
 
@@ -77,7 +77,7 @@
 
 ---
 
-## Módulo 2 — Gestor de Arbitragem
+## Módulo 2 — Gestor de Arbitragem (Responsável: Leonardo Mendes - 2241009)
 
 ### CU05: Consultar Visão Geral dos Árbitros
 
@@ -135,7 +135,7 @@
 
 ---
 
-## Módulo 3 — Gestor de Equipa
+## Módulo 3 — Gestor de Equipa (Responsável: Paulo Gomes - 2024134892)
 
 ### CU09: Consultar Visão Geral da Equipa
 
@@ -186,7 +186,7 @@
 
 ---
 
-## Módulo 4 — Gestor de Bilheteira
+## Módulo 4 — Gestor de Bilheteira (Responsável: Paulo Gomes - 2024134892)
 
 ### CU14: Consultar Visão Geral de Performance de Vendas
 
@@ -211,7 +211,7 @@
 
 ---
 
-## Módulo 5 — Gestor de Logística
+## Módulo 5 — Gestor de Logística (Responsável: Arthur - 2024107339)
 
 ### CU19: Gestão de Alojamento e Transportes
 
@@ -229,9 +229,9 @@
 
 ---
 
-## Módulo 6 — Público (Portal do Adepto)
+## Módulo 6 — Público (Portal do Adepto) (Desenvolvimento Partilhado)
 
-### CU21: Consultar Calendário de Jogos e Resultados
+### CU21: Consultar Calendário de Jogos e Resultados (Responsável: Leonardo Mendes - 2241009)
 
 1. O Adepto seleciona a opção "Calendário e Resultados" no `"Portal do Adepto"`.
 2. O sistema lê todos os `Jogo` registados na base de dados.
@@ -242,7 +242,7 @@
 
 ---
 
-### CU22: Consultar Tabelas Classificativas dos Grupos
+### CU22: Consultar Tabelas Classificativas dos Grupos (Responsável: Paulo Gomes - 2024134892)
 
 1. O Adepto seleciona a opção "Classificações" no `"Portal do Adepto"`.
 2. O sistema calcula a `Classificacao` em tempo real para cada grupo ordenando as `Equipa` por pontos, saldo de golos e golos marcados.
@@ -253,7 +253,7 @@
 
 ---
 
-### CU23: Comprar Bilhetes para Jogos
+### CU23: Comprar Bilhetes para Jogos (Responsável: Arthur - 2024107339)
 
 1. O Adepto seleciona o `Jogo` pretendido na `"Lista de Jogos para Venda"` no `"Portal do Adepto"`.
 2. O sistema apresenta o `"Ecrã de Compra de Bilhetes"`.
@@ -268,9 +268,9 @@
 
 ---
 
-## Caso de Uso Transversal — Autenticação
+## Caso de Uso Transversal — Autenticação (Responsável: Paulo Gomes - 2024134892)
 
-### CU-AUTH: Autenticar Utilizador
+### CU-AUTH: Autenticar Utilizador (Responsável: Paulo Gomes - 2024134892)
 
 1. O `Utilizador` introduz o endereço de email no `"Formulário de Login"` e clica no botão "Entrar".
 2. O sistema verifica se o email do `Utilizador` existe na base de dados.
