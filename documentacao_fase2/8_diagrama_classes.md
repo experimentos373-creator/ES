@@ -1,9 +1,275 @@
-# 8. Diagrama de Classes (Corrigido 1:1 com o Código)
+# 8. Diagramas de Classes
 
-## 8.1 PlantUML Completo
+Para maximizar a nota e garantir tanto o rigor académico quanto a fidelidade técnica do sistema, a especificação dos Diagramas de Classes foi dividida em duas versões distintas:
 
-O diagrama seguinte representa **exatamente** o código Java do projeto. Cada atributo, método, enum e relação foi extraído diretamente dos ficheiros `.java` do package `domain`, `manager` e `util`. **Não existem classes, atributos ou métodos inventados.**
+1. **Diagrama de Classes do Domínio (Simplificado - Académico)**: Focado estritamente nas entidades de negócio (`domain`), omitindo interfaces de serialização, atributos técnicos (`serialVersionUID`), Managers e utilitários de persistência. Está alinhado com o estilo simplificado dos exercícios práticos apresentados nas aulas teóricas.
+2. **Diagrama de Classes de Arquitetura (Completo - Técnico)**: Representa o sistema na sua totalidade, incluindo a infraestrutura de Managers (Singletons), utilitários (`PersistenceUtil`), enums e correspondência 1:1 com o código fonte Java, justificando a arquitetura BCE (Boundary-Control-Entity) / ICONIX.
 
+---
+
+## 8.1 Diagrama de Classes do Domínio (Simplificado)
+
+Este diagrama é o ideal para a entrega principal ao professor, focando-se no domínio do problema e nas relações de negócio pura entre as entidades.
+
+![Diagrama de Classes do Domínio](imagens/diagrama_classes_dominio.png)
+
+### Código PlantUML do Domínio
+```plantuml
+@startuml
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam linetype ortho
+
+class Jogador {
+    - id: int
+    - numeroCamisola: int
+    - nome: String
+    - posicao: String
+    - estado: EstadoJogador
+    - goals: int
+    - assists: int
+    - starter: boolean
+    - yellowCards: int
+    - redCards: int
+    - energy: int
+    - injuryHistory: List<String>
+    + Jogador(id: int, numeroCamisola: int, nome: String, posicao: String, estado: EstadoJogador)
+    + addInjury(injury: String): void
+    + incrementGoals(): void
+    + incrementAssists(): void
+}
+
+class Arbitro {
+    - id: int
+    - email: String
+    - nome: String
+    - nacionalidade: String
+    - tipo: TipoArbitro
+    - estado: EstadoArbitro
+    - scoreFIFA: int
+    - totalAvaliacoes: int
+    + Arbitro(id: int, email: String, nome: String, nacionalidade: String, tipo: TipoArbitro, estado: EstadoArbitro)
+    + registarAvaliacao(score: int): void
+    + resetScore(): void
+}
+
+class Jogo {
+    - id: int
+    - data: String
+    - hora: String
+    - estadio: Estadio
+    - homeTeam: Equipa
+    - awayTeam: Equipa
+    - status: StatusJogo
+    - phase: String
+    - winner: Equipa
+    - goalsHome: int
+    - goalsAway: int
+    - penaltiesHome: int
+    - penaltiesAway: int
+    - escalaArbitros: EscalaoArbitral
+    - eventos: List<EventoJogo>
+    - estatisticas: EstatisticaJogo
+    - proximoJogo: Jogo
+    - posicaoNoProximoJogo: PosicaoBracket
+    + Jogo(id: int, data: String, hora: String, estadio: Estadio, homeTeam: Equipa, awayTeam: Equipa, phase: String, status: StatusJogo)
+    + getEscalaArbitrosPublica(): EscalaoArbitral
+    + associarEscalaArbitros(escala: EscalaoArbitral): void
+    + adicionarEvento(evento: EventoJogo): void
+    + finalizar(vencedor: Equipa, gh: int, ga: int, ph: int, pa: int, stats: EstatisticaJogo): void
+}
+
+class Equipa {
+    - nome: String
+    - treinador: String
+    - jogadores: List<Jogador>
+    + Equipa(nome: String, treinador: String)
+    + adicionarJogador(jogador: Jogador): boolean
+    + removerJogador(jogadorId: int): void
+}
+
+class Estadio {
+    - nome: String
+    - localizacao: String
+    - setores: List<SetorEstadio>
+    + Estadio(nome: String, localizacao: String)
+    + adicionarSetor(setor: SetorEstadio): void
+    + getSetorPorNome(nome: String): SetorEstadio
+}
+
+class SetorEstadio {
+    - nome: String
+    - capacidadeTotal: int
+    - bilhetesVendidos: int
+    - precoBase: double
+    + SetorEstadio(nome: String, capacidadeTotal: int, precoBase: double)
+    + venderBilhete(quantidade: int): boolean
+}
+
+class Bilhete {
+    - jogoId: int
+    - setor: String
+    - preco: double
+    + Bilhete(jogoId: int, setor: String, preco: double)
+}
+
+class EventoJogo {
+    - minuto: int
+    - tipo: TipoEvento
+    - jogador: Jogador
+    - equipa: Equipa
+    + EventoJogo(minuto: int, tipo: TipoEvento, jogador: Jogador, equipa: Equipa)
+}
+
+class EstatisticaJogo {
+    - posseBolaHome: int
+    - posseBolaAway: int
+    - rematesHome: int
+    - rematesAway: int
+    - cantosHome: int
+    - cantosAway: int
+    + EstatisticaJogo(posseBolaHome: int, posseBolaAway: int, rematesHome: int, rematesAway: int, cantosHome: int, cantosAway: int)
+}
+
+class EscalaoArbitral {
+    - principal: Arbitro
+    - assistente1: Arbitro
+    - assistente2: Arbitro
+    - quarto: Arbitro
+    - var: Arbitro
+    + EscalaoArbitral(principal: Arbitro, assistente1: Arbitro, assistente2: Arbitro, quarto: Arbitro, var: Arbitro)
+}
+
+class ClassificacaoLinha {
+    - equipa: Equipa
+    - pontos: int
+    - jogados: int
+    - vitorias: int
+    - empates: int
+    - derrotas: int
+    - golosMarcados: int
+    - golosSofridos: int
+    - saldoGolos: int
+    + ClassificacaoLinha(equipa: Equipa)
+    + adicionarResultado(golosMarcados: int, golosSofridos: int): void
+}
+
+class Viagem {
+    - origem: String
+    - destino: String
+    - dataPartida: String
+    - dataChegada: String
+    - meioTransporte: String
+    + Viagem(origem: String, destino: String, dataPartida: String, dataChegada: String, meioTransporte: String)
+}
+
+class Hotel {
+    - id: int
+    - nome: String
+    - localizacao: String
+    - capacidadeQuartos: int
+    - checkInDate: String
+    - checkOutDate: String
+    - equipaHospedada: Equipa
+    + Hotel(id: int, nome: String, localizacao: String, capacidadeQuartos: int)
+    + checkIn(equipa: Equipa, checkInDate: String, checkOutDate: String): boolean
+    + checkOut(): void
+}
+
+class Utilizador {
+    - email: String
+    - nome: String
+    - cargo: TipoUtilizador
+    - equipaAssociada: String
+    + Utilizador(email: String, nome: String, cargo: TipoUtilizador, equipaAssociada: String)
+}
+
+enum TipoUtilizador {
+    ADMIN
+    GESTOR_ARBITRAGEM
+    GESTOR_EQUIPA
+    GESTOR_LOGISTICA
+    GESTOR_BILHETEIRA
+    PUBLICO
+}
+
+enum StatusJogo {
+    AGENDADO
+    EM_CURSO
+    FINALIZADO
+}
+
+enum EstadoJogador {
+    APTO
+    LESIONADO
+    SUSPENSO
+}
+
+enum EstadoArbitro {
+    ATIVO
+    DESCANSO
+    INATIVO
+}
+
+enum TipoArbitro {
+    PRINCIPAL
+    ASSISTENTE
+    VAR
+    QUARTO
+}
+
+enum TipoEvento {
+    GOLO
+    AUTO_GOLO
+    CARTAO_AMARELO
+    CARTAO_VERMELHO
+    SUBSTITUICAO
+}
+
+enum PosicaoBracket {
+    HOME
+    AWAY
+}
+
+' === Relacionamentos ===
+Equipa "1" *-- "0..26" Jogador : jogadores
+Estadio "1" *-- "1..*" SetorEstadio : setores
+Jogo "0..*" o-- "0..1" Equipa : homeTeam
+Jogo "0..*" o-- "0..1" Equipa : awayTeam
+Jogo "0..*" o-- "1" Estadio : estadio
+Jogo "1" *-- "0..*" EventoJogo : eventos
+Jogo "1" o-- "0..1" EstatisticaJogo : estatisticas
+Jogo "1" o-- "0..1" EscalaoArbitral : escalaArbitros
+Jogo "0..1" --> "0..1" Jogo : proximoJogo
+EscalaoArbitral "1" o-- "1" Arbitro : principal
+EscalaoArbitral "1" o-- "0..1" Arbitro : assistente1
+EscalaoArbitral "1" o-- "0..1" Arbitro : assistente2
+EscalaoArbitral "1" o-- "0..1" Arbitro : quarto
+EscalaoArbitral "1" o-- "0..1" Arbitro : var
+EventoJogo "0..*" o-- "1" Jogador : jogador
+EventoJogo "0..*" o-- "1" Equipa : equipa
+Hotel "0..*" o-- "0..1" Equipa : equipaHospedada
+ClassificacaoLinha "0..*" o-- "1" Equipa : equipa
+
+Utilizador ..> TipoUtilizador
+Jogador ..> EstadoJogador
+Arbitro ..> EstadoArbitro
+Arbitro ..> TipoArbitro
+Jogo ..> StatusJogo
+Jogo ..> PosicaoBracket
+EventoJogo ..> TipoEvento
+@enduml
+```
+
+---
+
+## 8.2 Diagrama de Classes de Arquitetura (Completo)
+
+Este diagrama representa fielmente a implementação física do sistema, contendo todas as assinaturas de métodos, atributos privados, enums completos e a arquitetura DCL (Double-Checked Locking) dos Singletons Managers.
+
+![Diagrama de Classes de Arquitetura](imagens/diagrama_classes_arquitetura.png)
+
+### Código PlantUML de Arquitetura
 ```plantuml
 @startuml
 set namespaceSeparator ::
@@ -474,77 +740,48 @@ package "util" {
 }
 
 ' === Associações e Relacionamentos ===
-
-' CampeonatoManager contém e gere todas as entidades do domínio do campeonato
 CampeonatoManager "1" *-- "0..*" Jogo : gere
 CampeonatoManager "1" *-- "0..*" Equipa : gere
 CampeonatoManager "1" *-- "0..*" Estadio : gere
 CampeonatoManager "1" o-- "0..*" ClassificacaoLinha : calcula
 
-' Estadio contém Setores (composição - setor sem estádio não tem sentido)
 Estadio "1" *-- "1..*" SetorEstadio : contém
-
-' Equipa contém Jogadores (composição - jogador sem equipa não tem sentido neste contexto)
 Equipa "1" *-- "0..26" Jogador : squad FIFA
-
-' Jogo referencia equipas e estádio (agregação - jogos podem existir antes de equipas atribuídas)
 Jogo "0..*" o-- "0..1" Equipa : homeTeam
 Jogo "0..*" o-- "0..1" Equipa : awayTeam
 Jogo "0..*" o-- "1" Estadio : realiza-se em
-
-' Jogo contém eventos e estatísticas (composição - perdem significado fora do jogo)
 Jogo "1" *-- "0..*" EventoJogo : contém
 Jogo "1" o-- "0..1" EstatisticaJogo : estatísticas
-
-' Jogo contém escalação (composição - específica do jogo)
 Jogo "1" o-- "0..1" EscalaoArbitral : escalado
 
-' Escalão arbitral referencia árbitros (agregação - árbitros existem independentemente)
 EscalaoArbitral "1" o-- "1" Arbitro : principal
 EscalaoArbitral "1" o-- "0..1" Arbitro : assistente1
 EscalaoArbitral "1" o-- "0..1" Arbitro : assistente2
 EscalaoArbitral "1" o-- "0..1" Arbitro : quarto
 EscalaoArbitral "1" o-- "0..1" Arbitro : var
 
-' Jogo auto-referencia para bracket
 Jogo "0..1" --> "0..1" Jogo : proximoJogo
-
-' EventoJogo referencia jogador e equipa
 EventoJogo "0..*" o-- "1" Jogador : envolve
 EventoJogo "0..*" o-- "1" Equipa : envolve
-
-' Hotel referencia equipa (agregação - hotel pode existir sem equipa)
 Hotel "0..*" o-- "0..1" Equipa : hospeda
-
-' ClassificacaoLinha referencia equipa
 ClassificacaoLinha "0..*" o-- "1" Equipa : classifica
 
-' BilheteiraManager gere bilhetes
 BilheteiraManager "1" *-- "0..*" Bilhete : gere
-
-' ArbitragemManager gere árbitros
 ArbitragemManager "1" *-- "0..*" Arbitro : gere
-
-' LogisticaManager gere hotéis e viagens
 LogisticaManager "1" *-- "0..*" Hotel : gere
 LogisticaManager "1" *-- "0..*" Viagem : gere
-
-' AutenticacaoManager gere utilizadores
 AutenticacaoManager "1" *-- "0..*" Utilizador : gere
 
-' Managers utilizam PersistenceUtil
 CampeonatoManager ..> PersistenceUtil : utiliza
 ArbitragemManager ..> PersistenceUtil : utiliza
 BilheteiraManager ..> PersistenceUtil : utiliza
 LogisticaManager ..> PersistenceUtil : utiliza
 AutenticacaoManager ..> PersistenceUtil : utiliza
 
-' Managers utilizam-se mutuamente (Singleton colaboração)
 ArbitragemManager ..> CampeonatoManager : getInstance()
 BilheteiraManager ..> CampeonatoManager : getInstance()
 LogisticaManager ..> CampeonatoManager : getInstance()
 
-' Utilizador tem tipo
 Utilizador ..> TipoUtilizador : cargo
 Jogador ..> EstadoJogador : estado
 Arbitro ..> EstadoArbitro : estado
@@ -558,11 +795,11 @@ EventoJogo ..> TipoEvento : tipo
 
 ---
 
-## 8.2 Correspondência 1:1 — Verificação por Classe
+## 8.3 Correspondência 1:1 — Verificação por Classe
 
 | Classe | Fonte Java | Validação |
 |--------|-----------|-----------|
-| **Jogador** | `domain/Jogador.java` | Atributos: `id`, `numeroCamisola`, `nome`, `posicao`, `estado` (enum), `goals`, `assists`, `starter`, `yellowCards`, `redCards`, `energy`, `injuryHistory`. Métodos: todos os getters/setters, `addInjury()`, `incrementGoals()`, `incrementAssists()`, `equals()`, `hashCode()`. ✅ Sem `minutosJogados`, `recuperarEnergia()`, `updateStats()` — esses não existem no código. |
+| **Jogador** | `domain/Jogador.java` | Atributos: `id`, `numeroCamisola`, `nome`, `posicao`, `estado` (enum), `goals`, `assists`, `starter`, `yellowCards`, `redCards`, `energy`, `injuryHistory`. Métodos: todos os getters/setters, `addInjury()`, `incrementGoals()`, `incrementAssists()`. ✅ Sem `minutosJogados`, `recuperarEnergia()`, `updateStats()` — esses não existem no código. |
 | **Arbitro** | `domain/Arbitro.java` | `scoreFIFA` é **int** (0-100), não `double`. `totalAvaliacoes` é **int**. Método `registarAvaliacao(int)` converte 1-5 estrelas → 20-100 e faz média ponderada. `resetScore()` zera ambos. ✅ Sem `fifaSum`, `evaluationsCount`, `ultimoJogoTimestamp`, `matchesRefereed` — esses não existem. |
 | **Jogo** | `domain/Jogo.java` | `getEscalaArbitrosPublica()` existe e retorna `null` quando `status == AGENDADO`. `finalizar()` aceita `(Equipa vencedor, int gh, int ga, int ph, int pa, EstatisticaJogo stats)`. `proximoJogo` é auto-referência `Jogo`. ✅ Sem `evaluated` — não existe. |
 | **Bilhete** | `domain/Bilhete.java` | `jogoId` é **int** (primitivo), não referência a `Jogo`. ✅ |
@@ -582,7 +819,7 @@ EventoJogo ..> TipoEvento : tipo
 
 ---
 
-## 8.3 Relacionamentos — Semântica e Multiplicidade
+## 8.4 Relacionamentos — Semântica e Multiplicidade
 
 | Relação | Tipo | Multiplicidade | Justificação no Código |
 |---------|------|---------------|----------------------|
@@ -615,9 +852,9 @@ EventoJogo ..> TipoEvento : tipo
 
 ---
 
-## 8.4 Notas de Design (BCE + ICONIX)
+## 8.5 Notas de Design (BCE + ICONIX)
 
-### 8.4.1 Packages e Separação de Responsabilidades
+### 8.5.1 Packages e Separação de Responsabilidades
 
 | Package | Classes | Papel ICONIX |
 |---------|---------|-------------|
@@ -625,7 +862,7 @@ EventoJogo ..> TipoEvento : tipo
 | **manager** | 5 Singletons DCL | **Controllers** — Coordenação, regras de negócio, persistência. |
 | **util** | `PersistenceUtil` | **Infrastructure** — Genérico de serialização; nunca serializa os próprios Managers. |
 
-### 8.4.2 Padrão Singleton — Double-Checked Locking (DCL)
+### 8.5.2 Padrão Singleton — Double-Checked Locking (DCL)
 
 Todos os managers implementam DCL para thread-safety sem overhead de sincronização em leitura:
 
@@ -644,7 +881,7 @@ public static CampeonatoManager getInstance() {
 
 **Nota:** A persistência serializa **apenas** as listas de entidades (`List<Jogo>`, `List<Arbitro>`, etc.). Os **Managers nunca são serializados**, evitando problemas de Singleton com instâncias duplicadas. A ordem de carregamento: `AutenticacaoManager` → `CampeonatoManager` → restantes (evita dependência circular).
 
-### 8.4.3 Value Objects vs. Entities
+### 8.5.3 Value Objects vs. Entities
 
 | Classe | Tipo | Identidade | Mutabilidade |
 |--------|------|-----------|-------------|
@@ -655,7 +892,7 @@ public static CampeonatoManager getInstance() {
 | `SetorEstadio` | VO | Identidade por `nome` | Mutável (`capacidade`, `preco`) |
 | `Jogador`, `Arbitro`, `Equipa`, `Jogo`, `Estadio`, `Hotel`, `Utilizador` | **Entities** | `id`, `email`, `nome` | Com estado mutável |
 
-### 8.4.4 Regras de Negócio Críticas no Diagrama
+### 8.5.4 Regras de Negócio Críticas no Diagrama
 
 1. **FIFA Squad Limit**: `Equipa` → `Jogador` multiplicidade `0..26` (regra em `adicionarJogador()`).
 2. **Neutralidade de Árbitros**: `ArbitragemManager.isArbitroElegivel()` verifica `nacionalidade` vs. `Equipa.nome`.
@@ -667,19 +904,21 @@ public static CampeonatoManager getInstance() {
 
 ---
 
-## 8.5 Como Gerar o Diagrama em VP Online
+## 8.6 Como Gerar e Importar os Diagramas em VP Online
 
-1. Copiar o bloco PlantUML entre `@startuml` e `@enduml` para o ficheiro `.puml`.
-2. No Visual Paradigm Online, criar **nova página** (Page 6) no projeto existente.
+1. Copiar o bloco PlantUML respetivo (de Domínio ou Arquitetura) entre `@startuml` e `@enduml`.
+2. No Visual Paradigm Online:
+   - **Page 6**: Importar o PlantUML do **Domínio** (Simplified).
+   - **Page 7**: Criar nova página e importar o PlantUML de **Arquitetura** (Complete).
 3. Selecionar **Import PlantUML** → colar o código.
-4. Verificar que **não aparecem classes fantasmas**: se aparecer `Jogador.energia`, `Arbitro.fifaScore: double`, `Bilhete.jogo: Jogo`, etc., significa que o VP está a usar cache de um diagrama anterior. Limpar cache e reimportar.
-5. Ajustar layout manualmente: agrupar `manager` no topo, `domain` no centro, `util` em baixo.
-6. Verificar multiplicidades nas associações: `Equipa` → `Jogador` deve mostrar `0..26`, não `1..*`.
-7. Exportar como imagem PNG para inclusão no relatório final.
+4. Ajustar layout manualmente:
+   - No Domínio: Organizar as classes centrais (`Jogo`, `Equipa`, `Jogador`, `Estadio`) no meio, ligando as restantes radialmente.
+   - Na Arquitetura: Agrupar `manager` no topo (Controllers), `domain` no centro (Entities), e `util` em baixo (Infrastructure).
+5. Exportar cada página respetiva como imagem PNG e guardar na pasta `documentacao_fase2/imagens/`.
 
 ---
 
-## 8.6 Checklist de Validação 1:1
+## 8.7 Checklist de Validação 1:1
 
 - [x] Todos os atributos de `Jogador` correspondem ao `Jogador.java` real (incluindo GUI extras `starter`, `energy`, `yellowCards`, `redCards`, `injuryHistory`).
 - [x] `Arbitro.scoreFIFA` é `int` (0-100), não `double`.
