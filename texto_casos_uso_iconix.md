@@ -98,7 +98,7 @@
 2. O Gestor de Arbitragem seleciona o `Jogo` pretendido no dropdown da `"Lista de Jogos Agendados"`.
 3. O Gestor de Arbitragem escolhe cinco `Arbitro` nos dropdowns das respetivas funções do `"Formulário de Escala"` e clica no botão "Confirmar Escala".
 4. O sistema valida que nenhum `Arbitro` tem nacionalidade igual à de uma das `Equipa` do `Jogo`, nem tem outro `Jogo` no período de 48 horas.
-5. O sistema regista o `Escalaonamento` na base de dados associado ao `Jogo`.
+5. O sistema regista o `EscalaoArbitral` na base de dados associado ao `Jogo`.
 6. O sistema apresenta a `"Mensagem de Confirmação: Escala Confirmada"` e o caso de uso termina.
 
 **Caminhos Alternativos:**
