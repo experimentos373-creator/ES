@@ -437,26 +437,33 @@ def create_pdf():
         if in_maven:
             maven_block.append(line)
             
-    # Print maven output in CourierNew inside a box
+    # Print maven output in CourierNew inside a box (using small font and left margin padding to prevent overflow)
     pdf.set_fill_color(245, 245, 245)
-    pdf.set_font("CourierNew", "", 8)
+    pdf.set_font("CourierNew", "", 7)
     pdf.set_text_color(30, 30, 30)
     
-    x, y = pdf.get_x(), pdf.get_y()
-    box_height = len(maven_block) * 4.2 + 6
+    line_h = 3.5
+    box_height = len(maven_block) * line_h + 6
     
+    x, y = pdf.get_x(), pdf.get_y()
     if y + box_height > 270:
         pdf.add_page()
         pdf.set_y(30)
         x, y = pdf.get_x(), pdf.get_y()
         
     pdf.rect(x, y, pdf.epw, box_height, "F")
-    pdf.set_xy(x + 3, y + 3)
+    
+    # Set left margin temporarily for box padding
+    old_l_margin = pdf.l_margin
+    pdf.set_left_margin(old_l_margin + 3)
+    pdf.set_xy(pdf.l_margin, y + 3)
     
     for m_line in maven_block:
-        pdf.cell(pdf.epw - 6, 4.2, m_line)
-        pdf.ln(4.2)
+        pdf.multi_cell(pdf.epw - 6, line_h, m_line)
         
+    # Restore original left margin
+    pdf.set_left_margin(old_l_margin)
+    pdf.set_x(pdf.l_margin)
     pdf.ln(10)
     
     # ================= PAGE: COERENCIA DA IMPLEMENTACAO =================
