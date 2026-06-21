@@ -3,7 +3,7 @@
 
 **Disciplina:** Engenharia de Software  
 **Grupo de Trabalho / Alunos:**  
-- Paulo Gomes (2024134892) — Responsável pelo Administrador (Geral), Gestor de Equipa, Gestor de Bilheteira, Bracket/Tabelas e Integração (50% do trabalho)
+- Paulo Gomes (2024134892) — Responsável pelo Administrador (Geral), Gestor de Equipa, Gestor de Bilheteira, Bracket/Tabelas, Integração, Público (Adepto) e Bilheteira (Desenvolvimento Partilhado) (50% do trabalho)
 - Leonardo Mendes (2241009) — Responsável pelo Gestor de Arbitragem e parte do Público (Adepto) (25% do trabalho)
 - Arthur (2024107339) — Responsável pelo Gestor de Logística (25% do trabalho)  
 **Fase:** 2  
@@ -238,7 +238,7 @@
 
 ## Módulo 6 — Público (Portal do Adepto) (Desenvolvimento Partilhado)
 
-### CU21: Consultar Calendário de Jogos e Resultados (Responsável: Leonardo Mendes - 2241009)
+### CU21: Consultar Calendário de Jogos e Resultados (Responsáveis: Leonardo Mendes - 2241009 / Paulo Gomes - 2024134892)
 
 1. O Adepto seleciona a opção "Calendário e Resultados" no `"Portal do Adepto"`.
 2. O sistema lê todos os `Jogo` registados na base de dados.
@@ -260,7 +260,7 @@
 
 ---
 
-### CU23: Comprar Bilhetes para Jogos (Responsável: Arthur - 2024107339)
+### CU23: Comprar Bilhetes para Jogos (Responsáveis: Arthur - 2024107339 / Paulo Gomes - 2024134892)
 
 1. O Adepto seleciona o `Jogo` pretendido na `"Lista de Jogos para Venda"` no `"Portal do Adepto"`.
 2. O sistema apresenta o `"Ecrã de Compra de Bilhetes"`.

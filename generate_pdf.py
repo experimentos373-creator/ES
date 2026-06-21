@@ -111,7 +111,7 @@ def create_pdf():
     
     pdf.set_font("Arial", "", 10)
     pdf.set_text_color(50, 50, 50)
-    pdf.cell(pdf.epw, 6, "Paulo Gomes (2024134892) (Admin + Gestor Equipa + Bracket + Integração) - 50%", align="C")
+    pdf.cell(pdf.epw, 6, "Paulo Gomes (2024134892) (Admin + Equipa + Bracket + Bilheteira + Público + Integração) - 50%", align="C")
     pdf.ln(6)
     pdf.cell(pdf.epw, 6, "Leonardo Mendes (2241009) (Gestão de Arbitragem + Público) - 25%", align="C")
     pdf.ln(6)
@@ -195,7 +195,7 @@ def create_pdf():
     # Division of Work Table using new FPDF2 table API
     work_data = [
         ("Paulo Gomes\n(2024134892)\n[50%]", 
-         "Administrador (Geral), Gestor de Equipa, Bracket/Tabelas de Eliminatórias, Integração Geral e Gestor de Bilheteira (Performance).\nImplementação Java da persistência Singleton (base dados simulada), classes de classificação de grupos e lógica de brackets.", 
+         "Administrador (Geral), Gestor de Equipa, Bracket/Tabelas de Eliminatórias, Integração Geral, Gestor de Bilheteira (Performance), Público (Portal do Adepto) e Bilheteira (partilhado).\nImplementação Java de base dados simulada (Singleton), classificação de grupos, brackets, bilheteira e áreas públicas.", 
          "GrupoClassificacaoTest\nCalendarioJogoTest\nAvancoBracketTest\nLotacaoEstadioTest\nScoreFIFATest\nSigiloArbitrosTest"),
          
         ("Leonardo Mendes\n(2241009)\n[25%]", 
