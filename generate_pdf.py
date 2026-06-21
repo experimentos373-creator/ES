@@ -437,33 +437,24 @@ def create_pdf():
         if in_maven:
             maven_block.append(line)
             
-    # Print maven output in CourierNew inside a box (using small font and left margin padding to prevent overflow)
-    pdf.set_fill_color(245, 245, 245)
+    # Print maven output in CourierNew inside a single robust multi_cell with fill=True
+    # This prevents coordinate offset bugs, truncation, and page break bugs.
+    pdf.set_fill_color(245, 247, 250)
     pdf.set_font("CourierNew", "", 7)
-    pdf.set_text_color(30, 30, 30)
+    pdf.set_text_color(50, 50, 50)
+    pdf.set_draw_color(220, 225, 230)
     
-    line_h = 3.5
-    box_height = len(maven_block) * line_h + 6
+    full_maven_text = "\n".join(maven_block)
     
-    x, y = pdf.get_x(), pdf.get_y()
-    if y + box_height > 270:
+    # Check if there is enough space on this page, if not start a new page
+    # A single cell height is calculated dynamically by FPDF2 during rendering
+    # Est height is approx number of lines * 3.2
+    est_height = len(maven_block) * 3.2 + 6
+    if pdf.get_y() + est_height > 260:
         pdf.add_page()
         pdf.set_y(30)
-        x, y = pdf.get_x(), pdf.get_y()
         
-    pdf.rect(x, y, pdf.epw, box_height, "F")
-    
-    # Set left margin temporarily for box padding
-    old_l_margin = pdf.l_margin
-    pdf.set_left_margin(old_l_margin + 3)
-    pdf.set_xy(pdf.l_margin, y + 3)
-    
-    for m_line in maven_block:
-        pdf.multi_cell(pdf.epw - 6, line_h, m_line)
-        
-    # Restore original left margin
-    pdf.set_left_margin(old_l_margin)
-    pdf.set_x(pdf.l_margin)
+    pdf.multi_cell(pdf.epw, 3.2, full_maven_text, border=1, fill=True)
     pdf.ln(10)
     
     # ================= PAGE: COERENCIA DA IMPLEMENTACAO =================
