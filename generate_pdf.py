@@ -111,7 +111,7 @@ def create_pdf():
     
     pdf.set_font("Arial", "", 10)
     pdf.set_text_color(50, 50, 50)
-    pdf.cell(pdf.epw, 6, "Paulo Gomes (2024134892) (Admin + Equipa + Bracket + Bilheteira + Público + Integração) - 50%", align="C")
+    pdf.cell(pdf.epw, 6, "Paulo Gomes (2024134892) (Admin + Equipa + Bilheteira + Público + Integração) - 50%", align="C")
     pdf.ln(6)
     pdf.cell(pdf.epw, 6, "Leonardo Mendes (2241009) (Gestão de Arbitragem + Público) - 25%", align="C")
     pdf.ln(6)
