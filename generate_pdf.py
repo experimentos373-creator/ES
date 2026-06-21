@@ -40,7 +40,7 @@ def create_pdf():
     pdf.add_font("CourierNew", "B", r"C:\Windows\Fonts\courbd.ttf")
 
     # Load resources early to prevent missing variables
-    with open("texto_casos_uso_iconix.md", "r", encoding="utf-8") as f:
+    with open("documentacao_fase2/texto_casos_uso_iconix.md", "r", encoding="utf-8") as f:
         uc_content = f.read()
     sections = uc_content.split("---")
 
