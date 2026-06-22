@@ -100,11 +100,10 @@ public class LogisticaManager {
         registarHotel(hotel);
     }
 
-    /**
-     * Planeia uma viagem para um jogo e persiste.
-     */
-    public Viagem planearViagem(Jogo jogo, String origem, String destino, String dataPartida, String dataChegada, String meio) {
+    public Viagem planearViagem(Jogo jogo, Equipa equipa, String origem, String destino, String dataPartida, String dataChegada, String meio) {
         Viagem v = new Viagem(origem, destino, dataPartida, dataChegada, meio);
+        v.setJogo(jogo);
+        v.setEquipa(equipa);
         this.viagens.add(v);
         saveAll();
         return v;

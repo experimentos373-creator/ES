@@ -124,11 +124,33 @@ public class MenuLogistica {
             System.out.println("  ID " + j.getId() + ": " + j.getHomeTeam().getNome() + " vs " + j.getAwayTeam().getNome() + " em " + j.getEstadio().getNome());
         }
 
-        int jogoId = LeitorInput.lerInteiro("ID do Jogo: ");
-        Jogo jogo = campManager.procurarJogoPorId(jogoId);
-        if (jogo == null) {
-            System.out.println("Jogo nao encontrado.");
-            return;
+        int jogoId = LeitorInput.lerInteiro("ID do Jogo (ou 0 para Viagem Geral/Sem Jogo): ");
+        Jogo jogo = null;
+        Equipa equipa = null;
+
+        if (jogoId != 0) {
+            jogo = campManager.procurarJogoPorId(jogoId);
+            if (jogo == null) {
+                System.out.println("Jogo nao encontrado.");
+                return;
+            }
+
+            System.out.println("Selecione a equipa que viaja:");
+            System.out.println("1. " + (jogo.getHomeTeam() != null ? jogo.getHomeTeam().getNome() : "[A definir]"));
+            System.out.println("2. " + (jogo.getAwayTeam() != null ? jogo.getAwayTeam().getNome() : "[A definir]"));
+            int optEq = LeitorInput.lerInteiro("Opcao (1 ou 2): ");
+            equipa = (optEq == 1) ? jogo.getHomeTeam() : jogo.getAwayTeam();
+            if (equipa == null) {
+                System.out.println("Equipa nao definida para este jogo.");
+                return;
+            }
+        } else {
+            String eqNome = LeitorInput.lerLinha("Nome da Equipa/Comitiva que viaja: ");
+            equipa = campManager.procurarEquipaPorNome(eqNome);
+            if (equipa == null) {
+                System.out.println("Equipa nao encontrada.");
+                return;
+            }
         }
 
         String origem = LeitorInput.lerLinha("Origem (Hotel/Cidade): ");
@@ -137,7 +159,7 @@ public class MenuLogistica {
         String dataChegada = LeitorInput.lerLinha("Data/Hora Chegada Prevista: ");
         String meio = LeitorInput.lerLinha("Meio de Transporte (Autocarro/Aviao): ");
 
-        Viagem v = logManager.planearViagem(jogo, origem, destino, dataPartida, dataChegada, meio);
+        Viagem v = logManager.planearViagem(jogo, equipa, origem, destino, dataPartida, dataChegada, meio);
         System.out.println("Viagem planificada! ID da viagem: " + v.hashCode());
     }
 

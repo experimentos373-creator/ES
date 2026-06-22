@@ -13,6 +13,8 @@ public class Viagem implements Serializable {
     private String dataPartida;
     private String dataChegada;
     private String meioTransporte; // Autocarro, Voo Charter, etc.
+    private Jogo jogo;             // Jogo associado
+    private Equipa equipa;         // Equipa associada
 
     public Viagem(String origem, String destino, String dataPartida, String dataChegada, String meioTransporte) {
         this.origem = origem;
@@ -40,5 +42,21 @@ public class Viagem implements Serializable {
 
     public String getMeioTransporte() {
         return meioTransporte;
+    }
+
+    public Jogo getJogo() {
+        return jogo;
+    }
+
+    public void setJogo(Jogo jogo) {
+        this.jogo = jogo;
+    }
+
+    public Equipa getEquipa() {
+        return equipa;
+    }
+
+    public void setEquipa(Equipa equipa) {
+        this.equipa = equipa;
     }
 }

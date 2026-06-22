@@ -14,6 +14,7 @@ public class Equipa implements Serializable {
     private String nome;
     private String treinador;
     private List<Jogador> jogadores;
+    private Estadio estadioCasa; // Estádio principal da equipa (casa)
 
     public Equipa(String nome, String treinador) {
         this.nome = nome;
@@ -31,6 +32,14 @@ public class Equipa implements Serializable {
 
     public List<Jogador> getJogadores() {
         return new ArrayList<>(jogadores); // Retorna cópia de segurança
+    }
+
+    public Estadio getEstadioCasa() {
+        return estadioCasa;
+    }
+
+    public void setEstadioCasa(Estadio estadioCasa) {
+        this.estadioCasa = estadioCasa;
     }
 
     /**

@@ -4315,25 +4315,44 @@ public class DashboardController {
         TextField txtOut = new TextField();
         txtOut.setPromptText("ex: 15:15");
         
+        Label lblTeam = new Label("Equipa que viaja:");
+        lblTeam.setStyle("-fx-font-weight: bold;");
+        ComboBox<Equipa> cmbTeam = new ComboBox<>();
+        cmbTeam.setMaxWidth(Double.MAX_VALUE);
+        
+        cmbTeam.setItems(FXCollections.observableArrayList(campManager.getEquipas()));
+
+        cmbMatch.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                List<Equipa> teams = new ArrayList<>();
+                if (newVal.getHomeTeam() != null) teams.add(newVal.getHomeTeam());
+                if (newVal.getAwayTeam() != null) teams.add(newVal.getAwayTeam());
+                cmbTeam.setItems(FXCollections.observableArrayList(teams));
+            } else {
+                cmbTeam.setItems(FXCollections.observableArrayList(campManager.getEquipas()));
+            }
+        });
+
         Label lblMeio = new Label("Meio de Transporte:");
         lblMeio.setStyle("-fx-font-weight: bold;");
         ComboBox<String> cmbMeio = new ComboBox<>(FXCollections.observableArrayList("Autocarro", "Avião"));
         cmbMeio.setMaxWidth(Double.MAX_VALUE);
         
-        vbox.getChildren().addAll(lblMatch, cmbMatch, lblOrig, txtOrig, lblDest, txtDest, lblIn, txtIn, lblOut, txtOut, lblMeio, cmbMeio);
+        vbox.getChildren().addAll(lblMatch, cmbMatch, lblTeam, cmbTeam, lblOrig, txtOrig, lblDest, txtDest, lblIn, txtIn, lblOut, txtOut, lblMeio, cmbMeio);
         dialog.getDialogPane().setContent(vbox);
         
         dialog.showAndWait().ifPresent(response -> {
             if (response == btnConfirm) {
                 Jogo jogo = cmbMatch.getValue();
+                Equipa equipa = cmbTeam.getValue();
                 String orig = txtOrig.getText().trim();
                 String dest = txtDest.getText().trim();
                 String inT = txtIn.getText().trim();
                 String outT = txtOut.getText().trim();
                 String meio = cmbMeio.getValue();
                 
-                if (jogo == null || orig.isEmpty() || dest.isEmpty() || inT.isEmpty() || outT.isEmpty() || meio == null) {
-                    Alert err = new Alert(Alert.AlertType.ERROR, "Todos os campos são obrigatórios!");
+                if (equipa == null || orig.isEmpty() || dest.isEmpty() || inT.isEmpty() || outT.isEmpty() || meio == null) {
+                    Alert err = new Alert(Alert.AlertType.ERROR, "Todos os campos (exceto Jogo) são obrigatórios!");
                     err.showAndWait();
                     return;
                 }
@@ -4358,7 +4377,7 @@ public class DashboardController {
                 String formattedDep = depTime.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
                 String formattedArr = arrTime.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
                 
-                logManager.planearViagem(jogo, orig, dest, formattedDep, formattedArr, meio);
+                logManager.planearViagem(jogo, equipa, orig, dest, formattedDep, formattedArr, meio);
                 
                 Alert okAlert = new Alert(Alert.AlertType.INFORMATION, "Viagem agendada com sucesso!");
                 okAlert.showAndWait();
