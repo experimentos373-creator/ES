@@ -62,4 +62,6 @@ Os dados são auto-gerados no primeiro arranque. Usar o **email** no campo de lo
 | Gestor de Logística | `logistica@fifa.com` | Gestor Logística |
 | Público (Adepto) | Botão **"Entrar como Público"** | Sem credenciais |
 
+Senhas:123456
+
 > **Nota:** Se já existirem ficheiros `.ser` na pasta raiz do projeto, apagar todos (`rm *.ser` ou `del *.ser`) para forçar a regeneração dos dados de demonstração.
