@@ -6,8 +6,6 @@ Projeto em JavaFX para gestão do Campeonato do Mundo 2026.
 
 Os documentos e diagramas finais desta fase encontram-se na pasta `documentacao_fase2`:
 - 📄 **Relatório Técnico Completo:** [Relatorio_Fase2_versão_correta!.pdf](documentacao_fase2/Relatorio_Fase2_versão_correta!.pdf) (Casos de Uso, Implementação e Testes)
-- 📄 **Relatório Técnico - Parte 1 (CU01 a CU12):** [Relatorio_Fase2_Parte1_versão_correta!.pdf](documentacao_fase2/Relatorio_Fase2_Parte1_versão_correta!.pdf)
-- 📄 **Relatório Técnico - Parte 2 (CU13 a CU24 + AUTH):** [Relatorio_Fase2_Parte2_versão_correta!.pdf](documentacao_fase2/Relatorio_Fase2_Parte2_versão_correta!.pdf)
 - 🎨 **Diagrama de Classes:** [Diagrama de classes_versão_correta!.png](documentacao_fase2/Diagrama%20de%20classes_versão_correta!.png)
 
 ## Requisitos
