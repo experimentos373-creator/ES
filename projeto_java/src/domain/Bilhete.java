@@ -10,7 +10,6 @@ public class Bilhete implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private int jogoId;
-    private Jogo jogo; // Associado ao Jogo
     private String setor;
     private double preco;
 
