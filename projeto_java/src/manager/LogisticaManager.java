@@ -60,6 +60,12 @@ public class LogisticaManager {
         saveAll();
     }
 
+    public void removerHotel(int id) {
+        this.hoteis.removeIf(h -> h.getId() == id);
+        saveAll();
+    }
+
+
     public Hotel procurarHotelPorId(int id) {
         for (Hotel h : this.hoteis) {
             if (h.getId() == id) return h;

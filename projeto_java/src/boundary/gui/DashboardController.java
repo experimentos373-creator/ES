@@ -930,6 +930,48 @@ public class DashboardController {
         ));
         cmbPhase.setPromptText("Fase do Campeonato");
 
+        ComboBox<String> cmbMatchGroupFilter = new ComboBox<>(FXCollections.observableArrayList(
+            "Todos", "Grupo A", "Grupo B", "Grupo C", "Grupo D", "Grupo E", "Grupo F", "Grupo G", "Grupo H"
+        ));
+        cmbMatchGroupFilter.setPromptText("Filtrar por Grupo (Opcional)");
+        cmbMatchGroupFilter.setValue("Todos");
+        
+        // Esconder filtro de grupo por defeito, ativado apenas se a fase for "Grupos"
+        cmbMatchGroupFilter.setVisible(false);
+        cmbMatchGroupFilter.setManaged(false);
+        
+        cmbPhase.valueProperty().addListener((obs, oldPhase, newPhase) -> {
+            if ("Grupos".equalsIgnoreCase(newPhase)) {
+                cmbMatchGroupFilter.setVisible(true);
+                cmbMatchGroupFilter.setManaged(true);
+            } else {
+                cmbMatchGroupFilter.setValue("Todos");
+                cmbMatchGroupFilter.setVisible(false);
+                cmbMatchGroupFilter.setManaged(false);
+            }
+        });
+        
+        cmbMatchGroupFilter.valueProperty().addListener((obs, oldGroup, newGroup) -> {
+            if (newGroup != null && !"Todos".equalsIgnoreCase(newGroup)) {
+                List<String> teamNames = campManager.getGrupos().get(newGroup);
+                List<Equipa> filtered = new ArrayList<>();
+                if (teamNames != null) {
+                    for (Equipa eq : campManager.getEquipas()) {
+                        if (teamNames.contains(eq.getNome())) {
+                            filtered.add(eq);
+                        }
+                    }
+                }
+                cmbHomeTeam.setItems(FXCollections.observableArrayList(filtered));
+                cmbAwayTeam.setItems(FXCollections.observableArrayList(filtered));
+            } else {
+                cmbHomeTeam.setItems(FXCollections.observableArrayList(campManager.getEquipas()));
+                cmbAwayTeam.setItems(FXCollections.observableArrayList(campManager.getEquipas()));
+            }
+            cmbHomeTeam.setValue(null);
+            cmbAwayTeam.setValue(null);
+        });
+
         // Load combobox elements
         cmbMatchStadium.setItems(FXCollections.observableArrayList(campManager.getEstadios()));
         cmbHomeTeam.setItems(FXCollections.observableArrayList(campManager.getEquipas()));
@@ -1090,16 +1132,28 @@ public class DashboardController {
 
                 // Default statistics for match
                 EstatisticaJogo stats = new EstatisticaJogo(50, 50, 8, 8, 4, 4);
-                campManager.finalizarJogoECorrerBracket(selected.getId(), null, gh, ga, ph, pa, stats);
-                
-                lblFinalizeMsg.setText("Jogo finalizado com sucesso!");
-                lblFinalizeMsg.setStyle("-fx-text-fill: #00D26A;");
-                txtGoalsHome.clear();
-                txtGoalsAway.clear();
-                txtPenHome.clear();
-                txtPenAway.clear();
-                cmbPendingMatches.setValue(null);
-                reloadPendingMatches.run();
+                if (gh == 0 && ga == 0) {
+                    campManager.finalizarJogoECorrerBracket(selected.getId(), null, gh, ga, ph, pa, stats);
+                    lblFinalizeMsg.setText("Jogo finalizado com sucesso!");
+                    lblFinalizeMsg.setStyle("-fx-text-fill: #00D26A;");
+                    txtGoalsHome.clear();
+                    txtGoalsAway.clear();
+                    txtPenHome.clear();
+                    txtPenAway.clear();
+                    cmbPendingMatches.setValue(null);
+                    reloadPendingMatches.run();
+                } else {
+                    showRegisterScorersAndAssistantsDialog(selected, gh, ga, ph, pa, stats, () -> {
+                        lblFinalizeMsg.setText("Jogo finalizado com sucesso!");
+                        lblFinalizeMsg.setStyle("-fx-text-fill: #00D26A;");
+                        txtGoalsHome.clear();
+                        txtGoalsAway.clear();
+                        txtPenHome.clear();
+                        txtPenAway.clear();
+                        cmbPendingMatches.setValue(null);
+                        reloadPendingMatches.run();
+                    });
+                }
             } catch (NumberFormatException ex) {
                 lblFinalizeMsg.setText("Os golos introduzidos devem ser números inteiros maiores ou iguais a 0!");
                 lblFinalizeMsg.setStyle("-fx-text-fill: #EF4444;");
@@ -1110,7 +1164,7 @@ public class DashboardController {
         });
 
         formMatches.getChildren().addAll(
-            matchTitle, txtMatchId, dpDate, txtMatchTime, cmbMatchStadium, cmbHomeTeam, cmbAwayTeam, cmbPhase, btnSchedule, lblMatchMsg,
+            matchTitle, txtMatchId, dpDate, txtMatchTime, cmbMatchStadium, cmbPhase, cmbMatchGroupFilter, cmbHomeTeam, cmbAwayTeam, btnSchedule, lblMatchMsg,
             sep2,
             finalizeTitle, cmbPendingMatches, scoreBox, penaltyContainer, btnFinalize, lblFinalizeMsg
         );
@@ -2749,7 +2803,34 @@ public class DashboardController {
                                "-fx-font-size: 9px; " +
                                "-fx-font-weight: bold;");
                 
-                r1.getChildren().addAll(titleInfo, sp, badge);
+                Button btnDelete = new Button("🗑");
+                btnDelete.setStyle("-fx-background-color: transparent; -fx-text-fill: #EF4444; -fx-font-weight: bold; -fx-padding: 2px 6px; -fx-cursor: hand; -fx-font-size: 13px; -fx-border-color: #FCA5A5; -fx-border-radius: 6px;");
+                btnDelete.setOnAction(evt -> {
+                    if (isOccupied) {
+                        Alert alert = new Alert(Alert.AlertType.WARNING, "Este hotel está atualmente ocupado pela comitiva de " + h.getEquipaHospedada().getNome() + ". Por favor, realize o Check-out antes de o eliminar.");
+                        alert.setTitle("Impossível Eliminar");
+                        alert.setHeaderText("Hotel com Ocupação Ativa");
+                        alert.showAndWait();
+                    } else {
+                        ButtonType btnSim = new ButtonType("Sim", ButtonBar.ButtonData.YES);
+                        ButtonType btnNao = new ButtonType("Não", ButtonBar.ButtonData.NO);
+                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Tem a certeza que deseja eliminar permanentemente o hotel " + h.getNome() + "?", btnSim, btnNao);
+                        alert.setTitle("Eliminar Hotel");
+                        alert.setHeaderText("Confirmar Eliminação");
+                        alert.showAndWait().ifPresent(res -> {
+                            if (res == btnSim) {
+                                logManager.removerHotel(h.getId());
+                                showLogistica(0); // Refresh screen
+                            }
+                        });
+                    }
+                });
+
+                HBox topActions = new HBox(5);
+                topActions.setAlignment(Pos.CENTER_RIGHT);
+                topActions.getChildren().addAll(badge, btnDelete);
+                
+                r1.getChildren().addAll(titleInfo, sp, topActions);
                 
                 Label lblCap = new Label("👤 Capacidade: " + h.getCapacidadeQuartos() + " pessoas");
                 lblCap.setStyle("-fx-background-color: #F9FAFB; " +
@@ -4514,6 +4595,214 @@ public class DashboardController {
                     okAlert.showAndWait();
                     showBilheteira(); // Refresh entire panel
                 }
+            }
+        });
+    }
+
+    private void showRegisterScorersAndAssistantsDialog(Jogo jogo, int goalsHome, int goalsAway, int penaltiesHome, int penaltiesAway, EstatisticaJogo stats, Runnable postFinalizeAction) {
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("Registrar Marcadores e Assistentes");
+        dialog.setHeaderText("Introduza quem marcou os golos e fez as assistências para este jogo.");
+
+        ButtonType btnConfirmar = new ButtonType("Confirmar e Finalizar", ButtonBar.ButtonData.OK_DONE);
+        ButtonType btnCancelar = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
+        dialog.getDialogPane().getButtonTypes().addAll(btnConfirmar, btnCancelar);
+
+        VBox content = new VBox(15);
+        content.setPadding(new Insets(20));
+        content.setMinWidth(450);
+
+        List<Jogador> homePlayers = jogo.getHomeTeam().getJogadores();
+        List<Jogador> awayPlayers = jogo.getAwayTeam().getJogadores();
+
+        List<ComboBox<Jogador>> homeScorersCombos = new ArrayList<>();
+        List<ComboBox<Jogador>> homeAssistantsCombos = new ArrayList<>();
+        List<ComboBox<Jogador>> awayScorersCombos = new ArrayList<>();
+        List<ComboBox<Jogador>> awayAssistantsCombos = new ArrayList<>();
+
+        if (goalsHome > 0) {
+            Label lblHome = new Label("Golos de " + jogo.getHomeTeam().getNome() + ":");
+            lblHome.setStyle("-fx-font-weight: bold; -fx-text-fill: #1E40AF; -fx-font-size: 13px;");
+            content.getChildren().add(lblHome);
+
+            for (int i = 1; i <= goalsHome; i++) {
+                HBox row = new HBox(10);
+                row.setAlignment(Pos.CENTER_LEFT);
+
+                Label lblGolo = new Label("Golo " + i + ":");
+                lblGolo.setMinWidth(50);
+
+                ComboBox<Jogador> cmbScorer = new ComboBox<>();
+                cmbScorer.getItems().addAll(homePlayers);
+                cmbScorer.setPromptText("Selecione o Marcador");
+                cmbScorer.setPrefWidth(180);
+                cmbScorer.setCellFactory(lv -> new ListCell<Jogador>() {
+                    @Override
+                    protected void updateItem(Jogador item, boolean empty) {
+                        super.updateItem(item, empty);
+                        setText(empty ? "" : item.getNumeroCamisola() + " - " + item.getNome() + " (" + item.getPosicao() + ")");
+                    }
+                });
+                cmbScorer.setButtonCell(new ListCell<Jogador>() {
+                    @Override
+                    protected void updateItem(Jogador item, boolean empty) {
+                        super.updateItem(item, empty);
+                        setText(empty ? "" : item.getNumeroCamisola() + " - " + item.getNome());
+                    }
+                });
+
+                ComboBox<Jogador> cmbAssistant = new ComboBox<>();
+                cmbAssistant.getItems().add(null);
+                cmbAssistant.getItems().addAll(homePlayers);
+                cmbAssistant.setPromptText("Selecione o Assistente (Opcional)");
+                cmbAssistant.setPrefWidth(180);
+                cmbAssistant.setCellFactory(lv -> new ListCell<Jogador>() {
+                    @Override
+                    protected void updateItem(Jogador item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty || item == null) {
+                            setText("Sem Assistência");
+                        } else {
+                            setText(item.getNumeroCamisola() + " - " + item.getNome());
+                        }
+                    }
+                });
+                cmbAssistant.setButtonCell(new ListCell<Jogador>() {
+                    @Override
+                    protected void updateItem(Jogador item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty || item == null) {
+                            setText("Sem Assistência");
+                        } else {
+                            setText(item.getNumeroCamisola() + " - " + item.getNome());
+                        }
+                    }
+                });
+
+                row.getChildren().addAll(lblGolo, cmbScorer, new Label("Assis:"), cmbAssistant);
+                content.getChildren().add(row);
+                homeScorersCombos.add(cmbScorer);
+                homeAssistantsCombos.add(cmbAssistant);
+            }
+        }
+
+        if (goalsAway > 0) {
+            Label lblAway = new Label("Golos de " + jogo.getAwayTeam().getNome() + ":");
+            lblAway.setStyle("-fx-font-weight: bold; -fx-text-fill: #B91C1C; -fx-font-size: 13px;");
+            content.getChildren().add(lblAway);
+
+            for (int i = 1; i <= goalsAway; i++) {
+                HBox row = new HBox(10);
+                row.setAlignment(Pos.CENTER_LEFT);
+
+                Label lblGolo = new Label("Golo " + i + ":");
+                lblGolo.setMinWidth(50);
+
+                ComboBox<Jogador> cmbScorer = new ComboBox<>();
+                cmbScorer.getItems().addAll(awayPlayers);
+                cmbScorer.setPromptText("Selecione o Marcador");
+                cmbScorer.setPrefWidth(180);
+                cmbScorer.setCellFactory(lv -> new ListCell<Jogador>() {
+                    @Override
+                    protected void updateItem(Jogador item, boolean empty) {
+                        super.updateItem(item, empty);
+                        setText(empty ? "" : item.getNumeroCamisola() + " - " + item.getNome() + " (" + item.getPosicao() + ")");
+                    }
+                });
+                cmbScorer.setButtonCell(new ListCell<Jogador>() {
+                    @Override
+                    protected void updateItem(Jogador item, boolean empty) {
+                        super.updateItem(item, empty);
+                        setText(empty ? "" : item.getNumeroCamisola() + " - " + item.getNome());
+                    }
+                });
+
+                ComboBox<Jogador> cmbAssistant = new ComboBox<>();
+                cmbAssistant.getItems().add(null);
+                cmbAssistant.getItems().addAll(awayPlayers);
+                cmbAssistant.setPromptText("Selecione o Assistente (Opcional)");
+                cmbAssistant.setPrefWidth(180);
+                cmbAssistant.setCellFactory(lv -> new ListCell<Jogador>() {
+                    @Override
+                    protected void updateItem(Jogador item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty || item == null) {
+                            setText("Sem Assistência");
+                        } else {
+                            setText(item.getNumeroCamisola() + " - " + item.getNome());
+                        }
+                    }
+                });
+                cmbAssistant.setButtonCell(new ListCell<Jogador>() {
+                    @Override
+                    protected void updateItem(Jogador item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty || item == null) {
+                            setText("Sem Assistência");
+                        } else {
+                            setText(item.getNumeroCamisola() + " - " + item.getNome());
+                        }
+                    }
+                });
+
+                row.getChildren().addAll(lblGolo, cmbScorer, new Label("Assis:"), cmbAssistant);
+                content.getChildren().add(row);
+                awayScorersCombos.add(cmbScorer);
+                awayAssistantsCombos.add(cmbAssistant);
+            }
+        }
+
+        ScrollPane scroll = new ScrollPane(content);
+        scroll.setFitToWidth(true);
+        scroll.setPrefHeight(350);
+        dialog.getDialogPane().setContent(scroll);
+
+        final Button confirmBtn = (Button) dialog.getDialogPane().lookupButton(btnConfirmar);
+        confirmBtn.addEventFilter(javafx.event.ActionEvent.ACTION, event -> {
+            boolean valid = true;
+            for (ComboBox<Jogador> cb : homeScorersCombos) {
+                if (cb.getValue() == null) valid = false;
+            }
+            for (ComboBox<Jogador> cb : awayScorersCombos) {
+                if (cb.getValue() == null) valid = false;
+            }
+            if (!valid) {
+                Alert error = new Alert(Alert.AlertType.ERROR, "Por favor, selecione o marcador de cada golo.");
+                error.showAndWait();
+                event.consume();
+            }
+        });
+
+        dialog.showAndWait().ifPresent(res -> {
+            for (ComboBox<Jogador> cb : homeScorersCombos) {
+                Jogador j = cb.getValue();
+                if (j != null) {
+                    j.incrementGoals();
+                }
+            }
+            for (ComboBox<Jogador> cb : homeAssistantsCombos) {
+                Jogador j = cb.getValue();
+                if (j != null) {
+                    j.incrementAssists();
+                }
+            }
+            for (ComboBox<Jogador> cb : awayScorersCombos) {
+                Jogador j = cb.getValue();
+                if (j != null) {
+                    j.incrementGoals();
+                }
+            }
+            for (ComboBox<Jogador> cb : awayAssistantsCombos) {
+                Jogador j = cb.getValue();
+                if (j != null) {
+                    j.incrementAssists();
+                }
+            }
+
+            campManager.finalizarJogoECorrerBracket(jogo.getId(), null, goalsHome, goalsAway, penaltiesHome, penaltiesAway, stats);
+            
+            if (postFinalizeAction != null) {
+                postFinalizeAction.run();
             }
         });
     }
