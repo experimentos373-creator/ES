@@ -3901,6 +3901,11 @@ public class DashboardController {
 
         vboxCalendar.getChildren().addAll(new Label("Fase da Competição:"), phaseFilterBox, dropDowns, tblMatches);
         tabCalendar.setContent(vboxCalendar);
+        tabCalendar.setOnSelectionChanged(event -> {
+            if (tabCalendar.isSelected()) {
+                runFilter.run();
+            }
+        });
 
         // ------------------------------------------
         // Tab 2: Bracket do Torneio (Visual Tree)
@@ -3920,6 +3925,13 @@ public class DashboardController {
         vboxBracketWrap.getChildren().addAll(new Label("Sinalética e Progresso das Eliminatórias (Symmetrical Tree):"), visualBracketTree);
         scrollBracket.setContent(vboxBracketWrap);
         tabBracket.setContent(scrollBracket);
+        tabBracket.setOnSelectionChanged(event -> {
+            if (tabBracket.isSelected()) {
+                HBox updatedBracket = buildVisualBracket();
+                vboxBracketWrap.getChildren().clear();
+                vboxBracketWrap.getChildren().addAll(new Label("Sinalética e Progresso das Eliminatórias (Symmetrical Tree):"), updatedBracket);
+            }
+        });
 
         // ------------------------------------------
         // Tab 3: Classificação dos Grupos
@@ -3987,6 +3999,12 @@ public class DashboardController {
 
         vboxStandings.getChildren().addAll(cmbGroups, tblStandings);
         tabStandings.setContent(vboxStandings);
+        tabStandings.setOnSelectionChanged(event -> {
+            if (tabStandings.isSelected() && cmbGroups.getValue() != null) {
+                List<ClassificacaoLinha> lines = campManager.calcularClassificacaoGrupo(cmbGroups.getValue());
+                tblStandings.setItems(FXCollections.observableArrayList(lines));
+            }
+        });
 
         tabPane.getTabs().addAll(tabCalendar, tabBracket, tabStandings);
         content.getChildren().addAll(title, tabPane);
@@ -4600,7 +4618,7 @@ public class DashboardController {
     }
 
     private void showRegisterScorersAndAssistantsDialog(Jogo jogo, int goalsHome, int goalsAway, int penaltiesHome, int penaltiesAway, EstatisticaJogo stats, Runnable postFinalizeAction) {
-        Dialog<Void> dialog = new Dialog<>();
+        Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Registrar Marcadores e Assistentes");
         dialog.setHeaderText("Introduza quem marcou os golos e fez as assistências para este jogo.");
 
@@ -4774,35 +4792,37 @@ public class DashboardController {
         });
 
         dialog.showAndWait().ifPresent(res -> {
-            for (ComboBox<Jogador> cb : homeScorersCombos) {
-                Jogador j = cb.getValue();
-                if (j != null) {
-                    j.incrementGoals();
+            if (res == btnConfirmar) {
+                for (ComboBox<Jogador> cb : homeScorersCombos) {
+                    Jogador j = cb.getValue();
+                    if (j != null) {
+                        j.incrementGoals();
+                    }
                 }
-            }
-            for (ComboBox<Jogador> cb : homeAssistantsCombos) {
-                Jogador j = cb.getValue();
-                if (j != null) {
-                    j.incrementAssists();
+                for (ComboBox<Jogador> cb : homeAssistantsCombos) {
+                    Jogador j = cb.getValue();
+                    if (j != null) {
+                        j.incrementAssists();
+                    }
                 }
-            }
-            for (ComboBox<Jogador> cb : awayScorersCombos) {
-                Jogador j = cb.getValue();
-                if (j != null) {
-                    j.incrementGoals();
+                for (ComboBox<Jogador> cb : awayScorersCombos) {
+                    Jogador j = cb.getValue();
+                    if (j != null) {
+                        j.incrementGoals();
+                    }
                 }
-            }
-            for (ComboBox<Jogador> cb : awayAssistantsCombos) {
-                Jogador j = cb.getValue();
-                if (j != null) {
-                    j.incrementAssists();
+                for (ComboBox<Jogador> cb : awayAssistantsCombos) {
+                    Jogador j = cb.getValue();
+                    if (j != null) {
+                        j.incrementAssists();
+                    }
                 }
-            }
 
-            campManager.finalizarJogoECorrerBracket(jogo.getId(), null, goalsHome, goalsAway, penaltiesHome, penaltiesAway, stats);
-            
-            if (postFinalizeAction != null) {
-                postFinalizeAction.run();
+                campManager.finalizarJogoECorrerBracket(jogo.getId(), null, goalsHome, goalsAway, penaltiesHome, penaltiesAway, stats);
+                
+                if (postFinalizeAction != null) {
+                    postFinalizeAction.run();
+                }
             }
         });
     }
