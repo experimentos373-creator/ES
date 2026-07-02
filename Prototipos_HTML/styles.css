@@ -1,0 +1,292 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+    --bg-color: #f6f8fa;
+    --card-bg: #ffffff;
+    --text-color: #0f172a;
+    --text-muted: #64748b;
+    --primary-color: #10b981; /* Premium Emerald Green */
+    --primary-hover: #059669;
+    --primary-glow: rgba(16, 185, 129, 0.2);
+    --border-color: #e2e8f0;
+    --sidebar-width: 280px;
+    --dark-bg: #0b0f19;
+    --dark-sidebar-item: #1e293b;
+    
+    /* Extra FIFA Premium Palette */
+    --accent-blue: #3b82f6;
+    --accent-blue-hover: #2563eb;
+    --accent-gold: #eab308;
+    --accent-red: #ef4444;
+}
+
+/* Global Reset & Body */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-color) !important;
+    color: var(--text-color) !important;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Modern Scrollbars */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Typography Enhancements */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: #0f172a;
+}
+
+/* Premium Sidebar Override */
+.sidebar {
+    background-color: var(--dark-bg) !important;
+    width: var(--sidebar-width) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.05) !important;
+    transition: all 0.3s ease;
+}
+
+.sidebar .logo {
+    color: var(--primary-color) !important;
+    font-size: 1.6rem !important;
+    font-weight: 900 !important;
+    letter-spacing: -0.04em !important;
+    margin-bottom: 2.5rem !important;
+}
+
+.sidebar-item, .nav-links a {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600 !important;
+    padding: 0.9rem 1.2rem !important;
+    border-radius: 14px !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #94a3b8 !important;
+    text-decoration: none;
+}
+
+.sidebar-item:hover, .nav-links a:hover {
+    background: rgba(16, 185, 129, 0.08) !important;
+    color: var(--primary-color) !important;
+    transform: translateX(4px);
+}
+
+.sidebar-item.active, .nav-links a.active {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%) !important;
+    color: white !important;
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Premium Buttons */
+.btn {
+    font-family: 'Outfit', sans-serif;
+    padding: 0.8rem 1.6rem !important;
+    border-radius: 14px !important;
+    font-weight: 700 !important;
+    font-size: 0.95rem !important;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border: none;
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn:hover {
+    background: var(--primary-hover) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px var(--primary-glow) !important;
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%) !important;
+    color: white !important;
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-blue-hover) 100%) !important;
+    color: white !important;
+}
+
+.btn-secondary:hover {
+    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3) !important;
+}
+
+.btn.outline, .btn-outline {
+    background: transparent !important;
+    border: 2px solid var(--border-color) !important;
+    color: var(--text-color) !important;
+}
+
+.btn.outline:hover, .btn-outline:hover {
+    border-color: var(--primary-color) !important;
+    color: var(--primary-color) !important;
+    background: rgba(16, 185, 129, 0.04) !important;
+}
+
+/* Premium Cards */
+.card, .stat-card, .hotel-card, .list-item, .player-card {
+    background: var(--card-bg) !important;
+    border-radius: 24px !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.04) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.card:hover, .stat-card:hover, .hotel-card:hover, .list-item:hover, .player-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.08) !important;
+    border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Stat Cards specific */
+.stat-card {
+    padding: 2rem !important;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.stat-label {
+    font-weight: 700 !important;
+    font-size: 0.85rem !important;
+    letter-spacing: 0.05em;
+    color: var(--text-muted) !important;
+}
+
+.stat-val {
+    font-size: 2.8rem !important;
+    font-weight: 900 !important;
+    color: #0f172a !important;
+    letter-spacing: -0.04em;
+}
+
+/* Glassmorphism & Shadow Utilities */
+.shadow-premium {
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08) !important;
+}
+
+.glass {
+    background: rgba(255, 255, 255, 0.75) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Inputs, Selects & Forms */
+input[type="text"], input[type="number"], input[type="date"], input[type="time"], select {
+    font-family: 'Inter', sans-serif;
+    padding: 0.8rem 1.2rem !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 14px !important;
+    background-color: #f8fafc !important;
+    color: var(--text-color) !important;
+    font-size: 0.95rem !important;
+    transition: all 0.2s ease !important;
+}
+
+input:focus, select:focus {
+    background-color: #ffffff !important;
+    border-color: var(--primary-color) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 4px var(--primary-glow) !important;
+}
+
+/* Badges & Indicators */
+.badge {
+    padding: 6px 14px !important;
+    border-radius: 50px !important;
+    font-size: 0.75rem !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.04em !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.badge-disponivel, .badge-apto, .badge-ativo {
+    background-color: #d1fae5 !important;
+    color: #065f46 !important;
+}
+
+.badge-ocupado, .badge-lesionado, .badge-suspenso {
+    background-color: #fee2e2 !important;
+    color: #991b1b !important;
+}
+
+.badge-descanso {
+    background-color: #fef3c7 !important;
+    color: #92400e !important;
+}
+
+/* Tables style */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 1.2rem !important;
+    border-bottom: 2px solid var(--border-color) !important;
+}
+
+td {
+    padding: 1.2rem !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    font-size: 0.95rem;
+}
+
+tr:hover td {
+    background-color: #f8fafc;
+}
+
+/* Modern Modals */
+.modal {
+    backdrop-filter: blur(12px) !important;
+    background: rgba(15, 23, 42, 0.4) !important;
+}
+
+.modal-content {
+    border-radius: 28px !important;
+    box-shadow: 0 30px 60px -15px rgba(15, 23, 42, 0.3) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    padding: 2.5rem !important;
+}

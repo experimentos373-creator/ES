@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIFA World Cup 2026 - Portal</title>
+    <meta name="description" content="Portal de Gestão e Consulta do FIFA World Cup 2026">
+    <meta property="og:title" content="FIFA World Cup 2026 - Portal">
+    <meta property="og:description" content="Portal de Gestão e Consulta do FIFA World Cup 2026">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;800&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            background: linear-gradient(135deg, #1A202C 0%, #2D3748 100%); 
+            color: white; 
+            text-align: center; 
+            margin: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+        .portal-card { 
+            background: white; 
+            color: #333; 
+            padding: 2.5rem 3.5rem; 
+            border-radius: 32px; 
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); 
+            max-width: 500px; 
+            width: 90%;
+            max-height: 95vh;
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+        h1 { margin-bottom: 0.5rem; font-weight: 800; color: #1A202C; font-size: 2rem; }
+        p { color: #666; margin-bottom: 2rem; font-size: 0.95rem; }
+        .btn-portal { 
+            display: flex; 
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%; 
+            padding: 1rem; 
+            margin-top: 0.8rem; 
+            background: #00D26A; 
+            color: white; 
+            border-radius: 16px; 
+            text-decoration: none; 
+            font-weight: 700; 
+            font-size: 1.05rem;
+            transition: all 0.2s; 
+            box-shadow: 0 4px 6px rgba(0, 210, 106, 0.2);
+            box-sizing: border-box;
+        }
+        .btn-portal:hover { transform: translateY(-2px); background: #00B95D; box-shadow: 0 10px 15px rgba(0, 210, 106, 0.3); }
+        .btn-secondary { background: #2D3748; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); font-size: 0.95rem; }
+        .btn-secondary:hover { background: #1A202C; box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2); }
+    </style>
+</head>
+<body>
+    <div class="portal-card" aria-label="portal">
+        <div style="font-size: 3.5rem; margin-bottom: 1rem;">🏆</div>
+        <h1>World Cup 2026</h1>
+        <p>Bem-vindo ao Portal de Gestão e Consulta</p>
+        
+        <a href="publico.html" class="btn-portal">🌍 Portal Público (Calendário)</a>
+        
+        <div style="margin: 1.8rem 0 1rem; font-size: 0.85rem; font-weight: 800; color: #718096; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #E2E8F0; padding-bottom: 0.5rem; text-align: left;">
+            Áreas de Gestão Restrita
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <a href="admin.html" class="btn-portal btn-secondary">👑 Administrador Global</a>
+            <a href="gestor_equipa.html" class="btn-portal btn-secondary">🏃 Gestor de Equipa</a>
+            <a href="gestor_arbitragem.html" class="btn-portal btn-secondary">⚖️ Gestor de Arbitragem</a>
+            <a href="gestor_bilheteira.html" class="btn-portal btn-secondary">🎟️ Gestor de Bilheteira</a>
+            <a href="gestor_logistica.html" class="btn-portal btn-secondary">🏨 Gestor de Logística</a>
+        </div>
+
+        <div style="margin-top: 1.8rem; background: #FFF5F5; border: 1px solid #FEB2B2; border-radius: 16px; padding: 1.2rem; text-align: left;">
+            <div style="font-weight: 800; font-size: 0.85rem; color: #C53030; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                <span>ℹ️</span> Nota sobre Controlo de Acesso (Fase 2)
+            </div>
+            <p style="margin: 0; font-size: 0.8rem; color: #9B2C2C; line-height: 1.5;">
+                Nesta versão de demonstração (Fase 1), o acesso às áreas de gestão é direto para facilitar a avaliação do docente. No futuro (Fase 2), o acesso será protegido por <b>autenticação obrigatória com credenciais (email e senha)</b> para cada perfil.
+            </p>
+        </div>
+        
+        <div style="margin-top: 2rem; font-size: 0.8rem; color: #A0AEC0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
+            FIFA Official Partner
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
