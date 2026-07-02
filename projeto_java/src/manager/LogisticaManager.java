@@ -74,20 +74,26 @@ public class LogisticaManager {
     }
 
     /**
-     * Aloca uma equipa a um hotel, validando capacidade e exclusividade.
+     * Aloca uma equipa a um hotel, validando capacidade acumulada e unicidade.
      * Capacidade = numero de jogadores inscritos (squadSize).
      */
     public boolean alocarHotel(Equipa equipa, Hotel hotel, String checkIn, String checkOut) {
         if (equipa == null || hotel == null) return false;
 
-        int squadSize = equipa.getJogadores().size();
-        if (squadSize > hotel.getCapacidadeQuartos()) {
-            return false; // Capacidade excedida
+        // Regra de Unicidade: Equipa não pode estar alojada em nenhum outro hotel
+        if (isEquipaHospedada(equipa)) {
+            return false;
         }
 
-        // Exclusividade: verificar se hotel ja tem outra equipa hospedada
-        if (hotel.getEquipaHospedada() != null && !hotel.getEquipaHospedada().equals(equipa)) {
-            return false; // Hotel ja ocupado por outra equipa
+        // Regra de Lotação: Calcular ocupação atual
+        int currentOccupancy = 0;
+        for (Hotel.AlojamentoInfo info : hotel.getAlojamentos()) {
+            currentOccupancy += info.getEquipa().getJogadores().size();
+        }
+
+        int squadSize = equipa.getJogadores().size();
+        if (currentOccupancy + squadSize > hotel.getCapacidadePessoas()) {
+            return false; // Capacidade excedida
         }
 
         boolean success = hotel.checkIn(equipa, checkIn, checkOut);
@@ -98,12 +104,39 @@ public class LogisticaManager {
     }
 
     /**
-     * Regista o checkout de uma equipa do hotel, libertando-o.
+     * Regista o checkout de uma equipa específica do hotel, libertando-a de forma persistente.
+     */
+    public boolean registarCheckoutEquipa(Hotel hotel, Equipa equipa) {
+        if (hotel == null || equipa == null) return false;
+        boolean success = hotel.checkOutEquipa(equipa);
+        if (success) {
+            registarHotel(hotel);
+        }
+        return success;
+    }
+
+    /**
+     * Regista o checkout de todas as equipas do hotel, libertando-o totalmente.
      */
     public void registarCheckout(Hotel hotel) {
         if (hotel == null) return;
         hotel.checkOut();
         registarHotel(hotel);
+    }
+
+    /**
+     * Verifica se uma equipa já se encontra hospedada em qualquer hotel do torneio.
+     */
+    public boolean isEquipaHospedada(Equipa equipa) {
+        if (equipa == null) return false;
+        for (Hotel h : this.hoteis) {
+            for (Hotel.AlojamentoInfo info : h.getAlojamentos()) {
+                if (info.getEquipa().equals(equipa)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public Viagem planearViagem(Jogo jogo, Equipa equipa, String origem, String destino, String dataPartida, String dataChegada, String meio) {

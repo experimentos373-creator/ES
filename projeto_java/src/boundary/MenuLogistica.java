@@ -21,40 +21,41 @@ public class MenuLogistica {
 
     public void exibir() {
         while (true) {
-            System.out.println("\n==================================");
-            System.out.println("   MENU LOGISTICA - WC 2026       ");
-            System.out.println("==================================");
-            System.out.println("1. Registar Hotel");
-            System.out.println("2. Alocar Hotel a Comitiva");
-            System.out.println("3. Registar Checkout de Hotel");
-            System.out.println("4. Planear Viagem de Jogo");
-            System.out.println("5. Listar Hoteis e Comitivas");
-            System.out.println("0. Voltar");
-            System.out.println("==================================");
-            int opcao = LeitorInput.lerInteiro("Opcao: ");
+            System.out.println("\n=================================");
+            System.out.println("    GESTAO DE LOGISTICA (WC 2026)");
+            System.out.println("=================================");
+            System.out.println("1. Alocar Hotel a Comitiva");
+            System.out.println("2. Registar Checkout de Hotel");
+            System.out.println("3. Planear Viagem de Jogo");
+            System.out.println("4. Listar Hoteis");
+            System.out.println("5. Listar Viagens Planeadas");
+            System.out.println("0. Voltar ao Menu Principal");
+            System.out.println("=================================");
+
+            int opcao = LeitorInput.lerInteiro("Escolha uma opcao: ");
 
             switch (opcao) {
-                case 1: registarHotel(); break;
-                case 2: alocarHotel(); break;
-                case 3: checkoutHotel(); break;
-                case 4: planearViagem(); break;
-                case 5: listarHoteis(); break;
-                case 0: return;
-                default: System.out.println("Opcao invalida.");
+                case 1:
+                    alocarHotel();
+                    break;
+                case 2:
+                    checkoutHotel();
+                    break;
+                case 3:
+                    planearViagem();
+                    break;
+                case 4:
+                    listarHoteis();
+                    break;
+                case 5:
+                    listarViagens();
+                    break;
+                case 0:
+                    return;
+                default:
+                    System.out.println("Opcao invalida!");
             }
         }
-    }
-
-    private void registarHotel() {
-        System.out.println("\n--- REGISTAR HOTEL ---");
-        int id = LeitorInput.lerInteiro("ID do Hotel: ");
-        String nome = LeitorInput.lerLinha("Nome: ");
-        String local = LeitorInput.lerLinha("Localizacao: ");
-        int cap = LeitorInput.lerInteiro("Capacidade de Quartos: ");
-
-        Hotel h = new Hotel(id, nome, local, cap);
-        logManager.registarHotel(h);
-        System.out.println("Hotel registado com sucesso!");
     }
 
     private void alocarHotel() {
@@ -65,7 +66,17 @@ public class MenuLogistica {
             return;
         }
         for (Hotel h : hoteis) {
-            System.out.println("  ID " + h.getId() + ": " + h.getNome() + " | Quartos: " + h.getCapacidadeQuartos() + " | Ocupado: " + (h.getEquipaHospedada() != null ? h.getEquipaHospedada().getNome() : "Livre"));
+            int currentOccupancy = h.getAlojamentos().stream().mapToInt(info -> info.getEquipa().getJogadores().size()).sum();
+            System.out.print("  ID " + h.getId() + ": " + h.getNome() + " | Capacidade: " + currentOccupancy + "/" + h.getCapacidadePessoas() + " pessoas");
+            if (!h.getAlojamentos().isEmpty()) {
+                System.out.print(" | Hospeda: ");
+                for (int i = 0; i < h.getAlojamentos().size(); i++) {
+                    System.out.print(h.getAlojamentos().get(i).getEquipa().getNome() + (i < h.getAlojamentos().size() - 1 ? ", " : ""));
+                }
+            } else {
+                System.out.print(" | Livre");
+            }
+            System.out.println();
         }
 
         int hotelId = LeitorInput.lerInteiro("ID do Hotel: ");
@@ -89,17 +100,28 @@ public class MenuLogistica {
         if (ok) {
             System.out.println("Comitiva alocada com sucesso!");
         } else {
-            System.out.println("Falha na alocacao. Capacidade insuficiente ou hotel ja ocupado.");
+            System.out.println("Falha na alocacao. Capacidade insuficiente, comitiva ja hospedada noutro hotel, ou dados invalidos.");
         }
     }
 
     private void checkoutHotel() {
         System.out.println("\n--- CHECKOUT DE HOTEL ---");
         List<Hotel> hoteis = logManager.getHoteis();
+        boolean hasOccupied = false;
         for (Hotel h : hoteis) {
-            if (h.getEquipaHospedada() != null) {
-                System.out.println("  ID " + h.getId() + ": " + h.getNome() + " | Equipa: " + h.getEquipaHospedada().getNome());
+            if (!h.getAlojamentos().isEmpty()) {
+                hasOccupied = true;
+                System.out.print("  ID " + h.getId() + ": " + h.getNome() + " | Equipas: ");
+                for (int i = 0; i < h.getAlojamentos().size(); i++) {
+                    System.out.print(h.getAlojamentos().get(i).getEquipa().getNome() + (i < h.getAlojamentos().size() - 1 ? ", " : ""));
+                }
+                System.out.println();
             }
+        }
+
+        if (!hasOccupied) {
+            System.out.println("Nao ha hoteis ocupados de momento.");
+            return;
         }
 
         int hotelId = LeitorInput.lerInteiro("ID do Hotel para checkout: ");
@@ -109,8 +131,35 @@ public class MenuLogistica {
             return;
         }
 
-        logManager.registarCheckout(hotel);
-        System.out.println("Checkout registado. Hotel agora livre.");
+        List<Hotel.AlojamentoInfo> alocs = hotel.getAlojamentos();
+        if (alocs.isEmpty()) {
+            System.out.println("Este hotel nao tem equipas alojadas.");
+            return;
+        }
+
+        Equipa selectedTeam = null;
+        if (alocs.size() == 1) {
+            selectedTeam = alocs.get(0).getEquipa();
+        } else {
+            System.out.println("Equipas alojadas neste hotel:");
+            for (int i = 0; i < alocs.size(); i++) {
+                System.out.println("  " + (i + 1) + ". " + alocs.get(i).getEquipa().getNome());
+            }
+            int opt = LeitorInput.lerInteiro("Selecione a equipa para check-out (1 a " + alocs.size() + "): ");
+            if (opt >= 1 && opt <= alocs.size()) {
+                selectedTeam = alocs.get(opt - 1).getEquipa();
+            } else {
+                System.out.println("Opcao invalida.");
+                return;
+            }
+        }
+
+        boolean success = logManager.registarCheckoutEquipa(hotel, selectedTeam);
+        if (success) {
+            System.out.println("Checkout registado com sucesso para a equipa: " + selectedTeam.getNome());
+        } else {
+            System.out.println("Nao foi possivel realizar o checkout.");
+        }
     }
 
     private void planearViagem() {
@@ -171,12 +220,28 @@ public class MenuLogistica {
             return;
         }
         for (Hotel h : hoteis) {
-            System.out.println("ID " + h.getId() + ": " + h.getNome() + " | " + h.getLocalizacao() + " | Quartos: " + h.getCapacidadeQuartos());
-            if (h.getEquipaHospedada() != null) {
-                System.out.println("  -> Comitiva: " + h.getEquipaHospedada().getNome() + " (Check-in: " + h.getCheckInDate() + ", Check-out: " + h.getCheckOutDate() + ")");
+            int currentOccupancy = h.getAlojamentos().stream().mapToInt(info -> info.getEquipa().getJogadores().size()).sum();
+            System.out.println("ID " + h.getId() + ": " + h.getNome() + " | " + h.getLocalizacao() + " | Lotação: " + currentOccupancy + "/" + h.getCapacidadePessoas() + " pessoas");
+            List<Hotel.AlojamentoInfo> alocs = h.getAlojamentos();
+            if (!alocs.isEmpty()) {
+                for (Hotel.AlojamentoInfo info : alocs) {
+                    System.out.println("  -> Comitiva: " + info.getEquipa().getNome() + " (" + info.getEquipa().getJogadores().size() + "p) (Check-in: " + info.getCheckInDate() + ", Check-out: " + info.getCheckOutDate() + ")");
+                }
             } else {
                 System.out.println("  -> Livre");
             }
+        }
+    }
+
+    private void listarViagens() {
+        System.out.println("\n--- LISTA DE VIAGENS ---");
+        List<Viagem> viagens = logManager.getViagens();
+        if (viagens.isEmpty()) {
+            System.out.println("Sem viagens planeadas.");
+            return;
+        }
+        for (Viagem v : viagens) {
+            System.out.println("Equipa: " + v.getEquipa().getNome() + " | De " + v.getOrigem() + " para " + v.getDestino() + " (" + v.getMeioTransporte() + ") em " + v.getDataPartida());
         }
     }
 }

@@ -450,18 +450,23 @@ public class DashboardController {
         baseCampCard.setStyle("-fx-background-color: linear-gradient(to right, #111827, #1F2937); -fx-padding: 20px;");
         
         Hotel allocated = null;
+        Hotel.AlojamentoInfo allocatedInfo = null;
         for (Hotel h : logManager.getHoteis()) {
-            if (h.getEquipaHospedada() != null && h.getEquipaHospedada().getNome().equalsIgnoreCase(teamName)) {
-                allocated = h;
-                break;
+            for (Hotel.AlojamentoInfo info : h.getAlojamentos()) {
+                if (info.getEquipa().getNome().equalsIgnoreCase(teamName)) {
+                    allocated = h;
+                    allocatedInfo = info;
+                    break;
+                }
             }
+            if (allocated != null) break;
         }
         
         Label baseCampTitle = new Label("🏨 Base de Estágio / Alojamento");
         baseCampTitle.setStyle("-fx-text-fill: #9CA3AF; -fx-font-weight: bold; -fx-font-size: 12px;");
         Label baseCampDetail;
         if (allocated != null) {
-            baseCampDetail = new Label(allocated.getNome() + " (" + allocated.getLocalizacao() + ") | Check-In: " + allocated.getCheckInDate() + " | Check-Out: " + allocated.getCheckOutDate());
+            baseCampDetail = new Label(allocated.getNome() + " (" + allocated.getLocalizacao() + ") | Check-In: " + allocatedInfo.getCheckInDate() + " | Check-Out: " + allocatedInfo.getCheckOutDate());
             baseCampDetail.setStyle("-fx-text-fill: #34D399; -fx-font-weight: bold; -fx-font-size: 14px;");
         } else {
             baseCampDetail = new Label("Sem alojamento oficial alocado de momento.");
@@ -586,10 +591,12 @@ public class DashboardController {
         int totalCapacity = 0;
         int occupiedCapacity = 0;
         for (Hotel h : logManager.getHoteis()) {
-            totalCapacity += h.getCapacidadeQuartos();
-            if (h.getEquipaHospedada() != null) {
+            totalCapacity += h.getCapacidadePessoas();
+            if (!h.getAlojamentos().isEmpty()) {
                 occupiedHotels++;
-                occupiedCapacity += h.getCapacidadeQuartos();
+                for (Hotel.AlojamentoInfo info : h.getAlojamentos()) {
+                    occupiedCapacity += info.getEquipa().getJogadores().size();
+                }
             }
         }
         int totalViagens = logManager.getViagens().size();
@@ -1424,11 +1431,16 @@ public class DashboardController {
                 hotelBanner.setStyle("-fx-background-color: linear-gradient(to right, #111827, #1F2937); -fx-background-radius: 16px; -fx-padding: 15px 20px;");
                 
                 Hotel allocated = null;
+                Hotel.AlojamentoInfo allocatedInfo = null;
                 for (Hotel h : logManager.getHoteis()) {
-                    if (h.getEquipaHospedada() != null && h.getEquipaHospedada().getNome().equalsIgnoreCase(newVal.getNome())) {
-                        allocated = h;
-                        break;
+                    for (Hotel.AlojamentoInfo info : h.getAlojamentos()) {
+                        if (info.getEquipa().getNome().equalsIgnoreCase(newVal.getNome())) {
+                            allocated = h;
+                            allocatedInfo = info;
+                            break;
+                        }
                     }
+                    if (allocated != null) break;
                 }
 
                 VBox hotelTexts = new VBox(2);
@@ -1438,7 +1450,7 @@ public class DashboardController {
                     lblBTitle.setStyle("-fx-text-fill: #A0AEC0; -fx-font-size: 11px; -fx-font-weight: bold;");
                     Label lblBName = new Label(allocated.getNome() + " - " + allocated.getLocalizacao());
                     lblBName.setStyle("-fx-text-fill: white; -fx-font-size: 15px; -fx-font-weight: bold;");
-                    Label lblBDates = new Label("In: " + allocated.getCheckInDate() + " • Out: " + allocated.getCheckOutDate() + " | Check-in Confirmado");
+                    Label lblBDates = new Label("In: " + allocatedInfo.getCheckInDate() + " • Out: " + allocatedInfo.getCheckOutDate() + " | Check-in Confirmado");
                     lblBDates.setStyle("-fx-text-fill: #00D26A; -fx-font-size: 12px;");
                     hotelTexts.getChildren().addAll(lblBTitle, lblBName, lblBDates);
                     
@@ -1446,15 +1458,16 @@ public class DashboardController {
                     btnCheckout.getStyleClass().add("btn-secondary");
                     btnCheckout.setStyle("-fx-background-color: #EF4444; -fx-text-fill: white; -fx-padding: 6px 12px; -fx-font-size: 11px;");
                     Hotel finalAllocated = allocated;
+                    Hotel.AlojamentoInfo finalInfo = allocatedInfo;
                     btnCheckout.setOnAction(e -> {
                         ButtonType btnSim = new ButtonType("Sim", ButtonBar.ButtonData.YES);
                         ButtonType btnNao = new ButtonType("Não", ButtonBar.ButtonData.NO);
-                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Confirmar Check-out de " + finalAllocated.getEquipaHospedada().getNome() + "?", btnSim, btnNao);
+                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Confirmar Check-out de " + finalInfo.getEquipa().getNome() + "?", btnSim, btnNao);
                         alert.setTitle("Confirmação de Check-out");
                         alert.setHeaderText("Realizar Check-out");
                         alert.showAndWait().ifPresent(res -> {
                             if (res == btnSim) {
-                                logManager.registarCheckout(finalAllocated);
+                                logManager.registarCheckoutEquipa(finalAllocated, finalInfo.getEquipa());
                                 lvTeams.getSelectionModel().clearSelection();
                                 lvTeams.getSelectionModel().select(newVal); // Reload view
                             }
@@ -1845,14 +1858,19 @@ public class DashboardController {
         if (utilizadorLogado.getCargo() == TipoUtilizador.GESTOR_EQUIPA) {
             String equipaAssociada = utilizadorLogado.getEquipaAssociada();
             Hotel allocated = null;
+            Hotel.AlojamentoInfo allocatedInfo = null;
             for (Hotel h : logManager.getHoteis()) {
-                if (h.getEquipaHospedada() != null && h.getEquipaHospedada().getNome().equalsIgnoreCase(equipaAssociada)) {
-                    allocated = h;
-                    break;
+                for (Hotel.AlojamentoInfo info : h.getAlojamentos()) {
+                    if (info.getEquipa().getNome().equalsIgnoreCase(equipaAssociada)) {
+                        allocated = h;
+                        allocatedInfo = info;
+                        break;
+                    }
                 }
+                if (allocated != null) break;
             }
             if (allocated != null) {
-                VBox hotelCard = createAlojamentoCard(allocated, tabAlojamento);
+                VBox hotelCard = createAlojamentoCard(allocated, allocatedInfo, tabAlojamento);
                 container.getChildren().add(hotelCard);
             } else {
                 VBox emptyCard = createEmptyAlojamentoCard("Sem alojamento atribuído à equipa: " + (equipaAssociada != null ? equipaAssociada : "Nenhuma"));
@@ -1860,31 +1878,33 @@ public class DashboardController {
             }
         } else {
             // ADMIN (ou outros gestores)
-            List<Hotel> occupiedHotels = new ArrayList<>();
+            boolean hasOccupied = false;
             for (Hotel h : logManager.getHoteis()) {
-                if (h.getEquipaHospedada() != null) {
-                    occupiedHotels.add(h);
+                if (!h.getAlojamentos().isEmpty()) {
+                    hasOccupied = true;
                 }
             }
 
-            if (occupiedHotels.isEmpty()) {
+            if (!hasOccupied) {
                 VBox emptyCard = createEmptyAlojamentoCard("Sem alojamentos atribuídos a equipas de momento.");
                 container.getChildren().add(emptyCard);
             } else {
-                Label lblTitle = new Label("Lista de Alojamentos das Seleções (" + occupiedHotels.size() + ")");
+                Label lblTitle = new Label("Lista de Alojamentos das Seleções");
                 lblTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1A202C;");
                 container.getChildren().add(lblTitle);
 
-                for (Hotel h : occupiedHotels) {
-                    VBox hotelCard = createAlojamentoCard(h, tabAlojamento);
-                    container.getChildren().add(hotelCard);
+                for (Hotel h : logManager.getHoteis()) {
+                    for (Hotel.AlojamentoInfo info : h.getAlojamentos()) {
+                        VBox hotelCard = createAlojamentoCard(h, info, tabAlojamento);
+                        container.getChildren().add(hotelCard);
+                    }
                 }
             }
         }
         tabAlojamento.setContent(scroll);
     }
 
-    private VBox createAlojamentoCard(Hotel allocated, Tab tabAlojamento) {
+    private VBox createAlojamentoCard(Hotel allocated, Hotel.AlojamentoInfo info, Tab tabAlojamento) {
         VBox card = new VBox(15);
         card.getStyleClass().add("card");
         card.setStyle("-fx-background-color: linear-gradient(to right, #111827, #1F2937); -fx-background-radius: 16px; -fx-padding: 25px; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 10, 0, 0, 4);");
@@ -1905,7 +1925,7 @@ public class DashboardController {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        String teamName = allocated.getEquipaHospedada() != null ? allocated.getEquipaHospedada().getNome() : "Sem Equipa";
+        String teamName = info.getEquipa().getNome();
         Label lblTeamBadge = new Label("⚡ Equipa: " + teamName);
         lblTeamBadge.setStyle("-fx-background-color: #00D26A; -fx-text-fill: white; -fx-padding: 6px 12px; -fx-background-radius: 20px; -fx-font-weight: bold; -fx-font-size: 11px;");
 
@@ -1919,14 +1939,14 @@ public class DashboardController {
         VBox boxQuartos = new VBox(4);
         Label lblQuartosTitle = new Label("CAPACIDADE DO HOTEL");
         lblQuartosTitle.setStyle("-fx-text-fill: #9CA3AF; -fx-font-size: 10px; -fx-font-weight: bold;");
-        Label lblQuartos = new Label(allocated.getCapacidadeQuartos() + " Quartos Reservados");
+        Label lblQuartos = new Label(allocated.getCapacidadePessoas() + " Lugares Totais");
         lblQuartos.setStyle("-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;");
         boxQuartos.getChildren().addAll(lblQuartosTitle, lblQuartos);
 
         VBox boxCheckIn = new VBox(4);
         Label lblCheckInTitle = new Label("DATA DE CHECK-IN");
         lblCheckInTitle.setStyle("-fx-text-fill: #9CA3AF; -fx-font-size: 10px; -fx-font-weight: bold;");
-        Label lblCheckIn = new Label(allocated.getCheckInDate() != null ? allocated.getCheckInDate() : "N/D");
+        Label lblCheckIn = new Label(info.getCheckInDate() != null ? info.getCheckInDate() : "N/D");
         lblCheckIn.setStyle("-fx-text-fill: #34D399; -fx-font-size: 14px; -fx-font-weight: bold;");
         boxCheckIn.getChildren().addAll(lblCheckInTitle, lblCheckIn);
 
@@ -1936,7 +1956,7 @@ public class DashboardController {
         VBox boxCheckOut = new VBox(4);
         Label lblCheckOutTitle = new Label("DATA DE CHECK-OUT");
         lblCheckOutTitle.setStyle("-fx-text-fill: #9CA3AF; -fx-font-size: 10px; -fx-font-weight: bold;");
-        Label lblCheckOut = new Label(allocated.getCheckOutDate() != null ? allocated.getCheckOutDate() : "N/D");
+        Label lblCheckOut = new Label(info.getCheckOutDate() != null ? info.getCheckOutDate() : "N/D");
         lblCheckOut.setStyle("-fx-text-fill: #F87171; -fx-font-size: 14px; -fx-font-weight: bold;");
         boxCheckOut.getChildren().addAll(lblCheckOutTitle, lblCheckOut);
 
@@ -1958,7 +1978,7 @@ public class DashboardController {
             confirm.setHeaderText("Realizar Check-out");
             confirm.showAndWait();
             if (confirm.getResult() == btnSim) {
-                logManager.registarCheckout(allocated);
+                logManager.registarCheckoutEquipa(allocated, info.getEquipa());
                 setupTabAlojamento(tabAlojamento);
                 showEquipas();
             }
@@ -2658,7 +2678,7 @@ public class DashboardController {
         int totalHotels = hotelsList.size();
         int occupiedHotels = 0;
         for (Hotel h : hotelsList) {
-            if (h.getEquipaHospedada() != null) {
+            if (!h.getAlojamentos().isEmpty()) {
                 occupiedHotels++;
             }
         }
@@ -2742,12 +2762,12 @@ public class DashboardController {
                                         (h.getNome() != null && h.getNome().toLowerCase().contains(search)) ||
                                         (h.getLocalizacao() != null && h.getLocalizacao().toLowerCase().contains(search));
                 
-                boolean isOccupied = h.getEquipaHospedada() != null;
+                boolean isOccupied = !h.getAlojamentos().isEmpty();
                 boolean matchesStatus = "Todos os Estados".equals(status) ||
                                         ("Ocupado".equals(status) && isOccupied) ||
                                         ("Disponível".equals(status) && !isOccupied);
                                         
-                boolean matchesCap = h.getCapacidadeQuartos() >= minCap;
+                boolean matchesCap = h.getCapacidadePessoas() >= minCap;
                 
                 if (matchesSearch && matchesStatus && matchesCap) {
                     filteredHotels.add(h);
@@ -2756,7 +2776,7 @@ public class DashboardController {
             
             int occ = 0;
             for (Hotel h : currentHotels) {
-                if (h.getEquipaHospedada() != null) occ++;
+                if (!h.getAlojamentos().isEmpty()) occ++;
             }
             lblTotalVal.setText(String.valueOf(currentHotels.size()));
             lblOccupiedVal.setText(String.valueOf(occ));
@@ -2765,7 +2785,8 @@ public class DashboardController {
             
             for (Hotel h : filteredHotels) {
                 VBox card = new VBox(12);
-                boolean isOccupied = h.getEquipaHospedada() != null;
+                boolean isOccupied = !h.getAlojamentos().isEmpty();
+                int currentOccupancy = h.getAlojamentos().stream().mapToInt(info -> info.getEquipa().getJogadores().size()).sum();
                 
                 card.setStyle("-fx-background-color: #FFFFFF; " +
                               "-fx-border-color: " + (isOccupied ? "#F59E0B" : "#00D26A") + " #E5E7EB #E5E7EB #E5E7EB; " +
@@ -2795,7 +2816,7 @@ public class DashboardController {
                 Region sp = new Region();
                 HBox.setHgrow(sp, Priority.ALWAYS);
                 
-                Label badge = new Label(isOccupied ? "OCUPADO" : "DISPONÍVEL");
+                Label badge = new Label(isOccupied ? "OCUPADO (" + currentOccupancy + "/" + h.getCapacidadePessoas() + "p)" : "DISPONÍVEL");
                 badge.setStyle("-fx-background-color: " + (isOccupied ? "#FEF3C7" : "#DCFCE7") + "; " +
                                "-fx-text-fill: " + (isOccupied ? "#92400E" : "#166534") + "; " +
                                "-fx-background-radius: 50px; " +
@@ -2807,7 +2828,8 @@ public class DashboardController {
                 btnDelete.setStyle("-fx-background-color: transparent; -fx-text-fill: #EF4444; -fx-font-weight: bold; -fx-padding: 2px 6px; -fx-cursor: hand; -fx-font-size: 13px; -fx-border-color: #FCA5A5; -fx-border-radius: 6px;");
                 btnDelete.setOnAction(evt -> {
                     if (isOccupied) {
-                        Alert alert = new Alert(Alert.AlertType.WARNING, "Este hotel está atualmente ocupado pela comitiva de " + h.getEquipaHospedada().getNome() + ". Por favor, realize o Check-out antes de o eliminar.");
+                        String occupiedNames = h.getAlojamentos().stream().map(info -> info.getEquipa().getNome()).collect(java.util.stream.Collectors.joining(", "));
+                        Alert alert = new Alert(Alert.AlertType.WARNING, "Este hotel está atualmente ocupado pelas comitivas de " + occupiedNames + ". Por favor, realize o Check-out antes de o eliminar.");
                         alert.setTitle("Impossível Eliminar");
                         alert.setHeaderText("Hotel com Ocupação Ativa");
                         alert.showAndWait();
@@ -2832,7 +2854,7 @@ public class DashboardController {
                 
                 r1.getChildren().addAll(titleInfo, sp, topActions);
                 
-                Label lblCap = new Label("👤 Capacidade: " + h.getCapacidadeQuartos() + " pessoas");
+                Label lblCap = new Label("👤 Capacidade: " + h.getCapacidadePessoas() + " pessoas");
                 lblCap.setStyle("-fx-background-color: #F9FAFB; " +
                                "-fx-padding: 6px 10px; " +
                                "-fx-background-radius: 8px; " +
@@ -2844,7 +2866,7 @@ public class DashboardController {
                 
                 card.getChildren().addAll(r1, lblCap);
                 
-                if (isOccupied) {
+                for (Hotel.AlojamentoInfo info : h.getAlojamentos()) {
                     VBox teamBox = new VBox(4);
                     teamBox.setStyle("-fx-background-color: #EFF6FF; " +
                                      "-fx-border-color: #DBEAFE; " +
@@ -2852,11 +2874,10 @@ public class DashboardController {
                                      "-fx-border-radius: 12px; " +
                                      "-fx-background-radius: 12px; " +
                                      "-fx-padding: 8px;");
-                    Label lblTeam = new Label("🚩 " + h.getEquipaHospedada().getNome());
+                    Label lblTeam = new Label("🚩 " + info.getEquipa().getNome() + " (" + info.getEquipa().getJogadores().size() + "p)");
                     lblTeam.setStyle("-fx-font-weight: bold; -fx-text-fill: #1E40AF; -fx-font-size: 12px;");
-                    Label lblDates = new Label("In: " + h.getCheckInDate() + "\nOut: " + h.getCheckOutDate());
+                    Label lblDates = new Label("In: " + info.getCheckInDate() + "\nOut: " + info.getCheckOutDate());
                     lblDates.setStyle("-fx-text-fill: #3B82F6; -fx-font-size: 10px;");
-                    teamBox.getChildren().addAll(lblTeam, lblDates);
                     
                     Button btnOut = new Button("Realizar Check-out");
                     btnOut.setStyle("-fx-background-color: transparent; -fx-border-color: #FECACA; -fx-border-radius: 8px; -fx-text-fill: #DC2626; -fx-font-weight: bold; -fx-padding: 6px; -fx-cursor: hand; -fx-font-size: 11px;");
@@ -2864,22 +2885,25 @@ public class DashboardController {
                     btnOut.setOnAction(evt -> {
                         ButtonType btnSim = new ButtonType("Sim", ButtonBar.ButtonData.YES);
                         ButtonType btnNao = new ButtonType("Não", ButtonBar.ButtonData.NO);
-                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Confirmar Check-out de " + h.getEquipaHospedada().getNome() + "?", btnSim, btnNao);
+                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Confirmar Check-out de " + info.getEquipa().getNome() + "?", btnSim, btnNao);
                         alert.setTitle("Confirmação de Check-out");
                         alert.setHeaderText("Realizar Check-out");
                         alert.showAndWait().ifPresent(res -> {
                             if (res == btnSim) {
-                                logManager.registarCheckout(h);
+                                logManager.registarCheckoutEquipa(h, info.getEquipa());
                                 showLogistica(0); // Refresh entire screen
                             }
                         });
                     });
                     
-                    card.getChildren().addAll(teamBox, btnOut);
-                } else {
+                    teamBox.getChildren().addAll(lblTeam, lblDates, btnOut);
+                    card.getChildren().add(teamBox);
+                }
+                
+                if (currentOccupancy < h.getCapacidadePessoas()) {
                     Region spacer = new Region();
                     VBox.setVgrow(spacer, Priority.ALWAYS);
-                    spacer.setPrefHeight(45);
+                    spacer.setPrefHeight(25);
                     
                     Button btnIn = new Button("Atribuir Equipa");
                     btnIn.getStyleClass().add("btn-primary");
@@ -4243,7 +4267,16 @@ public class DashboardController {
         Label lblTeam = new Label("Seleção:");
         lblTeam.setStyle("-fx-font-weight: bold;");
         ComboBox<Equipa> cmbTeam = new ComboBox<>();
-        cmbTeam.setItems(FXCollections.observableArrayList(campManager.getEquipas()));
+        
+        // Filtrar apenas as equipas que ainda não estão alojadas em lado nenhum
+        List<Equipa> disponiveis = new ArrayList<>();
+        for (Equipa eq : campManager.getEquipas()) {
+            if (!logManager.isEquipaHospedada(eq)) {
+                disponiveis.add(eq);
+            }
+        }
+        
+        cmbTeam.setItems(FXCollections.observableArrayList(disponiveis));
         cmbTeam.setMaxWidth(Double.MAX_VALUE);
         
         Label lblIn = new Label("Data de Check-in:");
@@ -4283,7 +4316,7 @@ public class DashboardController {
                     okAlert.showAndWait();
                     showLogistica(); // Refresh screen
                 } else {
-                    Alert err = new Alert(Alert.AlertType.ERROR, "Capacidade insuficiente ou hotel já ocupado!");
+                    Alert err = new Alert(Alert.AlertType.ERROR, "Capacidade de alojamento esgotada ou comitiva já hospedada!");
                     err.showAndWait();
                 }
             }
