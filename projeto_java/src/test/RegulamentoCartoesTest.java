@@ -104,4 +104,43 @@ public class RegulamentoCartoesTest {
         assertNotNull(realBernardo);
         assertEquals(EstadoJogador.SUSPENSO, realBernardo.getEstado(), "Jogador suspenso nos Quartos deve cumprir castigo na Meia-Final");
     }
+
+    @Test
+    public void testOrdemProcessamentoEventosELimpezaNosQuartos() {
+        // Arrange
+        Equipa p = new Equipa("Portugal", "Martínez");
+        Jogador jog1AmareloNoJogo = new Jogador(3, 8, "Bruno", "Médio", EstadoJogador.APTO);
+        Jogador jogAcumulouNoJogo = new Jogador(4, 11, "João", "Médio", EstadoJogador.APTO);
+        p.adicionarJogador(jog1AmareloNoJogo);
+        p.adicionarJogador(jogAcumulouNoJogo);
+        manager.registarEquipa(p);
+
+        Equipa c = new Equipa("Cuba", "Castillo");
+        manager.registarEquipa(c);
+
+        // Bruno começa com 0 amarelos. João começa com 1 amarelo.
+        jogAcumulouNoJogo.setYellowCards(1);
+
+        Estadio est = new Estadio("Santiago Bernabéu", "Madrid");
+        Jogo jogoQuartos = new Jogo(1, "2026-07-05", "18:00", est, p, c, "Quartos", null, null);
+        manager.registarJogo(jogoQuartos);
+
+        // Durante o jogo de Quartos, ambos recebem amarelo
+        jogoQuartos.adicionarEvento(new EventoJogo(15, TipoEvento.CARTAO_AMARELO, jog1AmareloNoJogo, p));
+        jogoQuartos.adicionarEvento(new EventoJogo(35, TipoEvento.CARTAO_AMARELO, jogAcumulouNoJogo, p));
+
+        // Act: Finalizar jogo dos Quartos
+        manager.finalizarJogoECorrerBracket(1, p, 1, 0, -1, -1, null);
+
+        // Assert
+        Jogador realBruno = manager.procurarEquipaPorNome("Portugal").getJogadores().stream().filter(j -> j.getId() == 3).findFirst().orElse(null);
+        assertNotNull(realBruno);
+        assertEquals(0, realBruno.getYellowCards(), "Amarelo de Bruno deve ser limpo");
+        assertEquals(EstadoJogador.APTO, realBruno.getEstado());
+
+        Jogador realJoao = manager.procurarEquipaPorNome("Portugal").getJogadores().stream().filter(j -> j.getId() == 4).findFirst().orElse(null);
+        assertNotNull(realJoao);
+        assertEquals(EstadoJogador.SUSPENSO, realJoao.getEstado(), "João deve ficar suspenso");
+        assertEquals(2, realJoao.getYellowCards(), "João deve manter os 2 cartões para a suspensão");
+    }
 }

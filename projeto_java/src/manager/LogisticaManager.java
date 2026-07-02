@@ -45,22 +45,22 @@ public class LogisticaManager {
         saveAll();
     }
 
-    public List<Hotel> getHoteis() {
+    public synchronized List<Hotel> getHoteis() {
         return new ArrayList<>(this.hoteis);
     }
 
-    public List<Viagem> getViagens() {
+    public synchronized List<Viagem> getViagens() {
         return new ArrayList<>(this.viagens);
     }
 
-    public void registarHotel(Hotel hotel) {
+    public synchronized void registarHotel(Hotel hotel) {
         if (hotel == null) return;
         this.hoteis.removeIf(h -> h.getId() == hotel.getId());
         this.hoteis.add(hotel);
         saveAll();
     }
 
-    public void removerHotel(int id) {
+    public synchronized void removerHotel(int id) {
         this.hoteis.removeIf(h -> h.getId() == id);
         saveAll();
     }

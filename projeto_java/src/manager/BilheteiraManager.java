@@ -40,7 +40,7 @@ public class BilheteiraManager {
         saveAll();
     }
 
-    public List<Bilhete> getBilhetes() {
+    public synchronized List<Bilhete> getBilhetes() {
         return new ArrayList<>(this.bilhetes);
     }
 
