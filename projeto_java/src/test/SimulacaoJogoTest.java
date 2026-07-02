@@ -51,7 +51,13 @@ public class SimulacaoJogoTest {
         Jogo jogoFinal = manager.procurarJogoPorId(1);
         assertNotNull(jogoFinal);
         assertEquals(StatusJogo.FINALIZADO, jogoFinal.getStatus(), "O jogo deve estar no estado FINALIZADO após a simulação");
-        assertNotNull(jogoFinal.getWinner(), "Deve haver um vencedor definido (ou empate em grupos)");
+        if (jogoFinal.getGoalsHome() > jogoFinal.getGoalsAway()) {
+            assertEquals("Portugal", jogoFinal.getWinner().getNome());
+        } else if (jogoFinal.getGoalsAway() > jogoFinal.getGoalsHome()) {
+            assertEquals("Cuba", jogoFinal.getWinner().getNome());
+        } else {
+            assertNull(jogoFinal.getWinner(), "Empates na fase de grupos devem ter vencedor nulo");
+        }
 
         // Verificar que eventos foram populados
         assertNotNull(jogoFinal.getEventos(), "A lista de eventos do jogo não deve ser nula");
