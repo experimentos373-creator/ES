@@ -4148,6 +4148,17 @@ public class DashboardController {
             } else {
                 score = j.getData() + " " + j.getHora();
             }
+
+            box.setCursor(javafx.scene.Cursor.HAND);
+            box.setOnMouseClicked(event -> {
+                if (utilizadorLogado.getCargo() == TipoUtilizador.ADMIN) {
+                    showBracketMatchActions(j);
+                } else {
+                    showRosterDialog(j);
+                }
+            });
+            box.setOnMouseEntered(e -> box.setStyle("-fx-background-color: #F1F5F9; -fx-border-color: #10B981; -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-padding: 8px; -fx-min-width: 140px; -fx-effect: dropshadow(three-pass-box, rgba(16,185,129,0.15), 8, 0, 0, 4);"));
+            box.setOnMouseExited(e -> box.setStyle("-fx-background-color: #FFFFFF; -fx-border-color: #E2E8F0; -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-padding: 8px; -fx-min-width: 140px; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 5, 0, 0, 2);"));
         }
         
         Label lblHome = new Label("⚽ " + homeName);
@@ -4161,6 +4172,223 @@ public class DashboardController {
         
         box.getChildren().addAll(lblHome, lblAway, lblScore);
         return box;
+    }
+
+    private void showBracketMatchActions(Jogo j) {
+        if (j == null) {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION, "Este jogo do bracket ainda não tem equipas definidas.");
+            alert.setTitle("Jogo Não Definido");
+            alert.setHeaderText(null);
+            alert.showAndWait();
+            return;
+        }
+
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Gerir Jogo - " + j.getHomeTeam().getNome() + " vs " + j.getAwayTeam().getNome());
+        dialog.setHeaderText("Fase: " + j.getPhase() + " | Estado: " + j.getStatus());
+
+        ButtonType btnSimulate = new ButtonType("Simular Jogo", ButtonBar.ButtonData.OTHER);
+        ButtonType btnFinalize = new ButtonType("Registar Manual", ButtonBar.ButtonData.OTHER);
+        ButtonType btnSchedule = new ButtonType("Reagendar", ButtonBar.ButtonData.OTHER);
+        ButtonType btnRoster = new ButtonType("Ver Convocatórias", ButtonBar.ButtonData.OTHER);
+        
+        dialog.getDialogPane().getButtonTypes().addAll(btnRoster);
+        
+        if (StatusJogo.AGENDADO.equals(j.getStatus())) {
+            dialog.getDialogPane().getButtonTypes().addAll(btnSimulate, btnFinalize, btnSchedule);
+        }
+        
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+
+        // Customize button display texts
+        if (StatusJogo.AGENDADO.equals(j.getStatus())) {
+            javafx.scene.Node simNode = dialog.getDialogPane().lookupButton(btnSimulate);
+            if (simNode instanceof Button) {
+                ((Button) simNode).setStyle("-fx-background-color: #10B981; -fx-text-fill: white; -fx-font-weight: bold;");
+            }
+            javafx.scene.Node finNode = dialog.getDialogPane().lookupButton(btnFinalize);
+            if (finNode instanceof Button) {
+                ((Button) finNode).setStyle("-fx-background-color: #3B82F6; -fx-text-fill: white; -fx-font-weight: bold;");
+            }
+        }
+
+        VBox content = new VBox(15);
+        content.setPadding(new Insets(20));
+        content.setPrefWidth(450);
+
+        Label lblInfo = new Label("Selecione uma ação rápida para gerir esta partida no bracket:");
+        lblInfo.setStyle("-fx-font-weight: bold;");
+        content.getChildren().add(lblInfo);
+
+        if (StatusJogo.FINALIZADO.equals(j.getStatus())) {
+            Label lblResult = new Label("Resultado Final: " + j.getGoalsHome() + " - " + j.getGoalsAway());
+            lblResult.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #10B981;");
+            content.getChildren().add(lblResult);
+            if (j.getPenaltiesHome() >= 0) {
+                Label lblPens = new Label("Penáltis: " + j.getPenaltiesHome() + " - " + j.getPenaltiesAway());
+                lblPens.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #64748B;");
+                content.getChildren().add(lblPens);
+            }
+        }
+
+        dialog.getDialogPane().setContent(content);
+
+        dialog.showAndWait().ifPresent(response -> {
+            if (response == btnRoster) {
+                showRosterDialog(j);
+            } else if (response == btnSchedule) {
+                showRescheduleDialog(j);
+            } else if (response == btnFinalize) {
+                showManualFinalizeDialog(j);
+            } else if (response == btnSimulate) {
+                boolean ok = campManager.simularJogoMinutoAMinuto(j.getId());
+                if (ok) {
+                    Alert okAlert = new Alert(Alert.AlertType.INFORMATION, "Jogo simulado com sucesso!\nResultado: " + j.getGoalsHome() + " - " + j.getGoalsAway() + (j.getPenaltiesHome() >= 0 ? " (Pen. " + j.getPenaltiesHome() + "-" + j.getPenaltiesAway() + ")" : ""));
+                    okAlert.showAndWait();
+                    showStandingsAndBracket(); // Reload bracket view!
+                } else {
+                    Alert err = new Alert(Alert.AlertType.ERROR, "Não foi possível simular o jogo.");
+                    err.showAndWait();
+                }
+            }
+        });
+    }
+
+    private void showRescheduleDialog(Jogo j) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Reagendar Jogo");
+        dialog.setHeaderText("Reagendar partida: " + j.getHomeTeam().getNome() + " vs " + j.getAwayTeam().getNome());
+        
+        ButtonType btnConfirm = new ButtonType("Confirmar Reagendamento", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(btnConfirm, ButtonType.CANCEL);
+        
+        VBox box = new VBox(12);
+        box.setPadding(new Insets(15));
+        box.setPrefWidth(350);
+
+        Label lblDate = new Label("Nova Data:");
+        DatePicker dpDate = new DatePicker();
+        try {
+            dpDate.setValue(java.time.LocalDate.parse(j.getData()));
+        } catch(Exception e) {}
+        dpDate.setMaxWidth(Double.MAX_VALUE);
+
+        Label lblTime = new Label("Nova Hora:");
+        TextField txtTime = new TextField(j.getHora());
+
+        box.getChildren().addAll(lblDate, dpDate, lblTime, txtTime);
+        dialog.getDialogPane().setContent(box);
+
+        dialog.showAndWait().ifPresent(res -> {
+            if (res == btnConfirm) {
+                if (dpDate.getValue() == null || txtTime.getText().trim().isEmpty()) {
+                    Alert err = new Alert(Alert.AlertType.ERROR, "Todos os campos devem ser preenchidos!");
+                    err.showAndWait();
+                    return;
+                }
+                String newDate = dpDate.getValue().toString();
+                String newTime = txtTime.getText().trim();
+                if (!newTime.matches("^\\d{2}:\\d{2}$")) {
+                    Alert err = new Alert(Alert.AlertType.ERROR, "Hora deve estar no formato HH:MM!");
+                    err.showAndWait();
+                    return;
+                }
+                j.setData(newDate);
+                j.setHora(newTime);
+                
+                Alert info = new Alert(Alert.AlertType.INFORMATION, "Jogo reagendado com sucesso!");
+                info.showAndWait();
+                showStandingsAndBracket();
+            }
+        });
+    }
+
+    private void showManualFinalizeDialog(Jogo selected) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Registar Resultado Manual");
+        dialog.setHeaderText("Definir resultado de " + selected.getHomeTeam().getNome() + " vs " + selected.getAwayTeam().getNome());
+
+        ButtonType btnConfirm = new ButtonType("Seguinte (Marcadores)", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(btnConfirm, ButtonType.CANCEL);
+
+        VBox box = new VBox(12);
+        box.setPadding(new Insets(15));
+        box.setPrefWidth(350);
+
+        HBox scoreBox = new HBox(10);
+        scoreBox.setAlignment(Pos.CENTER_LEFT);
+        TextField txtGoalsHome = new TextField();
+        txtGoalsHome.setPromptText("Golos Casa");
+        txtGoalsHome.setPrefWidth(100);
+        Label vs = new Label("vs");
+        TextField txtGoalsAway = new TextField();
+        txtGoalsAway.setPromptText("Golos Fora");
+        txtGoalsAway.setPrefWidth(100);
+        scoreBox.getChildren().addAll(txtGoalsHome, vs, txtGoalsAway);
+
+        VBox penaltyContainer = new VBox(10);
+        penaltyContainer.setVisible(false);
+        penaltyContainer.setManaged(false);
+        Label penaltyInfo = new Label("Jogo empatado em fase eliminatória! Decisão por Penaltis:");
+        penaltyInfo.setStyle("-fx-text-fill: #6B7280;");
+        HBox penaltyBox = new HBox(10);
+        penaltyBox.setAlignment(Pos.CENTER_LEFT);
+        TextField txtPenHome = new TextField();
+        txtPenHome.setPromptText("Pen. Casa");
+        txtPenHome.setPrefWidth(100);
+        Label vsPen = new Label("vs");
+        TextField txtPenAway = new TextField();
+        txtPenAway.setPromptText("Pen. Fora");
+        txtPenAway.setPrefWidth(100);
+        penaltyBox.getChildren().addAll(txtPenHome, vsPen, txtPenAway);
+        penaltyContainer.getChildren().addAll(penaltyInfo, penaltyBox);
+
+        txtGoalsHome.textProperty().addListener((o, ov, nv) -> {
+            checkPenaltiesVisible(txtGoalsHome, txtGoalsAway, selected, penaltyContainer);
+        });
+        txtGoalsAway.textProperty().addListener((o, ov, nv) -> {
+            checkPenaltiesVisible(txtGoalsHome, txtGoalsAway, selected, penaltyContainer);
+        });
+
+        box.getChildren().addAll(scoreBox, penaltyContainer);
+        dialog.getDialogPane().setContent(box);
+
+        dialog.showAndWait().ifPresent(res -> {
+            if (res == btnConfirm) {
+                try {
+                    int gh = Integer.parseInt(txtGoalsHome.getText().trim());
+                    int ga = Integer.parseInt(txtGoalsAway.getText().trim());
+                    if (gh < 0 || ga < 0) throw new NumberFormatException();
+
+                    int ph = -1;
+                    int pa = -1;
+                    if (penaltyContainer.isVisible()) {
+                        ph = Integer.parseInt(txtPenHome.getText().trim());
+                        pa = Integer.parseInt(txtPenAway.getText().trim());
+                        if (ph < 0 || pa < 0 || ph == pa) {
+                            Alert err = new Alert(Alert.AlertType.ERROR, "Golos de penaltis inválidos!");
+                            err.showAndWait();
+                            return;
+                        }
+                    }
+
+                    EstatisticaJogo stats = new EstatisticaJogo(50, 50, 8, 8, 4, 4);
+                    if (gh == 0 && ga == 0) {
+                        campManager.finalizarJogoECorrerBracket(selected.getId(), null, gh, ga, ph, pa, stats);
+                        Alert okAlert = new Alert(Alert.AlertType.INFORMATION, "Jogo finalizado com sucesso!");
+                        okAlert.showAndWait();
+                        showStandingsAndBracket();
+                    } else {
+                        showRegisterScorersAndAssistantsDialog(selected, gh, ga, ph, pa, stats, () -> {
+                            showStandingsAndBracket();
+                        });
+                    }
+                } catch (Exception ex) {
+                    Alert err = new Alert(Alert.AlertType.ERROR, "Dados de resultado inválidos!");
+                    err.showAndWait();
+                }
+            }
+        });
     }
 
     private void showRosterDialog(Jogo j) {

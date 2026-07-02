@@ -67,6 +67,14 @@ public class Jogo implements Serializable {
         return hora;
     }
 
+    public void setData(String data) {
+        this.data = data;
+    }
+
+    public void setHora(String hora) {
+        this.hora = hora;
+    }
+
     public Estadio getEstadio() {
         return estadio;
     }
