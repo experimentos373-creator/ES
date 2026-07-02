@@ -48,9 +48,13 @@ public class Main {
         // 2. Equipas e Jogadores (semente minima)
         CampeonatoManager camp = CampeonatoManager.getInstance();
         Equipa portugal = new Equipa("Portugal", "Roberto Martinez");
+        portugal.setRankingPontos(1745);
         Equipa brasil = new Equipa("Brasil", "Junior");
+        brasil.setRankingPontos(1790);
         Equipa franca = new Equipa("Franca", "Deschamps");
+        franca.setRankingPontos(1840);
         Equipa cuba = new Equipa("Cuba", "Castillo");
+        cuba.setRankingPontos(1050);
 
         for (int i = 1; i <= 5; i++) {
             portugal.adicionarJogador(new Jogador(i, i, "Jogador P" + i, "Avancado", EstadoJogador.APTO));

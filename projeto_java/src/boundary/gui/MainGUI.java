@@ -141,6 +141,40 @@ public class MainGUI extends Application {
         treinadores.put("Ucrânia", "Serhiy Rebrov");
         treinadores.put("Irão", "Amir Ghalenoei");
 
+        Map<String, Integer> rankings = new HashMap<>();
+        rankings.put("Argentina", 1860);
+        rankings.put("França", 1840);
+        rankings.put("Bélgica", 1795);
+        rankings.put("Brasil", 1790);
+        rankings.put("Inglaterra", 1785);
+        rankings.put("Portugal", 1745);
+        rankings.put("Holanda", 1740);
+        rankings.put("Espanha", 1730);
+        rankings.put("Itália", 1725);
+        rankings.put("Croácia", 1720);
+        rankings.put("EUA", 1660);
+        rankings.put("Marrocos", 1661);
+        rankings.put("Senegal", 1620);
+        rankings.put("Alemanha", 1644);
+        rankings.put("Colômbia", 1600);
+        rankings.put("Suíça", 1610);
+        rankings.put("Coreia do Sul", 1560);
+        rankings.put("Uruguai", 1658);
+        rankings.put("Gana", 1500);
+        rankings.put("Canadá", 1495);
+        rankings.put("Dinamarca", 1602);
+        rankings.put("Sérvia", 1515);
+        rankings.put("Polónia", 1530);
+        rankings.put("Austrália", 1570);
+        rankings.put("Áustria", 1555);
+        rankings.put("Nigéria", 1520);
+        rankings.put("Turquia", 1490);
+        rankings.put("Chile", 1485);
+        rankings.put("Ucrânia", 1565);
+        rankings.put("Irão", 1612);
+        rankings.put("Cuba", 1050);
+        rankings.put("Japão", 1622);
+
         Map<String, Equipa> equipasCriadas = new HashMap<>();
 
         // Registrar as equipas de forma dinâmica com plantéis ricos
@@ -148,6 +182,7 @@ public class MainGUI extends Application {
             for (String nomeEq : entry.getValue()) {
                 String coach = treinadores.getOrDefault(nomeEq, "Selecionador");
                 Equipa eq = new Equipa(nomeEq, coach);
+                eq.setRankingPontos(rankings.getOrDefault(nomeEq, 1200));
 
                 if ("Portugal".equals(nomeEq)) {
                     // Mantemos a sementeira manual rica de Portugal para demonstrar o plantel fiel
