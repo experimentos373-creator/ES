@@ -65,7 +65,7 @@ public class Hotel implements Serializable {
         return capacidadePessoas;
     }
 
-    public List<AlojamentoInfo> getAlojamentos() {
+    public synchronized List<AlojamentoInfo> getAlojamentos() {
         if (this.alojamentos == null) {
             this.alojamentos = new ArrayList<>();
         }
@@ -75,7 +75,7 @@ public class Hotel implements Serializable {
     /**
      * Efetua check-in de uma equipa no hotel.
      */
-    public boolean checkIn(Equipa equipa, String checkInDate, String checkOutDate) {
+    public synchronized boolean checkIn(Equipa equipa, String checkInDate, String checkOutDate) {
         if (equipa == null) return false;
         
         if (this.alojamentos == null) {
@@ -96,7 +96,7 @@ public class Hotel implements Serializable {
     /**
      * Efetua check-out de uma equipa específica.
      */
-    public boolean checkOutEquipa(Equipa equipa) {
+    public synchronized boolean checkOutEquipa(Equipa equipa) {
         if (equipa == null || this.alojamentos == null) return false;
         return this.alojamentos.removeIf(info -> info.getEquipa().equals(equipa));
     }
@@ -104,7 +104,7 @@ public class Hotel implements Serializable {
     /**
      * Efetua check-out de todas as equipas.
      */
-    public void checkOut() {
+    public synchronized void checkOut() {
         if (this.alojamentos != null) {
             this.alojamentos.clear();
         } else {

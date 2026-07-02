@@ -48,7 +48,7 @@ public class SetorEstadio implements Serializable {
     /**
      * Tenta vender bilhetes para este setor, verificando a capacidade restante.
      */
-    public boolean venderBilhete(int quantidade) {
+    public synchronized boolean venderBilhete(int quantidade) {
         if (this.bilhetesVendidos + quantidade > this.capacidadeTotal) {
             return false; // Capacidade máxima excedida
         }

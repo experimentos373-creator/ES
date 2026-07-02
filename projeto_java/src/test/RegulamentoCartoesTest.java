@@ -143,4 +143,31 @@ public class RegulamentoCartoesTest {
         assertEquals(EstadoJogador.SUSPENSO, realJoao.getEstado(), "João deve ficar suspenso");
         assertEquals(2, realJoao.getYellowCards(), "João deve manter os 2 cartões para a suspensão");
     }
+
+    @Test
+    public void testCumprimentoSuspensaoNosQuartosELimpeza() {
+        // Arrange
+        Equipa p = new Equipa("Portugal", "Martínez");
+        // O jogador já entra suspenso com 2 amarelos acumulados das Oitavas
+        Jogador jogSuspensoPre = new Jogador(5, 10, "Bernardo", "Médio", EstadoJogador.SUSPENSO);
+        jogSuspensoPre.setYellowCards(2);
+        p.adicionarJogador(jogSuspensoPre);
+        manager.registarEquipa(p);
+
+        Equipa c = new Equipa("Cuba", "Castillo");
+        manager.registarEquipa(c);
+
+        Estadio est = new Estadio("Santiago Bernabéu", "Madrid");
+        Jogo jogoQuartos = new Jogo(1, "2026-07-05", "18:00", est, p, c, "Quartos", null, null);
+        manager.registarJogo(jogoQuartos);
+
+        // Act: Finalizar o jogo de Quartos (onde Bernardo cumpre a suspensão e a equipa avança)
+        manager.finalizarJogoECorrerBracket(1, p, 1, 0, -1, -1, null);
+
+        // Assert: Bernardo deve estar APTO e com amarelos a 0 (cumpriu a suspensão e está limpo)
+        Jogador realBernardo = manager.procurarEquipaPorNome("Portugal").getJogadores().stream().filter(j -> j.getId() == 5).findFirst().orElse(null);
+        assertNotNull(realBernardo);
+        assertEquals(EstadoJogador.APTO, realBernardo.getEstado(), "Jogador que cumpriu suspensão nos Quartos deve voltar a APTO");
+        assertEquals(0, realBernardo.getYellowCards(), "Amarelos devem ser reiniciados após cumprir suspensão");
+    }
 }
