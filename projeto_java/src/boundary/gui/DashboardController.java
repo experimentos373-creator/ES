@@ -4878,6 +4878,31 @@ public class DashboardController {
         });
     }
 
+    private void setupJogadorCellFactory(ComboBox<Jogador> combo) {
+        combo.setCellFactory(lv -> new ListCell<Jogador>() {
+            @Override
+            protected void updateItem(Jogador item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText("Sem Assistência");
+                } else {
+                    setText(item.getNumeroCamisola() + " - " + item.getNome() + " (" + item.getPosicao() + ")");
+                }
+            }
+        });
+        combo.setButtonCell(new ListCell<Jogador>() {
+            @Override
+            protected void updateItem(Jogador item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText("Sem Assistência");
+                } else {
+                    setText(item.getNumeroCamisola() + " - " + item.getNome());
+                }
+            }
+        });
+    }
+
     private void showRegisterScorersAndAssistantsDialog(Jogo jogo, int goalsHome, int goalsAway, int penaltiesHome, int penaltiesAway, EstatisticaJogo stats, Runnable postFinalizeAction) {
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Registrar Marcadores e Assistentes");
@@ -4889,15 +4914,24 @@ public class DashboardController {
 
         VBox content = new VBox(15);
         content.setPadding(new Insets(20));
-        content.setMinWidth(450);
+        content.setMinWidth(550);
 
         List<Jogador> homePlayers = jogo.getHomeTeam().getJogadores();
         List<Jogador> awayPlayers = jogo.getAwayTeam().getJogadores();
 
-        List<ComboBox<Jogador>> homeScorersCombos = new ArrayList<>();
-        List<ComboBox<Jogador>> homeAssistantsCombos = new ArrayList<>();
-        List<ComboBox<Jogador>> awayScorersCombos = new ArrayList<>();
-        List<ComboBox<Jogador>> awayAssistantsCombos = new ArrayList<>();
+        class GoalRow {
+            ComboBox<String> cmbType;
+            ComboBox<Jogador> cmbScorer;
+            ComboBox<Jogador> cmbAssistant;
+            GoalRow(ComboBox<String> t, ComboBox<Jogador> s, ComboBox<Jogador> a) {
+                this.cmbType = t;
+                this.cmbScorer = s;
+                this.cmbAssistant = a;
+            }
+        }
+
+        List<GoalRow> homeGoalRows = new ArrayList<>();
+        List<GoalRow> awayGoalRows = new ArrayList<>();
 
         if (goalsHome > 0) {
             Label lblHome = new Label("Golos de " + jogo.getHomeTeam().getNome() + ":");
@@ -4911,57 +4945,40 @@ public class DashboardController {
                 Label lblGolo = new Label("Golo " + i + ":");
                 lblGolo.setMinWidth(50);
 
+                ComboBox<String> cmbType = new ComboBox<>();
+                cmbType.getItems().addAll("Normal", "Auto-Golo");
+                cmbType.setValue("Normal");
+                cmbType.setPrefWidth(100);
+
                 ComboBox<Jogador> cmbScorer = new ComboBox<>();
                 cmbScorer.getItems().addAll(homePlayers);
                 cmbScorer.setPromptText("Selecione o Marcador");
                 cmbScorer.setPrefWidth(180);
-                cmbScorer.setCellFactory(lv -> new ListCell<Jogador>() {
-                    @Override
-                    protected void updateItem(Jogador item, boolean empty) {
-                        super.updateItem(item, empty);
-                        setText(empty ? "" : item.getNumeroCamisola() + " - " + item.getNome() + " (" + item.getPosicao() + ")");
-                    }
-                });
-                cmbScorer.setButtonCell(new ListCell<Jogador>() {
-                    @Override
-                    protected void updateItem(Jogador item, boolean empty) {
-                        super.updateItem(item, empty);
-                        setText(empty ? "" : item.getNumeroCamisola() + " - " + item.getNome());
-                    }
-                });
+                setupJogadorCellFactory(cmbScorer);
 
                 ComboBox<Jogador> cmbAssistant = new ComboBox<>();
                 cmbAssistant.getItems().add(null);
                 cmbAssistant.getItems().addAll(homePlayers);
-                cmbAssistant.setPromptText("Selecione o Assistente (Opcional)");
+                cmbAssistant.setPromptText("Sem Assistência");
                 cmbAssistant.setPrefWidth(180);
-                cmbAssistant.setCellFactory(lv -> new ListCell<Jogador>() {
-                    @Override
-                    protected void updateItem(Jogador item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (empty || item == null) {
-                            setText("Sem Assistência");
-                        } else {
-                            setText(item.getNumeroCamisola() + " - " + item.getNome());
-                        }
-                    }
-                });
-                cmbAssistant.setButtonCell(new ListCell<Jogador>() {
-                    @Override
-                    protected void updateItem(Jogador item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (empty || item == null) {
-                            setText("Sem Assistência");
-                        } else {
-                            setText(item.getNumeroCamisola() + " - " + item.getNome());
-                        }
+                setupJogadorCellFactory(cmbAssistant);
+
+                cmbType.valueProperty().addListener((obs, oldVal, newVal) -> {
+                    if ("Auto-Golo".equals(newVal)) {
+                        cmbScorer.getItems().clear();
+                        cmbScorer.getItems().addAll(awayPlayers);
+                        cmbAssistant.setValue(null);
+                        cmbAssistant.setDisable(true);
+                    } else {
+                        cmbScorer.getItems().clear();
+                        cmbScorer.getItems().addAll(homePlayers);
+                        cmbAssistant.setDisable(false);
                     }
                 });
 
-                row.getChildren().addAll(lblGolo, cmbScorer, new Label("Assis:"), cmbAssistant);
+                row.getChildren().addAll(lblGolo, cmbType, cmbScorer, new Label("Assis:"), cmbAssistant);
                 content.getChildren().add(row);
-                homeScorersCombos.add(cmbScorer);
-                homeAssistantsCombos.add(cmbAssistant);
+                homeGoalRows.add(new GoalRow(cmbType, cmbScorer, cmbAssistant));
             }
         }
 
@@ -4977,57 +4994,40 @@ public class DashboardController {
                 Label lblGolo = new Label("Golo " + i + ":");
                 lblGolo.setMinWidth(50);
 
+                ComboBox<String> cmbType = new ComboBox<>();
+                cmbType.getItems().addAll("Normal", "Auto-Golo");
+                cmbType.setValue("Normal");
+                cmbType.setPrefWidth(100);
+
                 ComboBox<Jogador> cmbScorer = new ComboBox<>();
                 cmbScorer.getItems().addAll(awayPlayers);
                 cmbScorer.setPromptText("Selecione o Marcador");
                 cmbScorer.setPrefWidth(180);
-                cmbScorer.setCellFactory(lv -> new ListCell<Jogador>() {
-                    @Override
-                    protected void updateItem(Jogador item, boolean empty) {
-                        super.updateItem(item, empty);
-                        setText(empty ? "" : item.getNumeroCamisola() + " - " + item.getNome() + " (" + item.getPosicao() + ")");
-                    }
-                });
-                cmbScorer.setButtonCell(new ListCell<Jogador>() {
-                    @Override
-                    protected void updateItem(Jogador item, boolean empty) {
-                        super.updateItem(item, empty);
-                        setText(empty ? "" : item.getNumeroCamisola() + " - " + item.getNome());
-                    }
-                });
+                setupJogadorCellFactory(cmbScorer);
 
                 ComboBox<Jogador> cmbAssistant = new ComboBox<>();
                 cmbAssistant.getItems().add(null);
                 cmbAssistant.getItems().addAll(awayPlayers);
-                cmbAssistant.setPromptText("Selecione o Assistente (Opcional)");
+                cmbAssistant.setPromptText("Sem Assistência");
                 cmbAssistant.setPrefWidth(180);
-                cmbAssistant.setCellFactory(lv -> new ListCell<Jogador>() {
-                    @Override
-                    protected void updateItem(Jogador item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (empty || item == null) {
-                            setText("Sem Assistência");
-                        } else {
-                            setText(item.getNumeroCamisola() + " - " + item.getNome());
-                        }
-                    }
-                });
-                cmbAssistant.setButtonCell(new ListCell<Jogador>() {
-                    @Override
-                    protected void updateItem(Jogador item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (empty || item == null) {
-                            setText("Sem Assistência");
-                        } else {
-                            setText(item.getNumeroCamisola() + " - " + item.getNome());
-                        }
+                setupJogadorCellFactory(cmbAssistant);
+
+                cmbType.valueProperty().addListener((obs, oldVal, newVal) -> {
+                    if ("Auto-Golo".equals(newVal)) {
+                        cmbScorer.getItems().clear();
+                        cmbScorer.getItems().addAll(homePlayers);
+                        cmbAssistant.setValue(null);
+                        cmbAssistant.setDisable(true);
+                    } else {
+                        cmbScorer.getItems().clear();
+                        cmbScorer.getItems().addAll(awayPlayers);
+                        cmbAssistant.setDisable(false);
                     }
                 });
 
-                row.getChildren().addAll(lblGolo, cmbScorer, new Label("Assis:"), cmbAssistant);
+                row.getChildren().addAll(lblGolo, cmbType, cmbScorer, new Label("Assis:"), cmbAssistant);
                 content.getChildren().add(row);
-                awayScorersCombos.add(cmbScorer);
-                awayAssistantsCombos.add(cmbAssistant);
+                awayGoalRows.add(new GoalRow(cmbType, cmbScorer, cmbAssistant));
             }
         }
 
@@ -5039,11 +5039,11 @@ public class DashboardController {
         final Button confirmBtn = (Button) dialog.getDialogPane().lookupButton(btnConfirmar);
         confirmBtn.addEventFilter(javafx.event.ActionEvent.ACTION, event -> {
             boolean valid = true;
-            for (ComboBox<Jogador> cb : homeScorersCombos) {
-                if (cb.getValue() == null) valid = false;
+            for (GoalRow r : homeGoalRows) {
+                if (r.cmbScorer.getValue() == null) valid = false;
             }
-            for (ComboBox<Jogador> cb : awayScorersCombos) {
-                if (cb.getValue() == null) valid = false;
+            for (GoalRow r : awayGoalRows) {
+                if (r.cmbScorer.getValue() == null) valid = false;
             }
             if (!valid) {
                 Alert error = new Alert(Alert.AlertType.ERROR, "Por favor, selecione o marcador de cada golo.");
@@ -5054,29 +5054,72 @@ public class DashboardController {
 
         dialog.showAndWait().ifPresent(res -> {
             if (res == btnConfirmar) {
-                for (ComboBox<Jogador> cb : homeScorersCombos) {
-                    Jogador j = cb.getValue();
-                    if (j != null) {
-                        j.incrementGoals();
+                jogo.getEventos().clear();
+                
+                int homeGoalCount = 1;
+                for (GoalRow r : homeGoalRows) {
+                    Jogador scorer = r.cmbScorer.getValue();
+                    Jogador assistant = r.cmbAssistant.getValue();
+                    String type = r.cmbType.getValue();
+                    
+                    if ("Auto-Golo".equals(type)) {
+                        EventoJogo ev = new EventoJogo(15 * homeGoalCount, TipoEvento.AUTO_GOLO, scorer, jogo.getAwayTeam());
+                        jogo.adicionarEvento(ev);
+                    } else {
+                        EventoJogo ev = new EventoJogo(15 * homeGoalCount, TipoEvento.GOLO, scorer, jogo.getHomeTeam());
+                        jogo.adicionarEvento(ev);
+                        if (assistant != null) {
+                            Jogador assistantReal = null;
+                            Equipa homeEq = campManager.procurarEquipaPorNome(jogo.getHomeTeam().getNome());
+                            if (homeEq != null) {
+                                for (Jogador p : homeEq.getJogadores()) {
+                                    if (p.getId() == assistant.getId()) {
+                                        assistantReal = p;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (assistantReal != null) {
+                                assistantReal.incrementAssists();
+                            } else {
+                                assistant.incrementAssists();
+                            }
+                        }
                     }
+                    homeGoalCount++;
                 }
-                for (ComboBox<Jogador> cb : homeAssistantsCombos) {
-                    Jogador j = cb.getValue();
-                    if (j != null) {
-                        j.incrementAssists();
+
+                int awayGoalCount = 1;
+                for (GoalRow r : awayGoalRows) {
+                    Jogador scorer = r.cmbScorer.getValue();
+                    Jogador assistant = r.cmbAssistant.getValue();
+                    String type = r.cmbType.getValue();
+                    
+                    if ("Auto-Golo".equals(type)) {
+                        EventoJogo ev = new EventoJogo(15 * awayGoalCount, TipoEvento.AUTO_GOLO, scorer, jogo.getHomeTeam());
+                        jogo.adicionarEvento(ev);
+                    } else {
+                        EventoJogo ev = new EventoJogo(15 * awayGoalCount, TipoEvento.GOLO, scorer, jogo.getAwayTeam());
+                        jogo.adicionarEvento(ev);
+                        if (assistant != null) {
+                            Jogador assistantReal = null;
+                            Equipa awayEq = campManager.procurarEquipaPorNome(jogo.getAwayTeam().getNome());
+                            if (awayEq != null) {
+                                for (Jogador p : awayEq.getJogadores()) {
+                                    if (p.getId() == assistant.getId()) {
+                                        assistantReal = p;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (assistantReal != null) {
+                                assistantReal.incrementAssists();
+                            } else {
+                                assistant.incrementAssists();
+                            }
+                        }
                     }
-                }
-                for (ComboBox<Jogador> cb : awayScorersCombos) {
-                    Jogador j = cb.getValue();
-                    if (j != null) {
-                        j.incrementGoals();
-                    }
-                }
-                for (ComboBox<Jogador> cb : awayAssistantsCombos) {
-                    Jogador j = cb.getValue();
-                    if (j != null) {
-                        j.incrementAssists();
-                    }
+                    awayGoalCount++;
                 }
 
                 campManager.finalizarJogoECorrerBracket(jogo.getId(), null, goalsHome, goalsAway, penaltiesHome, penaltiesAway, stats);
