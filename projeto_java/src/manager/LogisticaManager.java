@@ -77,7 +77,7 @@ public class LogisticaManager {
      * Aloca uma equipa a um hotel, validando capacidade acumulada e unicidade.
      * Capacidade = numero de jogadores inscritos (squadSize).
      */
-    public boolean alocarHotel(Equipa equipa, Hotel hotel, String checkIn, String checkOut) {
+    public synchronized boolean alocarHotel(Equipa equipa, Hotel hotel, String checkIn, String checkOut) {
         if (equipa == null || hotel == null) return false;
 
         // Regra de Unicidade: Equipa não pode estar alojada em nenhum outro hotel
@@ -106,7 +106,7 @@ public class LogisticaManager {
     /**
      * Regista o checkout de uma equipa específica do hotel, libertando-a de forma persistente.
      */
-    public boolean registarCheckoutEquipa(Hotel hotel, Equipa equipa) {
+    public synchronized boolean registarCheckoutEquipa(Hotel hotel, Equipa equipa) {
         if (hotel == null || equipa == null) return false;
         boolean success = hotel.checkOutEquipa(equipa);
         if (success) {

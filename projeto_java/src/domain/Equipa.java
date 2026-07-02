@@ -15,11 +15,21 @@ public class Equipa implements Serializable {
     private String treinador;
     private List<Jogador> jogadores;
     private Estadio estadioCasa; // Estádio principal da equipa (casa)
+    private int rankingPontos;
 
     public Equipa(String nome, String treinador) {
         this.nome = nome;
         this.treinador = treinador;
         this.jogadores = new ArrayList<>();
+        this.rankingPontos = 1000; // Default FIFA ranking points
+    }
+
+    public int getRankingPontos() {
+        return rankingPontos;
+    }
+
+    public void setRankingPontos(int rankingPontos) {
+        this.rankingPontos = rankingPontos;
     }
 
     public String getNome() {

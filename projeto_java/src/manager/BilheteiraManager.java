@@ -44,11 +44,7 @@ public class BilheteiraManager {
         return new ArrayList<>(this.bilhetes);
     }
 
-    /**
-     * Vende bilhetes para um jogo especifico num setor do seu estadio.
-     * Regras: quantidade entre 1 e 4 (anti-bot), e capacidade do setor nao excedida.
-     */
-    public boolean venderBilhete(Jogo jogo, String nomeSetor, int quantidade) {
+    public synchronized boolean venderBilhete(Jogo jogo, String nomeSetor, int quantidade) {
         if (jogo == null || nomeSetor == null || nomeSetor.isEmpty()) return false;
 
         // Regra anti-bot: limite de 1 a 4 bilhetes por transacao

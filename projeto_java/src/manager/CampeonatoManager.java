@@ -263,8 +263,76 @@ public class CampeonatoManager {
 
         Equipa winnerToSet = vencedorReal != null ? vencedorReal : vencedor;
 
-        // Finaliza o jogo
+        // --- 1. Identificar jogadores das equipas participantes que estavam suspensos antes do início do jogo ---
+        List<Jogador> suspensosPreJogo = new ArrayList<>();
+        Equipa home = procurarEquipaPorNome(jogo.getHomeTeam().getNome());
+        Equipa away = procurarEquipaPorNome(jogo.getAwayTeam().getNome());
+        if (home != null) {
+            for (Jogador p : home.getJogadores()) {
+                if (p.getEstado() == EstadoJogador.SUSPENSO) {
+                    suspensosPreJogo.add(p);
+                }
+            }
+        }
+        if (away != null) {
+            for (Jogador p : away.getJogadores()) {
+                if (p.getEstado() == EstadoJogador.SUSPENSO) {
+                    suspensosPreJogo.add(p);
+                }
+            }
+        }
+
+        // --- 2. Finaliza o jogo ---
         jogo.finalizar(winnerToSet, goalsHome, goalsAway, penaltiesHome, penaltiesAway, stats);
+
+        // --- 3. Processar eventos do jogo atual para atualizar estatísticas de cartões e golos ---
+        for (EventoJogo ev : jogo.getEventos()) {
+            Jogador j = ev.getJogador();
+            if (j == null) continue;
+            
+            Jogador jogadorReal = null;
+            Equipa eq = ev.getEquipa() != null ? procurarEquipaPorNome(ev.getEquipa().getNome()) : null;
+            if (eq != null) {
+                for (Jogador p : eq.getJogadores()) {
+                    if (p.getId() == j.getId()) {
+                        jogadorReal = p;
+                        break;
+                    }
+                }
+            }
+            if (jogadorReal == null) jogadorReal = j;
+            
+            if (ev.getTipo() == TipoEvento.GOLO) {
+                jogadorReal.incrementGoals();
+            } else if (ev.getTipo() == TipoEvento.CARTAO_AMARELO) {
+                jogadorReal.setYellowCards(jogadorReal.getYellowCards() + 1);
+                // Se acumular 2 amarelos no torneio, fica suspenso para o jogo seguinte
+                if (jogadorReal.getYellowCards() >= 2) {
+                    jogadorReal.setEstado(EstadoJogador.SUSPENSO);
+                }
+            } else if (ev.getTipo() == TipoEvento.CARTAO_VERMELHO) {
+                jogadorReal.setRedCards(jogadorReal.getRedCards() + 1);
+                jogadorReal.setEstado(EstadoJogador.SUSPENSO);
+            }
+        }
+
+        // --- 4. Libertar os jogadores que já cumpriram a suspensão neste jogo ---
+        for (Jogador p : suspensosPreJogo) {
+            p.setEstado(EstadoJogador.APTO);
+            p.setYellowCards(0); // Reiniciar cartões amarelos após cumprir suspensão
+        }
+
+        // --- 5. Limpeza de cartões amarelos antes das meias-finais (Regulamento FIFA - Opção B) ---
+        if ("Quartos".equalsIgnoreCase(jogo.getPhase()) && winnerToSet != null) {
+            Equipa qualificada = procurarEquipaPorNome(winnerToSet.getNome());
+            if (qualificada != null) {
+                for (Jogador p : qualificada.getJogadores()) {
+                    if (p.getEstado() != EstadoJogador.SUSPENSO) {
+                        p.setYellowCards(0);
+                    }
+                }
+            }
+        }
 
         // --- Progressao no Bracket ---
         if (isEliminatoria) {
@@ -410,6 +478,128 @@ public class CampeonatoManager {
                 }
             }
         }
+    }
+
+    /**
+     * Realiza o sorteio da fase de grupos com base no ranking FIFA das equipas registadas.
+     * Requer pelo menos 16 equipas registadas. Distribuirá as equipas em 4 grupos (A, B, C, D) de 4 equipas.
+     */
+    public boolean realizarSorteioGrupos() {
+        if (this.equipas.size() < 16) {
+            return false;
+        }
+
+        // Ordenar equipas por ranking decrescente
+        List<Equipa> sorted = new ArrayList<>(this.equipas);
+        sorted.sort((e1, e2) -> Integer.compare(e2.getRankingPontos(), e1.getRankingPontos()));
+
+        // Dividir em 4 potes
+        List<Equipa> pote1 = new ArrayList<>(sorted.subList(0, 4));
+        List<Equipa> pote2 = new ArrayList<>(sorted.subList(4, 8));
+        List<Equipa> pote3 = new ArrayList<>(sorted.subList(8, 12));
+        List<Equipa> pote4 = new ArrayList<>(sorted.subList(12, 16));
+
+        // Embaralhar cada pote
+        java.util.Collections.shuffle(pote1);
+        java.util.Collections.shuffle(pote2);
+        java.util.Collections.shuffle(pote3);
+        java.util.Collections.shuffle(pote4);
+
+        // Atribuir equipas aos grupos
+        this.grupos = new HashMap<>();
+        this.grupos.put("Grupo A", new ArrayList<>(java.util.Arrays.asList(pote1.get(0).getNome(), pote2.get(0).getNome(), pote3.get(0).getNome(), pote4.get(0).getNome())));
+        this.grupos.put("Grupo B", new ArrayList<>(java.util.Arrays.asList(pote1.get(1).getNome(), pote2.get(1).getNome(), pote3.get(1).getNome(), pote4.get(1).getNome())));
+        this.grupos.put("Grupo C", new ArrayList<>(java.util.Arrays.asList(pote1.get(2).getNome(), pote2.get(2).getNome(), pote3.get(2).getNome(), pote4.get(2).getNome())));
+        this.grupos.put("Grupo D", new ArrayList<>(java.util.Arrays.asList(pote1.get(3).getNome(), pote2.get(3).getNome(), pote3.get(3).getNome(), pote4.get(3).getNome())));
+
+        saveAll();
+        return true;
+    }
+
+    /**
+     * Simula um jogo minuto a minuto (1-90), gerando eventos aleatórios de golos, cartões e substituições,
+     * e finalizando o jogo ao correr a lógica do bracket.
+     */
+    public boolean simularJogoMinutoAMinuto(int jogoId) {
+        Jogo jogo = procurarJogoPorId(jogoId);
+        if (jogo == null || StatusJogo.FINALIZADO.equals(jogo.getStatus())) {
+            return false;
+        }
+
+        if (jogo.getHomeTeam() == null || jogo.getAwayTeam() == null) {
+            return false;
+        }
+
+        // Carregar as equipas persistentes para obter os seus planteis reais
+        Equipa homeEq = procurarEquipaPorNome(jogo.getHomeTeam().getNome());
+        Equipa awayEq = procurarEquipaPorNome(jogo.getAwayTeam().getNome());
+        if (homeEq == null || awayEq == null) {
+            return false;
+        }
+
+        int scoreHome = 0;
+        int scoreAway = 0;
+        java.util.Random rand = new java.util.Random();
+
+        // Limpar eventos anteriores se houver
+        jogo.getEventos().clear();
+
+        for (int min = 1; min <= 90; min++) {
+            // 5% de probabilidade de ocorrer um evento a cada minuto
+            if (rand.nextInt(100) < 5) {
+                // Escolher a equipa beneficiada/penalizada (50% home, 50% away)
+                boolean isHome = rand.nextBoolean();
+                Equipa activeTeam = isHome ? homeEq : awayEq;
+                
+                // Escolher um jogador apto aleatório desta equipa
+                List<Jogador> aptos = new ArrayList<>();
+                for (Jogador p : activeTeam.getJogadores()) {
+                    if (p.getEstado() == EstadoJogador.APTO) {
+                        aptos.add(p);
+                    }
+                }
+                if (aptos.isEmpty()) continue;
+                Jogador jogador = aptos.get(rand.nextInt(aptos.size()));
+
+                // Decidir o tipo de evento
+                int roll = rand.nextInt(100);
+                TipoEvento tipo;
+                if (roll < 45) {
+                    tipo = TipoEvento.GOLO;
+                    if (isHome) scoreHome++; else scoreAway++;
+                } else if (roll < 80) {
+                    tipo = TipoEvento.CARTAO_AMARELO;
+                } else if (roll < 90) {
+                    tipo = TipoEvento.CARTAO_VERMELHO;
+                } else {
+                    tipo = TipoEvento.SUBSTITUICAO;
+                }
+
+                EventoJogo ev = new EventoJogo(min, tipo, jogador, activeTeam);
+                jogo.adicionarEvento(ev);
+            }
+        }
+
+        // Se for jogo de eliminatória e estiver empatado ao minuto 90, simular penaltis
+        int penHome = -1;
+        int penAway = -1;
+        boolean isEliminatoria = !"Grupos".equalsIgnoreCase(jogo.getPhase());
+        if (isEliminatoria && scoreHome == scoreAway) {
+            penHome = 5;
+            penAway = 4; // Um vencedor garantido por 5-4
+        }
+
+        EstatisticaJogo stats = new EstatisticaJogo(
+            50 + rand.nextInt(11) - 5, // posse bola home
+            50,                        // posse bola away (será recalculado ou mantido equilibrado)
+            10 + rand.nextInt(6),      // remates home
+            8 + rand.nextInt(6),       // remates away
+            5 + rand.nextInt(4),       // cantos home
+            4 + rand.nextInt(4)        // cantos away
+        );
+
+        finalizarJogoECorrerBracket(jogoId, null, scoreHome, scoreAway, penHome, penAway, stats);
+        return true;
     }
 
     // --- Persistencia Auxiliar ---
