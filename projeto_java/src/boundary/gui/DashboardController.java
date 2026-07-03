@@ -4030,9 +4030,120 @@ public class DashboardController {
             }
         });
 
-        tabPane.getTabs().addAll(tabCalendar, tabBracket, tabStandings);
+        // ------------------------------------------
+        // Tab 4: Estatísticas Individuais
+        // ------------------------------------------
+        Tab tabStats = new Tab("Estatísticas Individuais");
+        tabStats.setClosable(false);
+        HBox hboxStats = new HBox(20);
+        hboxStats.setPadding(new Insets(20));
+
+        VBox vboxScorers = new VBox(10);
+        HBox.setHgrow(vboxScorers, Priority.ALWAYS);
+        vboxScorers.getStyleClass().add("card");
+        vboxScorers.setStyle("-fx-padding: 15px;");
+        Label lblScorers = new Label("⚽ Melhores Marcadores (Golos e Assistências)");
+        lblScorers.setStyle("-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #10B981;");
+
+        TableView<Jogador> tblScorers = new TableView<>();
+        TableColumn<Jogador, String> colScorerName = new TableColumn<>("Jogador");
+        colScorerName.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getNome()));
+        colScorerName.setPrefWidth(140);
+        TableColumn<Jogador, String> colScorerTeam = new TableColumn<>("Seleção");
+        colScorerTeam.setCellValueFactory(c -> new SimpleStringProperty(getEquipaDoJogador(c.getValue())));
+        colScorerTeam.setPrefWidth(110);
+        TableColumn<Jogador, Number> colScorerGoals = new TableColumn<>("Golos ⚽");
+        colScorerGoals.setCellValueFactory(c -> new SimpleIntegerProperty(c.getValue().getGoals()));
+        colScorerGoals.setPrefWidth(80);
+        TableColumn<Jogador, Number> colScorerAssists = new TableColumn<>("Assistências 👟");
+        colScorerAssists.setCellValueFactory(c -> new SimpleIntegerProperty(c.getValue().getAssists()));
+        colScorerAssists.setPrefWidth(110);
+        tblScorers.getColumns().addAll(colScorerName, colScorerTeam, colScorerGoals, colScorerAssists);
+        tblScorers.setPrefHeight(300);
+        vboxScorers.getChildren().addAll(lblScorers, tblScorers);
+
+        VBox vboxDiscipline = new VBox(10);
+        HBox.setHgrow(vboxDiscipline, Priority.ALWAYS);
+        vboxDiscipline.getStyleClass().add("card");
+        vboxDiscipline.setStyle("-fx-padding: 15px;");
+        Label lblDiscipline = new Label("🟨 Quadro de Disciplina e Suspensões");
+        lblDiscipline.setStyle("-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #EF4444;");
+
+        TableView<Jogador> tblDiscipline = new TableView<>();
+        TableColumn<Jogador, String> colDiscName = new TableColumn<>("Jogador");
+        colDiscName.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getNome()));
+        colDiscName.setPrefWidth(140);
+        TableColumn<Jogador, String> colDiscTeam = new TableColumn<>("Seleção");
+        colDiscTeam.setCellValueFactory(c -> new SimpleStringProperty(getEquipaDoJogador(c.getValue())));
+        colDiscTeam.setPrefWidth(110);
+        TableColumn<Jogador, Number> colDiscYellows = new TableColumn<>("Amarelos 🟨");
+        colDiscYellows.setCellValueFactory(c -> new SimpleIntegerProperty(c.getValue().getYellowCards()));
+        colDiscYellows.setPrefWidth(90);
+        TableColumn<Jogador, Number> colDiscReds = new TableColumn<>("Vermelhos 🟥");
+        colDiscReds.setCellValueFactory(c -> new SimpleIntegerProperty(c.getValue().getRedCards()));
+        colDiscReds.setPrefWidth(90);
+        TableColumn<Jogador, String> colDiscStatus = new TableColumn<>("Estado");
+        colDiscStatus.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getEstado().toString()));
+        colDiscStatus.setPrefWidth(90);
+        tblDiscipline.getColumns().addAll(colDiscName, colDiscTeam, colDiscYellows, colDiscReds, colDiscStatus);
+        tblDiscipline.setPrefHeight(300);
+        vboxDiscipline.getChildren().addAll(lblDiscipline, tblDiscipline);
+
+        hboxStats.getChildren().addAll(vboxScorers, vboxDiscipline);
+        tabStats.setContent(hboxStats);
+
+        tabStats.setOnSelectionChanged(event -> {
+            if (tabStats.isSelected()) {
+                List<Jogador> players = new ArrayList<>();
+                for (Equipa eq : campManager.getEquipas()) {
+                    players.addAll(eq.getJogadores());
+                }
+
+                List<Jogador> topScorers = new ArrayList<>();
+                List<Jogador> discPlayers = new ArrayList<>();
+
+                for (Jogador p : players) {
+                    if (p.getGoals() > 0 || p.getAssists() > 0) {
+                        topScorers.add(p);
+                    }
+                    if (p.getYellowCards() > 0 || p.getRedCards() > 0 || EstadoJogador.SUSPENSO.equals(p.getEstado())) {
+                        discPlayers.add(p);
+                    }
+                }
+
+                topScorers.sort((a, b) -> {
+                    int comp = Integer.compare(b.getGoals(), a.getGoals());
+                    if (comp == 0) {
+                        return Integer.compare(b.getAssists(), a.getAssists());
+                    }
+                    return comp;
+                });
+
+                discPlayers.sort((a, b) -> {
+                    int comp = Integer.compare(b.getRedCards(), a.getRedCards());
+                    if (comp == 0) {
+                        return Integer.compare(b.getYellowCards(), a.getYellowCards());
+                    }
+                    return comp;
+                });
+
+                tblScorers.setItems(FXCollections.observableArrayList(topScorers));
+                tblDiscipline.setItems(FXCollections.observableArrayList(discPlayers));
+            }
+        });
+
+        tabPane.getTabs().addAll(tabCalendar, tabBracket, tabStandings, tabStats);
         content.getChildren().addAll(title, tabPane);
         setContent(content);
+    }
+
+    private String getEquipaDoJogador(Jogador player) {
+        for (Equipa eq : campManager.getEquipas()) {
+            if (eq.getJogadores().contains(player)) {
+                return eq.getNome();
+            }
+        }
+        return "N/A";
     }
 
     private HBox buildVisualBracket() {
