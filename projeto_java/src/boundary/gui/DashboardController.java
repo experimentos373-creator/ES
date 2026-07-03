@@ -4151,7 +4151,7 @@ public class DashboardController {
 
             box.setCursor(javafx.scene.Cursor.HAND);
             box.setOnMouseClicked(event -> {
-                if (utilizadorLogado.getCargo() == TipoUtilizador.ADMIN) {
+                if (utilizadorLogado.getCargo() == TipoUtilizador.ADMIN || utilizadorLogado.getCargo() == TipoUtilizador.GESTOR_ARBITRAGEM) {
                     showBracketMatchActions(j);
                 } else {
                     showRosterDialog(j);
@@ -4183,8 +4183,19 @@ public class DashboardController {
             return;
         }
 
+        if (j.getHomeTeam() == null || j.getAwayTeam() == null) {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION, "Este jogo do bracket ainda não tem as duas equipas qualificadas.");
+            alert.setTitle("Jogo Pendente de Qualificação");
+            alert.setHeaderText(null);
+            alert.showAndWait();
+            return;
+        }
+
+        String hName = j.getHomeTeam().getNome();
+        String aName = j.getAwayTeam().getNome();
+
         Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("Gerir Jogo - " + j.getHomeTeam().getNome() + " vs " + j.getAwayTeam().getNome());
+        dialog.setTitle("Gerir Jogo - " + hName + " vs " + aName);
         dialog.setHeaderText("Fase: " + j.getPhase() + " | Estado: " + j.getStatus());
 
         ButtonType btnSimulate = new ButtonType("Simular Jogo", ButtonBar.ButtonData.OTHER);
@@ -4905,8 +4916,8 @@ public class DashboardController {
 
     private void showRegisterScorersAndAssistantsDialog(Jogo jogo, int goalsHome, int goalsAway, int penaltiesHome, int penaltiesAway, EstatisticaJogo stats, Runnable postFinalizeAction) {
         Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("Registrar Marcadores e Assistentes");
-        dialog.setHeaderText("Introduza quem marcou os golos e fez as assistências para este jogo.");
+        dialog.setTitle("Registrar Marcadores, Assistentes e Cartões");
+        dialog.setHeaderText("Introduza quem marcou os golos, fez as assistências e quem recebeu cartões.");
 
         ButtonType btnConfirmar = new ButtonType("Confirmar e Finalizar", ButtonBar.ButtonData.OK_DONE);
         ButtonType btnCancelar = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
@@ -4914,7 +4925,7 @@ public class DashboardController {
 
         VBox content = new VBox(15);
         content.setPadding(new Insets(20));
-        content.setMinWidth(550);
+        content.setMinWidth(600);
 
         List<Jogador> homePlayers = jogo.getHomeTeam().getJogadores();
         List<Jogador> awayPlayers = jogo.getAwayTeam().getJogadores();
@@ -4930,8 +4941,24 @@ public class DashboardController {
             }
         }
 
+        class CardRow {
+            ComboBox<Equipa> cmbTeam;
+            ComboBox<Jogador> cmbPlayer;
+            ComboBox<String> cmbCardType;
+            TextField txtMinute;
+            HBox layoutRow;
+            CardRow(ComboBox<Equipa> t, ComboBox<Jogador> p, ComboBox<String> ct, TextField m, HBox layout) {
+                this.cmbTeam = t;
+                this.cmbPlayer = p;
+                this.cmbCardType = ct;
+                this.txtMinute = m;
+                this.layoutRow = layout;
+            }
+        }
+
         List<GoalRow> homeGoalRows = new ArrayList<>();
         List<GoalRow> awayGoalRows = new ArrayList<>();
+        List<CardRow> cardRows = new ArrayList<>();
 
         if (goalsHome > 0) {
             Label lblHome = new Label("Golos de " + jogo.getHomeTeam().getNome() + ":");
@@ -5031,9 +5058,68 @@ public class DashboardController {
             }
         }
 
+        // --- Secção Disciplina (Cartões) ---
+        Separator sep = new Separator();
+        Label lblCardsTitle = new Label("Disciplina (Cartões Amarelos / Vermelhos):");
+        lblCardsTitle.setStyle("-fx-font-weight: bold; -fx-text-fill: #0F172A; -fx-font-size: 14px;");
+
+        VBox cardsContainer = new VBox(8);
+        Button btnAddCard = new Button("+ Adicionar Cartão");
+        btnAddCard.getStyleClass().add("btn-secondary");
+        btnAddCard.setStyle("-fx-padding: 8px 16px; -fx-font-size: 12px;");
+
+        btnAddCard.setOnAction(event -> {
+            HBox row = new HBox(10);
+            row.setAlignment(Pos.CENTER_LEFT);
+
+            ComboBox<Equipa> cmbTeam = new ComboBox<>();
+            cmbTeam.getItems().addAll(jogo.getHomeTeam(), jogo.getAwayTeam());
+            cmbTeam.setPromptText("Equipa");
+            cmbTeam.setPrefWidth(120);
+
+            ComboBox<Jogador> cmbPlayer = new ComboBox<>();
+            cmbPlayer.setPromptText("Jogador");
+            cmbPlayer.setPrefWidth(160);
+            setupJogadorCellFactory(cmbPlayer);
+
+            cmbTeam.valueProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal != null) {
+                    cmbPlayer.getItems().clear();
+                    cmbPlayer.getItems().addAll(newVal.getJogadores());
+                } else {
+                    cmbPlayer.getItems().clear();
+                }
+            });
+
+            ComboBox<String> cmbCardType = new ComboBox<>();
+            cmbCardType.getItems().addAll("Amarelo 🟨", "Vermelho 🟥");
+            cmbCardType.setValue("Amarelo 🟨");
+            cmbCardType.setPrefWidth(120);
+
+            TextField txtMinute = new TextField("45");
+            txtMinute.setPromptText("Min");
+            txtMinute.setPrefWidth(50);
+
+            Button btnRemove = new Button("✕");
+            btnRemove.setStyle("-fx-background-color: #EF4444; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6px;");
+
+            row.getChildren().addAll(cmbTeam, cmbPlayer, cmbCardType, txtMinute, btnRemove);
+            cardsContainer.getChildren().add(row);
+
+            CardRow cardRowObj = new CardRow(cmbTeam, cmbPlayer, cmbCardType, txtMinute, row);
+            cardRows.add(cardRowObj);
+
+            btnRemove.setOnAction(e -> {
+                cardsContainer.getChildren().remove(row);
+                cardRows.remove(cardRowObj);
+            });
+        });
+
+        content.getChildren().addAll(sep, lblCardsTitle, cardsContainer, btnAddCard);
+
         ScrollPane scroll = new ScrollPane(content);
         scroll.setFitToWidth(true);
-        scroll.setPrefHeight(350);
+        scroll.setPrefHeight(450);
         dialog.getDialogPane().setContent(scroll);
 
         final Button confirmBtn = (Button) dialog.getDialogPane().lookupButton(btnConfirmar);
@@ -5045,8 +5131,13 @@ public class DashboardController {
             for (GoalRow r : awayGoalRows) {
                 if (r.cmbScorer.getValue() == null) valid = false;
             }
+            for (CardRow cr : cardRows) {
+                if (cr.cmbTeam.getValue() == null || cr.cmbPlayer.getValue() == null) {
+                    valid = false;
+                }
+            }
             if (!valid) {
-                Alert error = new Alert(Alert.AlertType.ERROR, "Por favor, selecione o marcador de cada golo.");
+                Alert error = new Alert(Alert.AlertType.ERROR, "Por favor, preencha todos os marcadores e cartões adicionados.");
                 error.showAndWait();
                 event.consume();
             }
@@ -5120,6 +5211,25 @@ public class DashboardController {
                         }
                     }
                     awayGoalCount++;
+                }
+
+                // Processar os Cartões Adicionados
+                for (CardRow cr : cardRows) {
+                    Equipa team = cr.cmbTeam.getValue();
+                    Jogador player = cr.cmbPlayer.getValue();
+                    String cardType = cr.cmbCardType.getValue();
+                    String minStr = cr.txtMinute.getText().trim();
+                    
+                    if (team != null && player != null) {
+                        int min = 45;
+                        try {
+                            min = Integer.parseInt(minStr);
+                        } catch(Exception e) {}
+                        
+                        TipoEvento te = "Vermelho 🟥".equals(cardType) ? TipoEvento.CARTAO_VERMELHO : TipoEvento.CARTAO_AMARELO;
+                        EventoJogo ev = new EventoJogo(min, te, player, team);
+                        jogo.adicionarEvento(ev);
+                    }
                 }
 
                 campManager.finalizarJogoECorrerBracket(jogo.getId(), null, goalsHome, goalsAway, penaltiesHome, penaltiesAway, stats);
