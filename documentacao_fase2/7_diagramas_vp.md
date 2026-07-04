@@ -134,49 +134,132 @@ graph TD
 
 ---
 
-## 🎨 3. Diagramas de Sequência (Sequence Diagrams - BCE/ICONIX)
+## 📌 3. Diagramas de Robustez (Robustness Diagrams - BCE/ICONIX) - Paulo Gomes (50%)
 
-Estes diagramas seguem a arquitetura **BCE (Boundary-Control-Entity)** / padrão **ICONIX** exigido para a documentação académica e de modelação (VP):
-- **Boundary**: Ecrãs e Controladores JavaFX (`DashboardController`).
-- **Control**: Controladores de Lógica e Managers (`CampeonatoManager`, `ArbitragemManager`, `LogisticaManager`, `BilheteiraManager`).
-- **Entity**: Classes de Domínio e Dados (`Jogo`, `Arbitro`, `Equipa`, `Hotel`, `SetorEstadio`, `Bilhete`).
+Esta secção contém os diagramas de robustez correspondentes aos Casos de Uso sob responsabilidade de **Paulo Gomes**, respeitando as regras estritas da análise BCE (sem conexões diretas Boundary-Boundary ou Entity-Entity):
 
-### A. CU02 — Agendar Jogo
+### A. CU02 — Agendar Jogo (Responsável: Paulo Gomes)
 ```plantuml
 @startuml
-actor "Administrador" as A
-boundary "DashboardController" as B
-control "CampeonatoManager" as C
-entity "Jogo" as E
+skinparam handwritten false
+skinparam packageStyle rect
+skinparam shadowing false
 
-A -> B: Preenche dados e clica "Agendar Jogo"
-B -> C: procurarJogoPorId(id)
-alt ID ja registado
-    C --> B: jogoExistente
-    B --> A: Erro: "ID do jogo ja existe!"
-else ID livre
-    C --> B: null
-    B -> B: Validar formato hora (HH:MM)
-    B -> C: registarJogo(novoJogo)
-    activate C
-    loop Verificar Conflitos de Calendario
-        C -> C: Compara data/hora e equipas
-    end
-    alt Conflito Detetado
-        C --> B: throw IllegalArgumentException
-        B --> A: Exibe Erro de Conflito de Data
-    else Sem Conflito
-        C -> C: Adiciona jogo ao calendario
-        C -> C: saveAll() (Gravar ficheiros .ser)
-        C --> B: Sucesso
-        deactivate C
-        B --> A: "Jogo agendado com sucesso!"
-    end
+actor Administrador
+
+boundary "Menu de Navegação" as NavMenu <<Boundary>>
+boundary "Formulário de Agendamento" as Form <<Boundary>>
+boundary "Mensagem de Confirmação" as MsgConf <<Boundary>>
+boundary "Mensagem de Erro" as MsgErro <<Boundary>>
+
+control "CampeonatoManager" as CtrlCamp <<Control>>
+
+entity Jogo <<Entity>>
+entity Estadio <<Entity>>
+entity Equipa <<Entity>>
+
+Administrador -> NavMenu : 1. Seleciona "Agendar Novo Jogo"
+Administrador -> Form : 2. Abre formulário e insere dados
+Administrador -> Form : 3. Clicar no botão "Guardar"
+Form -> CtrlCamp : 4. Solicita registo de jogo
+
+CtrlCamp -> CtrlCamp : 4.1. procurarJogoPorId(id)
+CtrlCamp -> CtrlCamp : 4.2. verificar disponibilidade do estádio (itera jogos)
+CtrlCamp -> CtrlCamp : 4.3. verificar conflito de calendário (itera jogos)
+
+alt 5. [Sem Conflitos]
+    CtrlCamp -> Jogo : 5.1. Cria e regista novo Jogo
+    CtrlCamp -> MsgConf : 5.2. Apresenta mensagem de sucesso
+else 5. [Conflito de ID ou Calendário]
+    CtrlCamp -> MsgErro : 5.1. Apresenta mensagem de erro
 end
-@endum
+@enduml
 ```
 
-### B. CU03 — Finalizar Jogo (Corrigido)
+### B. CU03 — Finalizar Jogo (Responsável: Paulo Gomes)
+```plantuml
+@startuml
+skinparam handwritten false
+skinparam packageStyle rect
+skinparam shadowing false
+
+actor Administrador
+
+boundary "Lista de Jogos" as JogoList <<Boundary>>
+boundary "Formulário de Resultados" as FormRes <<Boundary>>
+boundary "Mensagem de Confirmação" as MsgConf <<Boundary>>
+boundary "Mensagem de Erro" as MsgErro <<Boundary>>
+
+control "CampeonatoManager" as CtrlCamp <<Control>>
+
+entity Jogo <<Entity>>
+
+Administrador -> JogoList : 1. Seleciona o jogo pretendido
+Administrador -> JogoList : 2. Clica no botão "Finalizar Jogo"
+Administrador -> FormRes : 3. Abre formulário de resultados e insere dados
+Administrador -> FormRes : 4. Clica no botão "Confirmar"
+FormRes -> CtrlCamp : 5. Solicita finalização do jogo
+
+CtrlCamp -> CtrlCamp : 5.1. procurarJogoPorId(id)
+CtrlCamp -> Jogo : 5.2. finalizar(vencedor, golosCasa, golosFora, ...)
+CtrlCamp -> CtrlCamp : 5.3. atualizarClassificacoesEBrackets()
+
+alt 6. [Resultado Válido]
+    CtrlCamp -> MsgConf : 6.1. Apresenta mensagem de sucesso
+else 6. [Resultado Inválido/Empate Eliminatório sem Penalties]
+    CtrlCamp -> MsgErro : 6.1. Apresenta mensagem de erro
+end
+@enduml
+```
+
+### C. CU23 — Vender Bilhetes (Responsável: Paulo Gomes / Co-Autor: Arthur)
+```plantuml
+@startuml
+skinparam handwritten false
+skinparam packageStyle rect
+skinparam shadowing false
+
+actor Adepto
+
+boundary "Portal do Adepto" as Portal <<Boundary>>
+boundary "Ecrã de Compra de Bilhetes" as EcrãCompra <<Boundary>>
+boundary "Mensagem de Confirmação" as MsgConf <<Boundary>>
+boundary "Mensagem de Erro" as MsgErro <<Boundary>>
+
+control "BilheteiraManager" as CtrlBilheteira <<Control>>
+
+entity Jogo <<Entity>>
+entity Estadio <<Entity>>
+entity SetorEstadio <<Entity>>
+entity Bilhete <<Entity>>
+
+Adepto -> Portal : 1. Seleciona jogo pretendido na lista
+Portal -> CtrlBilheteira : 2. Solicita carregamento do ecrã de compra
+CtrlBilheteira -> EcrãCompra : 3. Apresenta ecrã de compra com dados do jogo
+Adepto -> EcrãCompra : 4. Escolhe SetorEstadio, Qtd e clica "Comprar"
+EcrãCompra -> CtrlBilheteira : 5. Solicita venda de bilhete(s)
+
+CtrlBilheteira -> CtrlBilheteira : 5.1. validarQtdAntiBot(qtd) (verifica limite de 4)
+CtrlBilheteira -> Jogo : 5.2. getEstadio()
+CtrlBilheteira -> Estadio : 5.3. getSetorPorNome(nomeSetor)
+CtrlBilheteira -> SetorEstadio : 5.4. venderLugares(qtd)
+
+alt 6. [Sucesso]
+    CtrlBilheteira -> Bilhete : 6.1. Cria instância(s) de Bilhete
+    CtrlBilheteira -> MsgConf : 6.2. Apresenta compra efetuada com sucesso
+else 6. [Esgotado ou Qtd Inválida]
+    CtrlBilheteira -> MsgErro : 6.2. Apresenta falha na compra
+end
+@enduml
+```
+
+---
+
+## 🎨 4. Diagramas de Sequência (Sequence Diagrams - BCE/ICONIX)
+
+Estes diagramas seguem a arquitetura **BCE (Boundary-Control-Entity)** / padrão **ICONIX** exigido para a documentação académica. Os diagramas associados ao trabalho de **Paulo Gomes** (CU02, CU03 e CU23) foram corrigidos para alinhar as setas de retorno tracejadas apenas a exceções e incluir notas descritivas. Os diagramas de **Leonardo Mendes** (CU06) e **Arthur** (CU19) mantêm-se inalterados para respeitar a divisão de autoria.
+
+### A. CU02 — Agendar Jogo (Responsável: Paulo Gomes)
 ```plantuml
 @startuml
 actor "Administrador" as A
@@ -184,36 +267,81 @@ boundary "DashboardController" as B
 control "CampeonatoManager" as C
 entity "Jogo" as J
 
-A -> B: Introduz golos/penalties e clica "Finalizar Jogo"
-B -> C: finalizarJogoECorrerBracket(jogoId, vencedor, gh, ga, ph, pa, stats)
+note left of A
+  **CU02: Agendar Novo Jogo**
+  1. O Administrador seleciona "Agendar Novo Jogo" no Menu.
+  2. O sistema apresenta o "Formulário de Agendamento".
+  3. O Administrador insere os dados e clica "Guardar".
+  4. O sistema valida dados e conflito de calendário.
+  5. O sistema regista o Jogo e apresenta mensagem.
+end note
+
+A -> B: 1. Seleciona opção no Menu
+A -> B: 2. Insere dados e clica "Guardar"
+B -> C: 3. registarJogo(novoJogo)
 activate C
-C -> C: procurarJogoPorId(jogoId)
-C -> J: finalizar(winner, gh, ga, ph, pa, stats)
+C -> C: 3.1. procurarJogoPorId(id)
+C -> C: 3.2. verificar disponibilidade do estádio
+C -> C: 3.3. verificar conflito de calendário (itera jogos)
+alt Sem Conflito
+    create J
+    C -> J: 4. Jogo(...)
+    C -> C: 4.1. saveAll()
+    C -> B: 4.2. exibeSucesso()
+    B -> A: 5. "Jogo agendado com sucesso!"
+else Conflito Detetado
+    C --> B: throw IllegalArgumentException
+    B -> A: 5. Exibe Mensagem de Erro correspondente
+end
+deactivate C
+@enduml
+```
+
+### B. CU03 — Finalizar Jogo (Responsável: Paulo Gomes)
+```plantuml
+@startuml
+actor "Administrador" as A
+boundary "DashboardController" as B
+control "CampeonatoManager" as C
+entity "Jogo" as J
+
+note left of A
+  **CU03: Finalizar Jogo**
+  1. Administrador seleciona o Jogo na Lista.
+  2. Administrador clica "Finalizar Jogo".
+  3. O sistema apresenta o "Formulário de Resultados".
+  4. Administrador introduz golos e clica "Confirmar".
+  5. O sistema valida, altera estado e corre brackets.
+end note
+
+A -> B: 1. Seleciona Jogo e clica "Finalizar Jogo"
+A -> B: 2. Introduz golos e clica "Confirmar"
+B -> C: 3. finalizarJogoECorrerBracket(jogoId, vencedor, ...)
+activate C
+C -> C: 3.1. procurarJogoPorId(jogoId)
+C -> J: 3.2. finalizar(vencedor, golosCasa, golosFora, ...)
 activate J
 J -> J: setStatus(FINALIZADO)
 deactivate J
 alt Fase de Grupos
-    C -> C: checkAndAdvanceGroupsToOitavos()
-    activate C
-    C -> C: calcularClassificacaoGrupo(grupoNome)
-    deactivate C
-else Fase Eliminatoria
-    C -> J: getProximoJogo()
+    C -> C: 3.3. checkAndAdvanceGroupsToOitavos()
+else Fase Eliminatória
+    C -> J: 3.4. getProximoJogo()
     activate J
-    J --> C: proximoJogo
+    J --> C: proximoJogo (Retorno Condicional)
     deactivate J
     alt proximoJogo != null
         C -> J: setHomeTeam(winner) / setAwayTeam(winner)
     end
 end
-C -> C: saveAll() (Gravar jogos.ser)
-C --> B: Sucesso
+C -> C: 3.5. saveAll()
+C -> B: 3.6. exibeSucesso()
+B -> A: 4. "Jogo finalizado! Vencedor: X"
 deactivate C
-B --> A: "Jogo finalizado! Vencedor: X"
-@endum
+@enduml
 ```
 
-### C. CU06 — Escalar Árbitro
+### C. CU06 — Escalar Árbitro (Responsável: Leonardo Mendes)
 ```plantuml
 @startuml
 actor "Gestor de Arbitragem" as GA
@@ -248,10 +376,10 @@ else Neutro
         B --> GA: "Arbitro escalado com sucesso!"
     end
 end
-@endum
+@enduml
 ```
 
-### D. CU19 — Alocar Hotel
+### D. CU19 — Alocar Hotel (Responsável: Arthur)
 ```plantuml
 @startuml
 actor "Gestor de Logistica" as GL
@@ -300,47 +428,59 @@ alt Sucesso
 else Falha
     B --> GL: "Falha na alocacao (Capacidade/Ocupacao)."
 end
-@endum
+@enduml
 ```
 
-### E. CU23 — Vender Bilhetes
+### E. CU23 — Vender Bilhetes (Responsável: Paulo Gomes / Co-Autor: Arthur)
 ```plantuml
 @startuml
-actor "Publico / Adepto" as P
+actor Adepto
 boundary "DashboardController" as B
 control "BilheteiraManager" as C
-control "CampeonatoManager" as CM
 entity "Jogo" as J
 entity "Estadio" as E
 entity "SetorEstadio" as S
+entity "Bilhete" as Bi
 
-P -> B: Seleciona Jogo, Setor, Qtd (Q) e clica "Comprar"
+note left of Adepto
+  **CU23: Comprar Bilhetes para Jogos**
+  1. O Adepto seleciona o Jogo no Portal.
+  2. O sistema apresenta o Ecrã de Compra.
+  3. O Adepto escolhe SetorEstadio, Qtd e clica "Comprar".
+  4. O sistema valida quantidade (1 a 4) e lotação.
+  5. O sistema desconta lugares, regista a compra e gera bilhetes.
+end note
+
+Adepto -> B: 1. Seleciona Jogo, Setor, Qtd (Q) e clica "Comprar"
 alt Q <= 0 ou Q > 4
-    B --> P: Erro: "Limite maximo de compra de 4 bilhetes..."
+    B -> Adepto: 2. Erro: "Limite anti-bot violado!"
 else Q Valido
-    B -> C: venderBilhete(jogo, nomeSetor, Q)
+    B -> C: 3. venderBilhete(jogo, nomeSetor, Q)
     activate C
+    C -> C: 3.1. validarQtdAntiBot(Q)
     C -> J: getEstadio()
-    J --> C: estadio
+    activate J
+    J --> C: estadio (Retorno Condicional)
+    deactivate J
     C -> E: getSetorPorNome(nomeSetor)
-    E --> C: setor
-    C -> S: venderBilhete(Q)
+    activate E
+    E --> C: setor (Retorno Condicional)
+    deactivate E
+    C -> S: 3.2. venderLugares(Q)
     activate S
-    alt Lugares Disponiveis >= Q
-        S -> S: decrementa lugares
-        S --> C: true
+    alt Lugares < Q
+        S --> C: false (Retorno Condicional/Erro)
+        C --> B: throw IllegalArgumentException
+        B -> Adepto: 4. Erro: "Setor esgotado ou lugares insuficientes!"
+    else Lugares OK
         deactivate S
-        C -> CM: registarJogo(jogo)
-        C -> C: Adiciona bilhetes a lista bilhetes
-        C -> C: saveAll() (Gravar bilhetes.ser)
-        C --> B: true
-    else Esgotado
-        S --> C: false
-        C --> B: false
-        deactivate C
-        B --> P: Erro: "Capacidade excedida!"
+        create Bi
+        C -> Bi: 3.3. Bilhete(...)
+        C -> C: saveAll()
+        C -> B: 3.4. exibeSucesso()
+        B -> Adepto: 4. "Compra efetuada! Bilhetes gerados."
     end
 end
-@endum
+deactivate C
+@enduml
 ```
-

@@ -4,9 +4,17 @@ Projeto em JavaFX para gestão do Campeonato do Mundo 2026.
 
 ## 📂 Entregas (Fase 2)
 
-Os documentos e diagramas finais desta fase encontram-se na pasta `documentacao_fase2`:
-- 📄 **Relatório Técnico Completo:** [Relatorio_Fase2_versão_correta!.pdf](documentacao_fase2/Relatorio_Fase2_versão_correta!.pdf) (Casos de Uso, Implementação e Testes)
-- 🎨 **Diagrama de Classes:** [Diagrama de classes_versão_correta!.png](documentacao_fase2/Diagrama%20de%20classes_versão_correta!.png)
+Os documentos e diagramas desta fase encontram-se estruturados nas seguintes pastas:
+
+### 📍 Versão Pós-Reunião com o Professor (Mais Recente e Corrigida)
+* 📂 Pasta: [`apos_a_reuniao_com_o_professor`](apos_a_reuniao_com_o_professor)
+* 📄 **Relatório Técnico Completo (Atualizado):** [Relatorio_Fase2_versão_correta!.pdf](apos_a_reuniao_com_o_professor/Relatorio_Fase2_versão_correta!.pdf) (Casos de Uso, Implementação e Testes)
+* 🎨 **Diagrama de Classes:** [Diagrama de classes_versão_correta!.png](apos_a_reuniao_com_o_professor/Diagrama%20de%20classes_versão_correta!.png)
+
+### 📍 Versão de Entrega Inicial
+* 📂 Pasta: [`documentacao_fase2`](documentacao_fase2)
+* 📄 **Relatório Técnico Completo:** [Relatorio_Fase2_versão_correta!.pdf](documentacao_fase2/Relatorio_Fase2_versão_correta!.pdf)
+* 🎨 **Diagrama de Classes:** [Diagrama de classes_versão_correta!.png](documentacao_fase2/Diagrama%20de%20classes_versão_correta!.png)
 
 ## Requisitos
 

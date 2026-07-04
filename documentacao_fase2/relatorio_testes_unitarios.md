@@ -16,7 +16,7 @@ Este documento apresenta os testes unitários realizados pelo grupo para garanti
 
 | Elemento | Testes Atribuídos | Módulos Relacionados | Justificação / Objetivo |
 | :--- | :--- | :--- | :--- |
-| **Leonardo** | 1. [JogadorStateTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/JogadorStateTest.java)<br>2. [NeutralidadeArbitroTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/NeutralidadeArbitroTest.java)<br>3. [IntervaloArbitroTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/IntervaloArbitroTest.java) | Gestor de Equipa + Arbitragem | Gestão e transição de estados dos atletas, elegibilidade ética por nacionalidade e repouso regulamentar de árbitros. |
+| **Leonardo** | 1. [JogadorStateTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/JogadorStateTest.java)<br>2. [NeutralidadeArbitroTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/NeutralidadeArbitroTest.java)<br>3. [IntervaloArbitroTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/IntervaloArbitroTest.java) | Gestão de Arbitragem + Jogadores | Gestão e transição de estados dos atletas, elegibilidade ética por nacionalidade e repouso regulamentar de árbitros. |
 | **Arthur** | 1. [AlojamentoCapacidadeTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/AlojamentoCapacidadeTest.java)<br>2. [AntiBotBilheteiraTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/AntiBotBilheteiraTest.java)<br>3. [ConcorrenciaManagerTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/ConcorrenciaManagerTest.java) | Gestor de Logística + Bilheteira | Lotação de pessoas por hotel, regra de exclusividade (1 equipa por hotel), limites anti-bot e stress/concorrência sob múltiplas threads. |
 | **Paulo** | 1. [GrupoClassificacaoTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/GrupoClassificacaoTest.java)<br>2. [CalendarioJogoTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/CalendarioJogoTest.java)<br>3. [AvancoBracketTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/AvancoBracketTest.java)<br>4. [LotacaoEstadioTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/LotacaoEstadioTest.java)<br>5. [ScoreFIFATest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/ScoreFIFATest.java)<br>6. [SigiloArbitrosTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/SigiloArbitrosTest.java)<br>7. [RegulamentoCartoesTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/RegulamentoCartoesTest.java)<br>8. [SorteioPotesTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/SorteioPotesTest.java)<br>9. [SimulacaoJogoTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/SimulacaoJogoTest.java) | Admin + Calendário + Bracket + Cartões + Sorteio + Simulador | Classificações de grupos, agendamento de jogos, Bracket, lotação de estádios, sigilo e reavaliação de árbitros, regras de cartões FIFA, sorteio por potes de rankings e simulação minuta a minuto. |
 
@@ -24,7 +24,7 @@ Este documento apresenta os testes unitários realizados pelo grupo para garanti
 
 ## 🧪 Detalhe Técnico dos Casos de Teste (AAA - Arrange, Act, Assert)
 
-### 👤 1. Leonardo Mendes (Gestor de Equipa + Arbitragem)
+### 👤 1. Leonardo Mendes (Gestão de Arbitragem + Jogadores)
 
 #### 1.1 [JogadorStateTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/JogadorStateTest.java)
 * **Objetivo:** Garantir a correta transição de estados disciplinares/físicos dos jogadores do plantel.
@@ -58,12 +58,12 @@ Este documento apresenta os testes unitários realizados pelo grupo para garanti
   - **Act:** Realizar a tentativa de alocação (check-in) da equipa no hotel.
   - **Assert:** Confirma que a atribuição foi negada por falta de espaço suficiente para o plantel.
 
-#### 2.2 [AlojamentoCapacidadeTest (Exclusividade)](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/AlojamentoCapacidadeTest.java)
-* **Objetivo:** Validar o princípio ético e logístico de exclusividade (apenas uma seleção por hotel).
+#### 2.2 [AlojamentoCapacidadeTest (Partilha de Alojamento)](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/AlojamentoCapacidadeTest.java)
+* **Objetivo:** Validar a partilha do mesmo hotel por múltiplas seleções desde que a capacidade total não seja excedida.
 * **Cenário de Teste:**
-  - **Arrange:** Duas seleções nacionais distintas (Equipa A e Equipa B) e um hotel.
-  - **Act:** Alocar a Equipa A com sucesso e tentar alocar a Equipa B no mesmo estabelecimento.
-  - **Assert:** O sistema impede a segunda alocação, garantindo a privacidade das seleções.
+  - **Arrange:** Duas seleções nacionais distintas (Equipa A com 5 jogadores e Equipa B com 4 jogadores) e um hotel com capacidade para 10 pessoas.
+  - **Act:** Alocar a Equipa A e em seguida alocar a Equipa B no mesmo hotel.
+  - **Assert:** Verifica que ambas as alocações são efetuadas com sucesso, registando 2 alojamentos ativos no hotel.
 
 #### 2.3 [AntiBotBilheteiraTest](file:///e:/Projeto_ES_Paulo_Gomes_2024134892/projeto_java/src/test/AntiBotBilheteiraTest.java)
 * **Objetivo:** Impedir a especulação de bilhetes limitando a compra online entre 1 e 4 ingressos.

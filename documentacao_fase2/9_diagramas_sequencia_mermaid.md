@@ -2,9 +2,12 @@
 
 Estes diagramas replicam a estrutura **BCE (Boundary-Control-Entity)** / padrão **ICONIX** exigido para o projeto, em formato **Mermaid** para visualização interativa diretamente no GitHub ou editores compatíveis com Markdown.
 
+> [!NOTE]
+> **Convenção de Retornos em Sequência**: Para as partes de **Paulo Gomes** (CU02, CU03, CU23), as setas tracejadas (`-->>`) são suprimidas em retornos normais implícitos de sucesso, sendo desenhadas apenas em caso de exceções/erros ou retornos condicionais. As partes dos restantes membros do grupo mantêm-se inalteradas.
+
 ---
 
-### 1. Login & RBAC (Roteamento Dinâmico)
+### 1. Login & RBAC (Roteamento Dinâmico) - Responsável: Paulo Gomes
 ```mermaid
 sequenceDiagram
     actor U as Utilizador
@@ -20,59 +23,23 @@ sequenceDiagram
     end
     alt Email Encontrado
         C->>C: Definir utilizadorAtual
-        C-->>B1: true
         B1->>B2: new DashboardController(stage)
         activate B2
         B2->>C: getUtilizadorAtual()
-        C-->>B2: utilizadorLogado
         B2->>E: getCargo()
-        E-->>B2: Cargo (ex: ADMIN)
+        E-->>B2: Cargo (ex: ADMIN) (Retorno Condicional)
         B2->>B2: Desenhar Sidebar com permissões do Cargo
         B2-->>U: Exibe Dashboard Customizado
         deactivate B2
     else Email Não Encontrado
-        C-->>B1: false
+        C-->>B1: false (Exceção/Erro)
         B1-->>U: Exibe mensagem "Email não encontrado!" (Erro)
     end
 ```
 
 ---
 
-### 2. CU02 — Agendar Jogo
-```mermaid
-sequenceDiagram
-    actor A as Administrador
-    participant B as DashboardController (Boundary)
-    participant C as CampeonatoManager (Control)
-    participant E as Jogo (Entity)
-
-    A->>B: Preenche ID, Data, Hora, Estádio, Equipas, Fase e clica em "Agendar Jogo"
-    B->>C: procurarJogoPorId(id)
-    alt ID Já Existe
-        C-->>B: jogoExistente
-        B-->>A: Erro: "ID do jogo já existe!"
-    else ID Livre
-        C-->>B: null
-        B->>B: Validar formato da Hora (HH:MM)
-        B->>C: registarJogo(novoJogo)
-        loop Verificar Conflito de Data
-            C->>C: Compara datas e equipas
-        end
-        alt Conflito Detetado (Equipa já joga no mesmo dia)
-            C-->>B: throw IllegalArgumentException
-            B-->>A: Erro: "Uma ou ambas as equipas já têm jogo..."
-        else Sem Conflito
-            C->>C: Adiciona jogo à lista
-            C->>C: saveAll() (Persistência)
-            C-->>B: Sucesso
-            B-->>A: Mensagem: "Jogo agendado com sucesso!"
-        end
-    end
-```
-
----
-
-### 3. CU03 — Finalizar Jogo & Progresso do Bracket (Corrigido)
+### 2. CU02 — Agendar Jogo - Responsável: Paulo Gomes
 ```mermaid
 sequenceDiagram
     actor A as Administrador
@@ -80,7 +47,36 @@ sequenceDiagram
     participant C as CampeonatoManager (Control)
     participant J as Jogo (Entity)
 
-    A->>B: Introduz golos (e penalties se empate eliminatório) e clica "Finalizar Jogo"
+    A->>B: Insere dados e clica "Guardar"
+    B->>C: registarJogo(novoJogo)
+    activate C
+    C->>C: procurarJogoPorId(id)
+    C->>C: verificar disponibilidade do estádio
+    C->>C: verificar conflito de calendário (itera jogos)
+    alt Sem Conflito
+        create J
+        C->>J: Jogo(...)
+        C->>C: saveAll()
+        C->>B: exibeSucesso()
+        B-->>A: "Jogo agendado com sucesso!"
+    else Conflito Detetado
+        C-->>B: throw IllegalArgumentException (Erro)
+        B-->>A: Exibe mensagem de erro correspondente
+    end
+    deactivate C
+```
+
+---
+
+### 3. CU03 — Finalizar Jogo & Brackets - Responsável: Paulo Gomes
+```mermaid
+sequenceDiagram
+    actor A as Administrador
+    participant B as DashboardController (Boundary)
+    participant C as CampeonatoManager (Control)
+    participant J as Jogo (Entity)
+
+    A->>B: Introduz golos e clica "Confirmar"
     B->>C: finalizarJogoECorrerBracket(jogoId, vencedor, goalsHome, goalsAway, penHome, penAway, stats)
     activate C
     C->>C: procurarJogoPorId(jogoId)
@@ -91,27 +87,24 @@ sequenceDiagram
     
     alt Fase de Grupos
         C->>C: checkAndAdvanceGroupsToOitavos()
-        activate C
-        C->>C: calcularClassificacaoGrupo(grupoNome)
-        deactivate C
     else Fase Eliminatória
         C->>J: getProximoJogo()
         activate J
-        J-->>C: proximoJogo
+        J-->>C: proximoJogo (Retorno Condicional)
         deactivate J
         alt proximoJogo != null
             C->>J: setHomeTeam(winner) ou setAwayTeam(winner)
         end
     end
-    C->>C: saveAll() (Persistência)
-    C-->>B: Sucesso
+    C->>C: saveAll()
+    C->>B: exibeSucesso()
     deactivate C
     B-->>A: Mensagem: "Jogo finalizado! Vencedor: X"
 ```
 
 ---
 
-### 4. CU06 — Escalar Árbitro (Neutralidade e Repouso)
+### 4. CU06 — Escalar Árbitro (Neutralidade e Repouso) - Responsável: Leonardo Mendes
 ```mermaid
 sequenceDiagram
     actor GA as Gestor de Arbitragem
@@ -151,7 +144,7 @@ sequenceDiagram
 
 ---
 
-### 5. CU19 — Alocar Hotel (Logística)
+### 5. CU19 — Alocar Hotel (Logística) - Responsável: Arthur
 ```mermaid
 sequenceDiagram
     actor GL as Gestor de Logística
@@ -205,47 +198,46 @@ sequenceDiagram
 
 ---
 
-### 6. CU23 — Compra de Bilhete com Regra Anti-Bot
+### 6. CU23 — Compra de Bilhete com Regra Anti-Bot - Responsável: Paulo Gomes / Co-Autor: Arthur
 ```mermaid
 sequenceDiagram
     actor P as Público / Adepto
     participant B as DashboardController (Boundary)
     participant C as BilheteiraManager (Control)
-    participant CM as CampeonatoManager (Control)
     participant J as Jogo (Entity)
     participant E as Estadio (Entity)
     participant S as SetorEstadio (Entity)
+    participant Bi as Bilhete (Entity)
 
-    P->>B: Seleciona Jogo, Setor, Quantidade (Q) e clica "Comprar Bilhete"
-    
-    Note over B,C: Regra de Ética: Limite Anti-Bot (1 a 4)
+    P->>B: Seleciona Jogo, Setor, Quantidade (Q) e clica "Comprar"
     alt Q <= 0 ou Q > 4
         B-->>P: Erro: "Limite máximo de compra de 4 bilhetes..."
     else Q Válido (1 a 4)
         B->>C: venderBilhete(jogo, nomeSetor, Q)
         activate C
+        C->>C: validarQtdAntiBot(Q)
         C->>J: getEstadio()
-        J-->>C: estadio
+        activate J
+        J-->>C: estadio (Retorno Condicional)
+        deactivate J
         C->>E: getSetorPorNome(nomeSetor)
-        E-->>C: setor
-        
-        C->>S: venderBilhete(Q) (Valida capacidade restante)
+        activate E
+        E-->>C: setor (Retorno Condicional)
+        deactivate E
+        C->>S: venderLugares(Q)
         activate S
-        alt Lugares Disponíveis >= Q
-            S->>S: decrementa lugares disponíveis
-            S-->>C: true
+        alt Lugares < Q
+            S-->>C: false (Retorno Condicional/Erro)
+            C-->>B: throw IllegalArgumentException (Erro)
+            B-->>P: Erro: "Setor esgotado ou lugares insuficientes!"
+        else Lugares OK
             deactivate S
-            C->>CM: registarJogo(jogo) (Atualiza lotação)
-            C->>C: regista novos Bilhete(s) na lista
-            C->>C: saveAll() (Persistência)
-            C-->>B: true
+            create Bi
+            C->>Bi: Bilhete(...)
+            C->>C: saveAll()
+            C->>B: exibeSucesso()
             B-->>P: Mensagem: "Compra efetuada com sucesso!"
-        else Lotação Esgotada
-            S-->>C: false
-            deactivate S
-            C-->>B: false
-            deactivate C
-            B-->>P: Erro: "Compra falhou. Capacidade excedida."
         end
     end
+    deactivate C
 ```
