@@ -24,6 +24,8 @@ Os documentos e diagramas desta fase encontram-se estruturados nas seguintes pas
 
 ## Como Importar e Executar
 
+Existem duas versões do projeto disponíveis no repositório. Para executar a versão mais recente e corrigida (pós-reunião), deve utilizar os caminhos da pasta `apos_a_reuniao_com_o_professor`.
+
 ### Opção A — IntelliJ IDEA (recomendado)
 
 1. Clonar o repositório:
@@ -33,31 +35,42 @@ Os documentos e diagramas desta fase encontram-se estruturados nas seguintes pas
    ```
 
 2. Abrir no IntelliJ:
-   - `File` → `Open` → selecionar a pasta **`projeto_java`** (contém o `pom.xml`).
-   - Escolher **"Open as Project"** (Maven).
+   * **Para a Versão Pós-Reunião (Recomendada e Corrigida):** `File` → `Open` → selecionar a pasta **`apos_a_reuniao_com_o_professor/projeto_java`** (contém o `pom.xml`).
+   * **Para a Versão Original:** `File` → `Open` → selecionar a pasta **`projeto_java`** (contém o `pom.xml`).
+   * Escolher **"Open as Project"** (Maven).
 
 3. Configurar o JDK:
-   - `File` → `Project Structure` → `Project` → definir SDK para **JDK 21+**.
+   * `File` → `Project Structure` → `Project` → definir SDK para **JDK 21+**.
 
 4. Executar:
-   - Abrir `src/boundary/gui/Launcher.java`.
-   - Clicar com o botão direito → **`Run 'Launcher.main()'`**.
-   - Se der erro de módulos JavaFX, adicionar nas VM options da Run Configuration:
+   * Abrir `src/boundary/gui/Launcher.java`.
+   * Clicar com o botão direito → **`Run 'Launcher.main()'`**.
+   * Se der erro de módulos JavaFX, adicionar nas VM options da Run Configuration:
      ```
      --add-modules javafx.controls,javafx.fxml
      ```
 
 ### Opção B — Terminal com Maven
 
-```bash
-cd projeto_java
-mvn clean javafx:run
-```
+* **Para a Versão Pós-Reunião (Recomendada e Corrigida):**
+  ```bash
+  cd apos_a_reuniao_com_o_professor/projeto_java
+  mvn clean javafx:run
+  ```
+  Se `javafx:run` não funcionar, usar:
+  ```bash
+  mvn clean compile exec:java
+  ```
 
-Se `javafx:run` não funcionar, usar:
-```bash
-mvn clean compile exec:java
-```
+* **Para a Versão Original:**
+  ```bash
+  cd projeto_java
+  mvn clean javafx:run
+  ```
+  Se `javafx:run` não funcionar, usar:
+  ```bash
+  mvn clean compile exec:java
+  ```
 
 ## Credenciais de Login (Dados de Demonstração)
 
