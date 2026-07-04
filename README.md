@@ -9,8 +9,8 @@ Os documentos e diagramas desta fase encontram-se estruturados nas seguintes pas
 ### 📍 Versão Pós-Reunião com o Professor (Mais Recente e Corrigida)
 * 📂 Pasta: [`apos_a_reuniao_com_o_professor`](apos_a_reuniao_com_o_professor)
 * ⚠️ **Nota de Autoria:** Todas as novas alterações, diagramas de robustez BCE, correção do modelo de domínio conceptual, acertos de capitalização de texto e a revisão e alinhamento completo do relatório em PDF pós-reunião foram realizados **exclusivamente pelo aluno Paulo Gomes (2024134892)**.
-* 📄 **Relatório Técnico Completo (Atualizado):** [Relatorio_Fase2_versão_correta!.pdf](apos_a_reuniao_com_o_professor/Relatorio_Fase2_versão_correta!.pdf) (Casos de Uso, Implementação e Testes)
-* 🎨 **Diagrama de Classes:** [Diagrama de classes_versão_correta!.png](apos_a_reuniao_com_o_professor/Diagrama%20de%20classes_versão_correta!.png)
+* 📄 **Relatório Técnico Completo (Atualizado):** [Relatorio_Fase2_versão_correta!.pdf](apos_a_reuniao_com_o_professor/documentacao_fase2/Relatorio_Fase2_versão_correta!.pdf) (Casos de Uso, Implementação e Testes)
+* 🎨 **Diagrama de Classes:** [Diagrama de classes_versão_correta!.png](apos_a_reuniao_com_o_professor/documentacao_fase2/Diagrama%20de%20classes_versão_correta!.png)
 
 ### 📍 Versão de Entrega Inicial
 * 📂 Pasta: [`documentacao_fase2`](documentacao_fase2)
