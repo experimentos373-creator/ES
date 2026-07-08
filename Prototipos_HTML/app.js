@@ -35,7 +35,79 @@ function finalizeMatch(matchId, resultData) {
     match.penaltiesHome = resultData.penaltiesHome || null;
     match.penaltiesAway = resultData.penaltiesAway || null;
     if (resultData.events) match.events = resultData.events;
-    if (resultData.stats) match.stats = resultData.stats;
+    
+    // Ensure stats structure exists
+    const defaultStats = {
+        posHome: 50, posAway: 50, shotsHome: 10, shotsAway: 10, targetHome: 4, targetAway: 4,
+        cornersHome: 4, cornersAway: 4, offsidesHome: 1, offsidesAway: 1, foulsHome: 10, foulsAway: 10,
+        yellowsHome: 1, yellowsAway: 1, redsHome: 0, redsAway: 0, savesHome: 3, savesAway: 3,
+        passesHome: 400, passesAway: 400, passaccHome: 80, passaccAway: 80
+    };
+    match.stats = Object.assign({}, defaultStats, resultData.stats);
+
+    // Generate individual player ratings and save to snapshot & player history
+    const homeTeamObj = data.teams.find(t => t.name === match.homeTeam);
+    const awayTeamObj = data.teams.find(t => t.name === match.awayTeam);
+    
+    match.playersSnapshot = { home: [], away: [] };
+    
+    [ { teamObj: homeTeamObj, list: match.playersSnapshot.home, isHome: true, goalsTeam: match.goalsHome, goalsOpp: match.goalsAway, saves: match.stats.savesHome },
+      { teamObj: awayTeamObj, list: match.playersSnapshot.away, isHome: false, goalsTeam: match.goalsAway, goalsOpp: match.goalsHome, saves: match.stats.savesAway }
+    ].forEach(({ teamObj, list, isHome, goalsTeam, goalsOpp, saves }) => {
+        if (!teamObj || !teamObj.players) return;
+        teamObj.players.forEach(p => {
+            const played = p.isStarter || p.starter || match.events.some(e => e.player === p.name);
+            if (!played) return;
+            
+            // Dynamic rating: 6.0 baseline + random match fluctuation (±1.5)
+            let rating = 6.0 + (Math.random() * 3.0 - 1.5);
+            let minutes = 90;
+            
+            const playerGoals = match.events.filter(e => e.player === p.name && e.type === 'Golo' && e.team === teamObj.name).length;
+            const playerYellows = match.events.filter(e => e.player === p.name && e.type === 'Cartão Amarelo').length;
+            const playerReds = match.events.filter(e => e.player === p.name && e.type === 'Cartão Vermelho').length;
+            
+            rating += playerGoals * 1.5;
+            rating -= playerYellows * 0.5;
+            rating -= playerReds * 1.5;
+            
+            if (p.position === 'Guarda-Redes' || p.pos === 'Guarda-Redes') {
+                rating += saves * 0.3;
+            }
+            
+            rating = Math.max(3.0, Math.min(10.0, rating));
+            rating = parseFloat(rating.toFixed(1));
+            
+            const snapPlayer = {
+                id: p.id,
+                name: p.name,
+                number: p.number,
+                position: p.position || p.pos || 'Avançado',
+                rating: rating,
+                minutes: minutes,
+                goals: playerGoals,
+                yellow: playerYellows,
+                red: playerReds
+            };
+            list.push(snapPlayer);
+            
+            // Save to general team database for player history tab
+            p.performances = p.performances || [];
+            p.performances = p.performances.filter(perf => perf.matchId !== match.id);
+            p.performances.push({
+                matchId: match.id,
+                rating: rating,
+                minutes: minutes,
+                goals: playerGoals,
+                yellow: playerYellows,
+                red: playerReds
+            });
+            
+            p.goals = (p.goals || 0) + playerGoals;
+            p.yellow = (p.yellow || 0) + playerYellows;
+            p.red = (p.red || 0) + playerReds;
+        });
+    });
 
     const phaseOrder = ['Grupos', 'Dezasseis-avos','Oitavos','Quartos','Meias-Finais','Final'];
     const currentIdx = phaseOrder.indexOf(match.phase);
@@ -100,10 +172,130 @@ function deleteMatch(matchId) {
 const DEFAULT_DATA = {
     matches: [
         // Dezasseis-avos (16 jogos)
-        { id: 1, date: '2026-06-25', time: '15:00', stadium: 'Estádio da Luz', homeTeam: 'Portugal', awayTeam: 'Cuba', phase: 'Dezasseis-avos', status: 'Finalizado', winner: 'Portugal', evaluated: false, refPrincipal: 'Artur Soares Dias', refAssistente1: 'Pau Cebrián Devís', refVAR: 'Wilton Sampaio', refQuarto: 'Clément Turpin', events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
-        { id: 2, date: '2026-06-25', time: '18:00', stadium: 'Estádio Alvalade', homeTeam: 'França', awayTeam: 'Japão', phase: 'Dezasseis-avos', status: 'Finalizado', winner: 'França', evaluated: false, refPrincipal: 'Szymon Marciniak', refAssistente1: 'Nicolas Danos', refVAR: 'Massimiliano Irrati', refQuarto: 'Facundo Tello', events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
-        { id: 3, date: '2026-06-25', time: '21:00', stadium: 'Estádio do Dragão', homeTeam: 'Espanha', awayTeam: 'Senegal', phase: 'Dezasseis-avos', status: 'Finalizado', winner: 'Espanha', evaluated: false, refPrincipal: 'Daniele Orsato', refAssistente1: 'Pau Cebrián Devís', refVAR: 'Tiago Martins', refQuarto: 'Clément Turpin', events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
-        { id: 4, date: '2026-06-26', time: '15:00', stadium: 'Camp Nou', homeTeam: 'Brasil', awayTeam: 'Marrocos', phase: 'Dezasseis-avos', status: 'Finalizado', winner: 'Brasil', evaluated: false, refPrincipal: 'Facundo Tello', refAssistente1: 'Nicolas Danos', refVAR: 'Wilton Sampaio', refQuarto: 'Artur Soares Dias', events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
+        { 
+            id: 1, date: '2026-06-25', time: '15:00', stadium: 'Estádio da Luz', homeTeam: 'Portugal', awayTeam: 'Cuba', phase: 'Dezasseis-avos', status: 'Finalizado', winner: 'Portugal', evaluated: false, 
+            refPrincipal: 'Artur Soares Dias', refAssistente1: 'Pau Cebrián Devís', refVAR: 'Wilton Sampaio', refQuarto: 'Clément Turpin', 
+            goalsHome: 3, goalsAway: 0,
+            events: [
+                { type: 'Golo', minute: 23, player: 'Cristiano Ronaldo', team: 'Portugal' },
+                { type: 'Golo', minute: 45, player: 'Bruno Fernandes', team: 'Portugal' },
+                { type: 'Golo', minute: 78, player: 'Cristiano Ronaldo', team: 'Portugal' },
+                { type: 'Cartão Amarelo', minute: 34, player: 'Pepe Silva', team: 'Portugal' }
+            ], 
+            tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)),
+            stats: {
+                posHome: 65, posAway: 35, shotsHome: 18, shotsAway: 4, targetHome: 8, targetAway: 1,
+                cornersHome: 7, cornersAway: 2, offsidesHome: 2, offsidesAway: 1, foulsHome: 8, foulsAway: 12,
+                yellowsHome: 1, yellowsAway: 2, redsHome: 0, redsAway: 0, savesHome: 1, savesAway: 5,
+                passesHome: 580, passesAway: 290, passaccHome: 88, passaccAway: 70
+            },
+            playersSnapshot: {
+                home: [
+                    { id: 1, name: 'Diogo Costa', number: 1, position: 'Guarda-Redes', rating: 7.2, minutes: 90, goals: 0, yellow: 0, red: 0 },
+                    { id: 3, name: 'Pepe Silva', number: 3, position: 'Guarda-Redes', rating: 6.8, minutes: 90, goals: 0, yellow: 1, red: 0 },
+                    { id: 4, name: 'Rúben Dias', number: 4, position: 'Defesa', rating: 7.5, minutes: 90, goals: 0, yellow: 0, red: 0 },
+                    { id: 5, name: 'Nuno Mendes', number: 5, position: 'Defesa', rating: 7.3, minutes: 90, goals: 0, yellow: 0, red: 0 },
+                    { id: 6, name: 'João Cancelo', number: 6, position: 'Defesa', rating: 7.8, minutes: 90, goals: 0, yellow: 0, red: 0 },
+                    { id: 7, name: 'Bruno Fernandes', number: 7, position: 'Defesa', rating: 8.9, minutes: 90, goals: 1, yellow: 0, red: 0 },
+                    { id: 8, name: 'Bernardo Silva', number: 8, position: 'Defesa', rating: 8.0, minutes: 90, goals: 0, yellow: 0, red: 0 },
+                    { id: 9, name: 'Rafael Leão', number: 9, position: 'Defesa', rating: 7.6, minutes: 90, goals: 0, yellow: 0, red: 0 },
+                    { id: 10, name: 'Cristiano Ronaldo', number: 10, position: 'Defesa', rating: 9.6, minutes: 90, goals: 2, yellow: 0, red: 0 },
+                    { id: 11, name: 'Gonçalo Ramos', number: 11, position: 'Defesa', rating: 6.9, minutes: 90, goals: 0, yellow: 0, red: 0 }
+                ],
+                away: [
+                    { id: 101, name: 'Y. Castillo Player 1', number: 1, position: 'Guarda-Redes', rating: 5.5, minutes: 90, goals: 0, yellow: 0, red: 0 },
+                    { id: 102, name: 'Y. Castillo Player 2', number: 2, position: 'Defesa', rating: 5.0, minutes: 90, goals: 0, yellow: 1, red: 0 },
+                    { id: 103, name: 'Y. Castillo Player 3', number: 3, position: 'Defesa', rating: 5.2, minutes: 90, goals: 0, yellow: 1, red: 0 },
+                    { id: 104, name: 'Y. Castillo Player 4', number: 4, position: 'Médio', rating: 6.0, minutes: 90, goals: 0, yellow: 0, red: 0 },
+                    { id: 105, name: 'Y. Castillo Player 5', number: 5, position: 'Avançado', rating: 5.8, minutes: 90, goals: 0, yellow: 0, red: 0 }
+                ]
+            }
+        },
+        { 
+            id: 2, date: '2026-06-25', time: '18:00', stadium: 'Estádio Alvalade', homeTeam: 'França', awayTeam: 'Japão', phase: 'Dezasseis-avos', status: 'Finalizado', winner: 'França', evaluated: false, 
+            refPrincipal: 'Szymon Marciniak', refAssistente1: 'Nicolas Danos', refVAR: 'Massimiliano Irrati', refQuarto: 'Facundo Tello', 
+            goalsHome: 2, goalsAway: 1,
+            events: [
+                { type: 'Golo', minute: 15, player: 'Kylian Mbappé', team: 'França' },
+                { type: 'Golo', minute: 40, player: 'Japão Player 9', team: 'Japão' },
+                { type: 'Golo', minute: 82, player: 'Antoine Griezmann', team: 'França' }
+            ], 
+            tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)),
+            stats: {
+                posHome: 58, posAway: 42, shotsHome: 14, shotsAway: 8, targetHome: 6, targetAway: 3,
+                cornersHome: 5, cornersAway: 3, offsidesHome: 3, offsidesAway: 2, foulsHome: 11, foulsAway: 14,
+                yellowsHome: 1, yellowsAway: 1, redsHome: 0, redsAway: 0, savesHome: 2, savesAway: 4,
+                passesHome: 490, passesAway: 360, passaccHome: 84, passaccAway: 78
+            },
+            playersSnapshot: {
+                home: [
+                    { id: 1, name: 'Mike Maignan', number: 1, position: 'Guarda-Redes', rating: 7.0, minutes: 90, goals: 0, yellow: 0, red: 0 },
+                    { id: 4, name: 'Dayot Upamecano', number: 4, position: 'Defesa', rating: 7.2, minutes: 90, goals: 0, yellow: 0, red: 0 },
+                    { id: 5, name: 'Ibrahima Konaté', number: 5, position: 'Defesa', rating: 7.1, minutes: 90, goals: 0, yellow: 0, red: 0 },
+                    { id: 6, name: 'Theo Hernandez', number: 6, position: 'Defesa', rating: 7.5, minutes: 90, goals: 0, yellow: 0, red: 0 },
+                    { id: 9, name: 'Antoine Griezmann', number: 9, position: 'Defesa', rating: 8.5, minutes: 90, goals: 1, yellow: 0, red: 0 },
+                    { id: 10, name: 'Kylian Mbappé', number: 10, position: 'Defesa', rating: 8.8, minutes: 90, goals: 1, yellow: 0, red: 0 },
+                    { id: 11, name: 'Olivier Giroud', number: 11, position: 'Defesa', rating: 6.8, minutes: 90, goals: 0, yellow: 0, red: 0 }
+                ],
+                away: [
+                    { id: 201, name: 'Japão Player 1', number: 1, position: 'Guarda-Redes', rating: 6.8, minutes: 90, goals: 0, yellow: 0, red: 0 },
+                    { id: 209, name: 'Japão Player 9', number: 9, position: 'Avançado', rating: 8.0, minutes: 90, goals: 1, yellow: 0, red: 0 }
+                ]
+            }
+        },
+        { 
+            id: 3, date: '2026-06-25', time: '21:00', stadium: 'Estádio do Dragão', homeTeam: 'Espanha', awayTeam: 'Senegal', phase: 'Dezasseis-avos', status: 'Finalizado', winner: 'Espanha', evaluated: false, 
+            refPrincipal: 'Daniele Orsato', refAssistente1: 'Pau Cebrián Devís', refVAR: 'Tiago Martins', refQuarto: 'Clément Turpin', 
+            goalsHome: 1, goalsAway: 0,
+            events: [
+                { type: 'Golo', minute: 67, player: 'Espanha Player 10', team: 'Espanha' }
+            ], 
+            tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)),
+            stats: {
+                posHome: 62, posAway: 38, shotsHome: 12, shotsAway: 5, targetHome: 5, targetAway: 2,
+                cornersHome: 6, cornersAway: 1, offsidesHome: 1, offsidesAway: 3, foulsHome: 9, foulsAway: 15,
+                yellowsHome: 1, yellowsAway: 2, redsHome: 0, redsAway: 0, savesHome: 2, savesAway: 4,
+                passesHome: 550, passesAway: 310, passaccHome: 87, passaccAway: 72
+            },
+            playersSnapshot: {
+                home: [
+                    { id: 301, name: 'Espanha Player 1', number: 1, position: 'Guarda-Redes', rating: 7.4, minutes: 90, goals: 0, yellow: 0, red: 0 },
+                    { id: 310, name: 'Espanha Player 10', number: 10, position: 'Avançado', rating: 8.2, minutes: 90, goals: 1, yellow: 0, red: 0 }
+                ],
+                away: [
+                    { id: 401, name: 'Senegal Player 1', number: 1, position: 'Guarda-Redes', rating: 7.0, minutes: 90, goals: 0, yellow: 0, red: 0 }
+                ]
+            }
+        },
+        { 
+            id: 4, date: '2026-06-26', time: '15:00', stadium: 'Camp Nou', homeTeam: 'Brasil', awayTeam: 'Marrocos', phase: 'Dezasseis-avos', status: 'Finalizado', winner: 'Brasil', evaluated: false, 
+            refPrincipal: 'Facundo Tello', refAssistente1: 'Nicolas Danos', refVAR: 'Wilton Sampaio', refQuarto: 'Artur Soares Dias', 
+            goalsHome: 2, goalsAway: 0,
+            events: [
+                { type: 'Golo', minute: 30, player: 'Vinícius Júnior', team: 'Brasil' },
+                { type: 'Golo', minute: 75, player: 'Rodrygo Goes', team: 'Brasil' }
+            ], 
+            tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)),
+            stats: {
+                posHome: 55, posAway: 45, shotsHome: 15, shotsAway: 7, targetHome: 7, targetAway: 2,
+                cornersHome: 4, cornersAway: 3, offsidesHome: 2, offsidesAway: 1, foulsHome: 10, foulsAway: 13,
+                yellowsHome: 2, yellowsAway: 1, redsHome: 0, redsAway: 0, savesHome: 2, savesAway: 5,
+                passesHome: 470, passesAway: 380, passaccHome: 83, passaccAway: 76
+            },
+            playersSnapshot: {
+                home: [
+                    { id: 1, name: 'Alisson Becker', number: 1, position: 'Guarda-Redes', rating: 7.5, minutes: 90, goals: 0, yellow: 0, red: 0 },
+                    { id: 4, name: 'Danilo Luiz', number: 4, position: 'Defesa', rating: 7.2, minutes: 90, goals: 0, yellow: 0, red: 0 },
+                    { id: 5, name: 'Marquinhos Corrêa', number: 5, position: 'Defesa', rating: 7.4, minutes: 90, goals: 0, yellow: 0, red: 0 },
+                    { id: 8, name: 'Casemiro Casemiro', number: 8, position: 'Defesa', rating: 7.8, minutes: 90, goals: 0, yellow: 1, red: 0 },
+                    { id: 11, name: 'Vinícius Júnior', number: 11, position: 'Defesa', rating: 9.0, minutes: 90, goals: 1, yellow: 0, red: 0 },
+                    { id: 12, name: 'Rodrygo Goes', number: 12, position: 'Médio', rating: 8.5, minutes: 90, goals: 1, yellow: 0, red: 0 }
+                ],
+                away: [
+                    { id: 501, name: 'Marrocos Player 1', number: 1, position: 'Guarda-Redes', rating: 6.8, minutes: 90, goals: 0, yellow: 0, red: 0 }
+                ]
+            }
+        },
         { id: 5, date: '2026-06-26', time: '18:00', stadium: 'Wembley', homeTeam: 'Argentina', awayTeam: 'EUA', phase: 'Dezasseis-avos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
         { id: 6, date: '2026-06-26', time: '21:00', stadium: 'Santiago Bernabéu', homeTeam: 'Inglaterra', awayTeam: 'Holanda', phase: 'Dezasseis-avos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
         { id: 7, date: '2026-06-27', time: '15:00', stadium: 'Azteca', homeTeam: 'Alemanha', awayTeam: 'Itália', phase: 'Dezasseis-avos', status: 'Agendado', winner: null, evaluated: false, refPrincipal: null, refAssistente1: null, refVAR: null, refQuarto: null, events: [], tickets: JSON.parse(JSON.stringify(DEFAULT_TICKETS)) },
@@ -208,7 +400,7 @@ const DEFAULT_DATA = {
         { name: 'Grupo H', teams: ['Turquia', 'Chile', 'Ucrânia', 'Irão'] }
     ],
     logs: [],
-    version: 14
+    version: 15
 };
 
 // Funções para Árbitros

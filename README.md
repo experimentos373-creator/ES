@@ -87,3 +87,20 @@ Os dados são auto-gerados no primeiro arranque. Usar o **email** no campo de lo
 Senhas:123456
 
 > **Nota:** Se já existirem ficheiros `.ser` na pasta raiz do projeto, apagar todos (`rm *.ser` ou `del *.ser`) para forçar a regeneração dos dados de demonstração.
+
+---
+
+## 🛠️ Novas Atualizações e Melhorias (Fase de Consolidação)
+
+Todas as seguintes atualizações e melhorias críticas foram desenvolvidas e consolidadas **exclusivamente pelo aluno Paulo Gomes (2024134892)**:
+
+1. **Sincronização Fidedigna de Cartões e Estatísticas:**
+   - Correção do algoritmo que gerava estatísticas aleatórias sobrepostas a jogos com posse de bola standard de 50-50, garantindo que os cartões amarelos e vermelhos definidos pelo utilizador são guardados e apresentados com precisão absoluta.
+2. **Finalização Manual Completa (Incluindo Empates a 0-0):**
+   - Garantia de que todos os jogos, incluindo empates sem golos (0-0), acionam o diálogo completo de finalização para permitir a introdução manual de cartões e substituições.
+3. **Cronologia Real de Substituições:**
+   - Remoção de substituições fictícias automáticas na finalização manual, respeitando exclusivamente os dados fornecidos pelo utilizador.
+4. **Detalhes das Grandes Penalidades na Cronologia:**
+   - Geração e exibição de um log ronda a ronda detalhado para decisões por grandes penalidades (penaltis), identificando os marcadores e guarda-redes envolvidos com os seus nomes reais.
+5. **Redesenho do Campo Táctico e Formações:**
+   - Redesenho da aba "Pontuações" de jogo para exibir ambas as equipas num único campo de futebol vertical com badges de jogador de 11.5px e as formações táticas dinâmicas em string (ex: "4-3-3") ao lado dos suplentes.

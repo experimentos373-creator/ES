@@ -37,6 +37,7 @@ public class DashboardController {
     private ArbitragemManager arbManager;
     private LogisticaManager logManager;
     private BilheteiraManager bilManager;
+    private boolean updatingTeams = false;
 
     private ObservableList<InventoryItem> inventoryItems = null;
     private ObservableList<FraudLog> fraudLogs = null;
@@ -933,7 +934,7 @@ public class DashboardController {
         cmbAwayTeam.setPromptText("Equipa Fora");
         
         ComboBox<String> cmbPhase = new ComboBox<>(FXCollections.observableArrayList(
-            "Grupos", "Dezasseis-avos", "Oitavos", "Quartos", "Meias-Finais", "Final"
+            "Grupos", "Dezasseis-avos"
         ));
         cmbPhase.setPromptText("Fase do Campeonato");
 
@@ -955,6 +956,14 @@ public class DashboardController {
                 cmbMatchGroupFilter.setValue("Todos");
                 cmbMatchGroupFilter.setVisible(false);
                 cmbMatchGroupFilter.setManaged(false);
+            }
+            if (!updatingTeams) {
+                updatingTeams = true;
+                try {
+                    updateEligibleTeams(newPhase, cmbHomeTeam, cmbAwayTeam);
+                } finally {
+                    updatingTeams = false;
+                }
             }
         });
         
@@ -983,6 +992,28 @@ public class DashboardController {
         cmbMatchStadium.setItems(FXCollections.observableArrayList(campManager.getEstadios()));
         cmbHomeTeam.setItems(FXCollections.observableArrayList(campManager.getEquipas()));
         cmbAwayTeam.setItems(FXCollections.observableArrayList(campManager.getEquipas()));
+
+        cmbHomeTeam.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (!updatingTeams) {
+                updatingTeams = true;
+                try {
+                    updateEligibleTeams(cmbPhase.getValue(), cmbHomeTeam, cmbAwayTeam);
+                } finally {
+                    updatingTeams = false;
+                }
+            }
+        });
+
+        cmbAwayTeam.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (!updatingTeams) {
+                updatingTeams = true;
+                try {
+                    updateEligibleTeams(cmbPhase.getValue(), cmbHomeTeam, cmbAwayTeam);
+                } finally {
+                    updatingTeams = false;
+                }
+            }
+        });
 
         Button btnSchedule = new Button("Agendar Jogo");
         btnSchedule.getStyleClass().add("btn-primary");
@@ -1022,6 +1053,44 @@ public class DashboardController {
                     lblMatchMsg.setText("A equipa casa deve ser diferente da equipa fora!");
                     lblMatchMsg.setStyle("-fx-text-fill: #EF4444;");
                     return;
+                }
+
+                // Validar se as equipas pertencem ao mesmo grupo para a fase de grupos
+                if ("Grupos".equalsIgnoreCase(phase)) {
+                    String groupHome = null;
+                    String groupAway = null;
+                    for (Map.Entry<String, List<String>> entry : campManager.getGrupos().entrySet()) {
+                        if (entry.getValue().contains(home.getNome())) groupHome = entry.getKey();
+                        if (entry.getValue().contains(away.getNome())) groupAway = entry.getKey();
+                    }
+                    if (groupHome == null || groupAway == null || !groupHome.equals(groupAway)) {
+                        lblMatchMsg.setText("As equipas devem pertencer ao mesmo grupo!");
+                        lblMatchMsg.setStyle("-fx-text-fill: #EF4444;");
+                        return;
+                    }
+                }
+                
+                // Validar emparelhamento do bracket para eliminatórias (ex: Dezasseis-avos)
+                if ("Dezasseis-avos".equalsIgnoreCase(phase) || "Oitavos".equalsIgnoreCase(phase)) {
+                    String groupHome = null;
+                    String groupAway = null;
+                    for (Map.Entry<String, List<String>> entry : campManager.getGrupos().entrySet()) {
+                        if (entry.getValue().contains(home.getNome())) groupHome = entry.getKey().replace("Grupo ", "");
+                        if (entry.getValue().contains(away.getNome())) groupAway = entry.getKey().replace("Grupo ", "");
+                    }
+                    if (groupHome != null && groupAway != null) {
+                        boolean validMatchup = false;
+                        if (("A".equals(groupHome) && "B".equals(groupAway)) || ("B".equals(groupHome) && "A".equals(groupAway))) validMatchup = true;
+                        else if (("C".equals(groupHome) && "D".equals(groupAway)) || ("D".equals(groupHome) && "C".equals(groupAway))) validMatchup = true;
+                        else if (("E".equals(groupHome) && "F".equals(groupAway)) || ("F".equals(groupHome) && "E".equals(groupAway))) validMatchup = true;
+                        else if (("G".equals(groupHome) && "H".equals(groupAway)) || ("H".equals(groupHome) && "G".equals(groupAway))) validMatchup = true;
+                        
+                        if (!validMatchup) {
+                            lblMatchMsg.setText("Confronto inválido de acordo com a estrutura do bracket!");
+                            lblMatchMsg.setStyle("-fx-text-fill: #EF4444;");
+                            return;
+                        }
+                    }
                 }
 
                 Jogo jogo = new Jogo(id, date, time, est, home, away, phase, null, null);
@@ -1139,8 +1208,7 @@ public class DashboardController {
 
                 // Default statistics for match
                 EstatisticaJogo stats = new EstatisticaJogo(50, 50, 8, 8, 4, 4);
-                if (gh == 0 && ga == 0) {
-                    campManager.finalizarJogoECorrerBracket(selected.getId(), null, gh, ga, ph, pa, stats);
+                showRegisterScorersAndAssistantsDialog(selected, gh, ga, ph, pa, stats, () -> {
                     lblFinalizeMsg.setText("Jogo finalizado com sucesso!");
                     lblFinalizeMsg.setStyle("-fx-text-fill: #00D26A;");
                     txtGoalsHome.clear();
@@ -1149,18 +1217,7 @@ public class DashboardController {
                     txtPenAway.clear();
                     cmbPendingMatches.setValue(null);
                     reloadPendingMatches.run();
-                } else {
-                    showRegisterScorersAndAssistantsDialog(selected, gh, ga, ph, pa, stats, () -> {
-                        lblFinalizeMsg.setText("Jogo finalizado com sucesso!");
-                        lblFinalizeMsg.setStyle("-fx-text-fill: #00D26A;");
-                        txtGoalsHome.clear();
-                        txtGoalsAway.clear();
-                        txtPenHome.clear();
-                        txtPenAway.clear();
-                        cmbPendingMatches.setValue(null);
-                        reloadPendingMatches.run();
-                    });
-                }
+                });
             } catch (NumberFormatException ex) {
                 lblFinalizeMsg.setText("Os golos introduzidos devem ser números inteiros maiores ou iguais a 0!");
                 lblFinalizeMsg.setStyle("-fx-text-fill: #EF4444;");
@@ -1365,7 +1422,11 @@ public class DashboardController {
         tabAlojamento.setClosable(false);
         setupTabAlojamento(tabAlojamento);
 
-        tabPane.getTabs().addAll(tabPlantel, tabAlojamento);
+        Tab tabEstatisticas = new Tab("Estatísticas de Jogadores");
+        tabEstatisticas.setClosable(false);
+        updateStatsTabContent(tabEstatisticas, lvTeams.getSelectionModel().getSelectedItem());
+
+        tabPane.getTabs().addAll(tabPlantel, tabAlojamento, tabEstatisticas);
 
         content.getChildren().addAll(title, tabPane);
         setContent(content);
@@ -1373,6 +1434,7 @@ public class DashboardController {
         // Detail update listener (registered BEFORE auto-selecting so it fires correctly)
         lvTeams.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) {
+                updateStatsTabContent(tabEstatisticas, newVal);
                 right.getChildren().clear();
 
                 // 1. Team Header
@@ -1814,6 +1876,876 @@ public class DashboardController {
         if (utilizadorLogado.getCargo() == TipoUtilizador.GESTOR_EQUIPA && !lvTeams.getItems().isEmpty()) {
             lvTeams.getSelectionModel().selectFirst();
         }
+    }
+
+    private void updateStatsTabContent(Tab tab, Equipa equipa) {
+        if (equipa == null) {
+            VBox placeholder = new VBox(10);
+            placeholder.setAlignment(Pos.CENTER);
+            placeholder.setPadding(new Insets(50));
+            placeholder.getStyleClass().add("card");
+            placeholder.getChildren().add(new Label("Selecione uma equipa para consultar as estatísticas dos jogadores."));
+            tab.setContent(placeholder);
+            return;
+        }
+
+        HBox split = new HBox(20);
+        split.setPadding(new Insets(20));
+
+        // Left Side: Player List Table
+        VBox left = new VBox(15);
+        left.setPrefWidth(350);
+        left.getStyleClass().add("card");
+        left.setStyle("-fx-padding: 20px;");
+
+        Label title = new Label("Desempenho Geral do Plantel");
+        title.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+
+        TableView<Jogador> tbl = new TableView<>();
+        
+        TableColumn<Jogador, Number> colNum = new TableColumn<>("#");
+        colNum.setCellValueFactory(c -> new SimpleIntegerProperty(c.getValue().getNumeroCamisola()));
+        colNum.setPrefWidth(40);
+
+        TableColumn<Jogador, String> colNome = new TableColumn<>("Jogador");
+        colNome.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getNome()));
+        colNome.setPrefWidth(130);
+
+        TableColumn<Jogador, String> colPos = new TableColumn<>("Posição");
+        colPos.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getPosicao()));
+        colPos.setPrefWidth(90);
+
+        TableColumn<Jogador, String> colMedia = new TableColumn<>("Média (10)");
+        colMedia.setCellValueFactory(c -> {
+            double avg = c.getValue().getAverageRating();
+            return new SimpleStringProperty(avg > 0 ? String.format("%.1f", avg) : "-");
+        });
+        colMedia.setPrefWidth(70);
+
+        tbl.getColumns().addAll(colNum, colNome, colPos, colMedia);
+        tbl.setItems(FXCollections.observableArrayList(equipa.getJogadores()));
+        VBox.setVgrow(tbl, Priority.ALWAYS);
+
+        left.getChildren().addAll(title, tbl);
+
+        // Right Side: Player Profile and Played Matches details
+        VBox right = new VBox(15);
+        HBox.setHgrow(right, Priority.ALWAYS);
+        right.getStyleClass().add("card");
+        right.setStyle("-fx-padding: 20px;");
+
+        VBox rightPlaceholder = new VBox(10);
+        rightPlaceholder.setAlignment(Pos.CENTER);
+        VBox.setVgrow(rightPlaceholder, Priority.ALWAYS);
+        Label lblPh = new Label("Selecione um jogador na tabela lateral para ver a análise individual.");
+        lblPh.setStyle("-fx-text-fill: #6B7280; -fx-font-style: italic;");
+        rightPlaceholder.getChildren().add(lblPh);
+        right.getChildren().add(rightPlaceholder);
+
+        split.getChildren().addAll(left, right);
+        tab.setContent(split);
+
+        tbl.getSelectionModel().selectedItemProperty().addListener((obs, oldPlayer, selectedPlayer) -> {
+            if (selectedPlayer != null) {
+                right.getChildren().clear();
+
+                // Player Header details
+                HBox pHead = new HBox(15);
+                pHead.setAlignment(Pos.CENTER_LEFT);
+                Label pAvatar = new Label("👤");
+                pAvatar.setStyle("-fx-background-color: #F3F4F6; -fx-min-width: 60px; -fx-min-height: 60px; -fx-background-radius: 12px; -fx-alignment: center; -fx-font-size: 24px;");
+
+                VBox pHeadTexts = new VBox(2);
+                Label pName = new Label(selectedPlayer.getNome());
+                pName.setStyle("-fx-font-weight: bold; -fx-font-size: 18px;");
+                Label pNumber = new Label("#" + selectedPlayer.getNumeroCamisola() + " • " + selectedPlayer.getPosicao());
+                pNumber.setStyle("-fx-text-fill: #6B7280; -fx-font-size: 12px;");
+                double avg = selectedPlayer.getAverageRating();
+                Label pAvg = new Label("Média Geral: " + (avg > 0 ? String.format("%.1f/10", avg) : "-"));
+                pAvg.setStyle("-fx-font-weight: bold; -fx-text-fill: #059669; -fx-font-size: 12px;");
+                pHeadTexts.getChildren().addAll(pName, pNumber, pAvg);
+                pHead.getChildren().addAll(pAvatar, pHeadTexts);
+                right.getChildren().add(pHead);
+
+                // Stats Summary
+                HBox statsSummary = new HBox(10);
+                statsSummary.setAlignment(Pos.CENTER);
+                statsSummary.getChildren().addAll(
+                    createEquipaMiniStatCard("Golos", String.valueOf(selectedPlayer.getGoals()), "⚽", "#FDF2F2", "#DC2626"),
+                    createEquipaMiniStatCard("Assistências", String.valueOf(selectedPlayer.getAssists()), "🎯", "#EFF6FF", "#2563EB"),
+                    createEquipaMiniStatCard("Cartões Amarelos", String.valueOf(selectedPlayer.getYellowCards()), "🟨", "#FEF3C7", "#D97706"),
+                    createEquipaMiniStatCard("Cartões Vermelhos", String.valueOf(selectedPlayer.getRedCards()), "🟥", "#FEE2E2", "#991B1B")
+                );
+                right.getChildren().add(statsSummary);
+
+                // Matches List and comparison Stats
+                Label lblHistory = new Label("Histórico de Jogos Disputados");
+                lblHistory.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
+                right.getChildren().add(lblHistory);
+
+                TableView<JogadorJogoStats> tblMatches = new TableView<>();
+                TableColumn<JogadorJogoStats, String> colMatch = new TableColumn<>("Jogo");
+                colMatch.setCellValueFactory(c -> {
+                    Jogo j = campManager.procurarJogoPorId(c.getValue().getJogoId());
+                    if (j != null) {
+                        String homeName = j.getHomeTeam() != null ? j.getHomeTeam().getNome() : "?";
+                        String awayName = j.getAwayTeam() != null ? j.getAwayTeam().getNome() : "?";
+                        return new SimpleStringProperty(String.format("%s vs %s (%s)", homeName, awayName, j.getPhase()));
+                    }
+                    return new SimpleStringProperty("Jogo #" + c.getValue().getJogoId());
+                });
+                colMatch.setPrefWidth(220);
+
+                TableColumn<JogadorJogoStats, String> colScore = new TableColumn<>("Resultado");
+                colScore.setCellValueFactory(c -> {
+                    Jogo j = campManager.procurarJogoPorId(c.getValue().getJogoId());
+                    if (j != null && StatusJogo.FINALIZADO.equals(j.getStatus())) {
+                        return new SimpleStringProperty(j.getGoalsHome() + " - " + j.getGoalsAway());
+                    }
+                    return new SimpleStringProperty("-");
+                });
+                colScore.setPrefWidth(80);
+
+                TableColumn<JogadorJogoStats, Number> colMin = new TableColumn<>("Minutos");
+                colMin.setCellValueFactory(c -> new SimpleIntegerProperty(c.getValue().getMinutesPlayed()));
+                colMin.setPrefWidth(70);
+
+                TableColumn<JogadorJogoStats, String> colRating = new TableColumn<>("Nota");
+                colRating.setCellValueFactory(c -> new SimpleStringProperty(String.format("%.1f", c.getValue().getRating())));
+                colRating.setPrefWidth(60);
+
+                tblMatches.getColumns().addAll(colMatch, colScore, colMin, colRating);
+                tblMatches.setItems(FXCollections.observableArrayList(selectedPlayer.getMatchStatsList()));
+                tblMatches.setPrefHeight(160);
+                right.getChildren().add(tblMatches);
+
+                // Stats Side-by-Side Panel
+                VBox statsComparisonBox = new VBox(10);
+                statsComparisonBox.getStyleClass().add("card");
+                statsComparisonBox.setStyle("-fx-padding: 15px;");
+                Label lblComparisonTitle = new Label("Estatísticas da Seleção no Jogo");
+                lblComparisonTitle.setStyle("-fx-font-weight: bold; -fx-font-size: 13px;");
+                
+                GridPane grid = new GridPane();
+                grid.setHgap(20);
+                grid.setVgap(8);
+                grid.setAlignment(Pos.CENTER);
+                statsComparisonBox.getChildren().addAll(lblComparisonTitle, grid);
+                right.getChildren().add(statsComparisonBox);
+
+                tblMatches.getSelectionModel().selectedItemProperty().addListener((mObs, oldM, selectedMatchStats) -> {
+                    grid.getChildren().clear();
+                    if (selectedMatchStats != null) {
+                        Jogo j = campManager.procurarJogoPorId(selectedMatchStats.getJogoId());
+                        if (j != null) {
+                            EstatisticaJogo s = j.getEstatisticas();
+                            if (s == null) {
+                                s = EstatisticaJogo.gerarEstatisticasAleatorias(j.getGoalsHome(), j.getGoalsAway());
+                                j.setEstatisticas(s);
+                                campManager.saveAll();
+                            }
+                            boolean isHome = j.getHomeTeam() != null && j.getHomeTeam().getNome().equalsIgnoreCase(equipa.getNome());
+                            String oppName = isHome ? (j.getAwayTeam() != null ? j.getAwayTeam().getNome() : "Adversário") 
+                                                    : (j.getHomeTeam() != null ? j.getHomeTeam().getNome() : "Adversário");
+
+                            // Headers
+                            Label lblTName = new Label(equipa.getNome());
+                            lblTName.setStyle("-fx-font-weight: bold;");
+                            Label lblMetric = new Label("Métrica");
+                            lblMetric.setStyle("-fx-font-weight: bold; -fx-text-fill: #6B7280;");
+                            Label lblOName = new Label(oppName);
+                            lblOName.setStyle("-fx-font-weight: bold;");
+                            
+                            grid.add(lblTName, 0, 0);
+                            grid.add(lblMetric, 1, 0);
+                            grid.add(lblOName, 2, 0);
+
+                            // Metrics list
+                            int tGoals = isHome ? j.getGoalsHome() : j.getGoalsAway();
+                            int oGoals = isHome ? j.getGoalsAway() : j.getGoalsHome();
+                            addComparisonRow(grid, 1, String.valueOf(tGoals), "Golos (Resultado)", String.valueOf(oGoals));
+
+                            int tPoss = isHome ? s.getPosseBolaHome() : s.getPosseBolaAway();
+                            int oPoss = isHome ? s.getPosseBolaAway() : s.getPosseBolaHome();
+                            addComparisonRow(grid, 2, String.valueOf(tPoss) + "%", "Posse de Bola", String.valueOf(oPoss) + "%");
+
+                            int tShots = isHome ? s.getRematesHome() : s.getRematesAway();
+                            int oShots = isHome ? s.getRematesAway() : s.getRematesHome();
+                            addComparisonRow(grid, 3, String.valueOf(tShots), "Remates Totais", String.valueOf(oShots));
+
+                            int tTarget = isHome ? s.getRematesBalizaHome() : s.getRematesBalizaAway();
+                            int oTarget = isHome ? s.getRematesBalizaAway() : s.getRematesBalizaHome();
+                            addComparisonRow(grid, 4, String.valueOf(tTarget), "Remates à Baliza", String.valueOf(oTarget));
+
+                            int tCorners = isHome ? s.getCantosHome() : s.getCantosAway();
+                            int oCorners = isHome ? s.getCantosAway() : s.getCantosHome();
+                            addComparisonRow(grid, 5, String.valueOf(tCorners), "Cantos", String.valueOf(oCorners));
+
+                            int tOff = isHome ? s.getForasJogoHome() : s.getForasJogoAway();
+                            int oOff = isHome ? s.getForasJogoAway() : s.getForasJogoHome();
+                            addComparisonRow(grid, 6, String.valueOf(tOff), "Foras de Jogo", String.valueOf(oOff));
+
+                            int tFouls = isHome ? s.getFaltasHome() : s.getFaltasAway();
+                            int oFouls = isHome ? s.getFaltasAway() : s.getFaltasHome();
+                            addComparisonRow(grid, 7, String.valueOf(tFouls), "Faltas", String.valueOf(oFouls));
+
+                            int tSaves = isHome ? s.getDefesasHome() : s.getDefesasAway();
+                            int oSaves = isHome ? s.getDefesasAway() : s.getDefesasHome();
+                            addComparisonRow(grid, 8, String.valueOf(tSaves), "Defesas Guarda-Redes", String.valueOf(oSaves));
+
+                            int tPass = isHome ? s.getPassesHome() : s.getPassesAway();
+                            int oPass = isHome ? s.getPassesAway() : s.getPassesHome();
+                            addComparisonRow(grid, 9, String.valueOf(tPass), "Passes Realizados", String.valueOf(oPass));
+
+                            int tAcc = isHome ? s.getPrecisaoPasseHome() : s.getPrecisaoPasseAway();
+                            int oAcc = isHome ? s.getPrecisaoPasseAway() : s.getPrecisaoPasseHome();
+                            addComparisonRow(grid, 10, String.valueOf(tAcc) + "%", "Precisão de Passe", String.valueOf(oAcc) + "%");
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    private void addComparisonRow(GridPane grid, int row, String val1, String metric, String val2) {
+        Label l1 = new Label(val1);
+        l1.setStyle("-fx-font-weight: bold; -fx-text-fill: #10B981;");
+        Label l2 = new Label(metric);
+        l2.setStyle("-fx-text-fill: #6B7280;");
+        Label l3 = new Label(val2);
+        l3.setStyle("-fx-font-weight: bold;");
+
+        GridPane.setHalignment(l1, javafx.geometry.HPos.LEFT);
+        GridPane.setHalignment(l2, javafx.geometry.HPos.CENTER);
+        GridPane.setHalignment(l3, javafx.geometry.HPos.RIGHT);
+
+        grid.add(l1, 0, row);
+        grid.add(l2, 1, row);
+        grid.add(l3, 2, row);
+    }
+
+    private void updateEligibleTeams(String phase, ComboBox<Equipa> homeCombo, ComboBox<Equipa> awayCombo) {
+        Equipa home = homeCombo.getValue();
+        Equipa away = awayCombo.getValue();
+
+        // If both are null, reset both to show all teams
+        if (home == null && away == null) {
+            homeCombo.setItems(FXCollections.observableArrayList(campManager.getEquipas()));
+            awayCombo.setItems(FXCollections.observableArrayList(campManager.getEquipas()));
+            return;
+        }
+
+        // Filter for Away Team if Home Team is selected
+        if (home != null) {
+            List<Equipa> eligible = new ArrayList<>();
+            String homeGroup = getTeamGroup(home.getNome());
+            
+            for (Equipa eq : campManager.getEquipas()) {
+                if (eq.equals(home)) continue;
+                String eqGroup = getTeamGroup(eq.getNome());
+                
+                if ("Grupos".equalsIgnoreCase(phase)) {
+                    if (homeGroup != null && homeGroup.equals(eqGroup)) {
+                        eligible.add(eq);
+                    }
+                } else if ("Dezasseis-avos".equalsIgnoreCase(phase) || "Oitavos".equalsIgnoreCase(phase)) {
+                    if (homeGroup != null && eqGroup != null) {
+                        String hG = homeGroup.replace("Grupo ", "");
+                        String eG = eqGroup.replace("Grupo ", "");
+                        boolean paired = (("A".equals(hG) && "B".equals(eG)) || ("B".equals(hG) && "A".equals(eG)) ||
+                                          ("C".equals(hG) && "D".equals(eG)) || ("D".equals(hG) && "C".equals(eG)) ||
+                                          ("E".equals(hG) && "F".equals(eG)) || ("F".equals(hG) && "E".equals(eG)) ||
+                                          ("G".equals(hG) && "H".equals(eG)) || ("H".equals(hG) && "G".equals(eG)));
+                        if (paired) eligible.add(eq);
+                    }
+                } else {
+                    eligible.add(eq);
+                }
+            }
+            
+            awayCombo.setItems(FXCollections.observableArrayList(eligible));
+            if (away != null && eligible.contains(away)) {
+                awayCombo.setValue(away);
+            }
+        }
+
+        // Filter for Home Team if Away Team is selected
+        if (away != null) {
+            List<Equipa> eligible = new ArrayList<>();
+            String awayGroup = getTeamGroup(away.getNome());
+            
+            for (Equipa eq : campManager.getEquipas()) {
+                if (eq.equals(away)) continue;
+                String eqGroup = getTeamGroup(eq.getNome());
+                
+                if ("Grupos".equalsIgnoreCase(phase)) {
+                    if (awayGroup != null && awayGroup.equals(eqGroup)) {
+                        eligible.add(eq);
+                    }
+                } else if ("Dezasseis-avos".equalsIgnoreCase(phase) || "Oitavos".equalsIgnoreCase(phase)) {
+                    if (awayGroup != null && eqGroup != null) {
+                        String aG = awayGroup.replace("Grupo ", "");
+                        String eG = eqGroup.replace("Grupo ", "");
+                        boolean paired = (("A".equals(aG) && "B".equals(eG)) || ("B".equals(aG) && "A".equals(eG)) ||
+                                          ("C".equals(aG) && "D".equals(eG)) || ("D".equals(aG) && "C".equals(eG)) ||
+                                          ("E".equals(aG) && "F".equals(eG)) || ("F".equals(aG) && "E".equals(eG)) ||
+                                          ("G".equals(aG) && "H".equals(eG)) || ("H".equals(aG) && "G".equals(eG)));
+                        if (paired) eligible.add(eq);
+                    }
+                } else {
+                    eligible.add(eq);
+                }
+            }
+            
+            homeCombo.setItems(FXCollections.observableArrayList(eligible));
+            if (home != null && eligible.contains(home)) {
+                homeCombo.setValue(home);
+            }
+        }
+    }
+
+    private String getTeamGroup(String teamName) {
+        for (Map.Entry<String, List<String>> entry : campManager.getGrupos().entrySet()) {
+            if (entry.getValue().contains(teamName)) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
+
+    private ScrollPane createTacticalFieldView(Jogo j, Equipa homeEq, Equipa awayEq) {
+        VBox rootBox = new VBox(10);
+        rootBox.setAlignment(Pos.CENTER);
+        rootBox.setPadding(new Insets(10));
+        rootBox.setStyle("-fx-background-color: #0f172a;"); // Dark slate background
+
+        // Football Field Pane (340x400)
+        Pane field = new Pane();
+        field.setPrefSize(340, 400);
+        field.setMinSize(340, 400);
+        field.setMaxSize(340, 400);
+        field.setStyle("-fx-background-color: #1e3a1e; -fx-border-color: #475569; -fx-border-width: 2px; -fx-border-radius: 8px; -fx-background-radius: 8px;");
+
+        // White Lines
+        javafx.scene.shape.Circle centerCircle = new javafx.scene.shape.Circle(170, 200, 40);
+        centerCircle.setFill(javafx.scene.paint.Color.TRANSPARENT);
+        centerCircle.setStroke(javafx.scene.paint.Color.web("#94a3b8", 0.5));
+        centerCircle.setStrokeWidth(1.5);
+
+        javafx.scene.shape.Line centerLine = new javafx.scene.shape.Line(0, 200, 340, 200);
+        centerLine.setStroke(javafx.scene.paint.Color.web("#94a3b8", 0.5));
+        centerLine.setStrokeWidth(1.5);
+
+        // Penalty Areas
+        javafx.scene.shape.Rectangle topPenalty = new javafx.scene.shape.Rectangle(60, 0, 220, 50);
+        topPenalty.setFill(javafx.scene.paint.Color.TRANSPARENT);
+        topPenalty.setStroke(javafx.scene.paint.Color.web("#94a3b8", 0.5));
+        topPenalty.setStrokeWidth(1.5);
+
+        javafx.scene.shape.Rectangle botPenalty = new javafx.scene.shape.Rectangle(60, 350, 220, 50);
+        botPenalty.setFill(javafx.scene.paint.Color.TRANSPARENT);
+        botPenalty.setStroke(javafx.scene.paint.Color.web("#94a3b8", 0.5));
+        botPenalty.setStrokeWidth(1.5);
+
+        field.getChildren().addAll(centerCircle, centerLine, topPenalty, botPenalty);
+
+        // Map of ratings
+        java.util.Map<Integer, Double> ratingMap = new java.util.HashMap<>();
+        if (j.getPlayersSnapshot() != null) {
+            for (JogadorJogoStats js : j.getPlayersSnapshot()) {
+                ratingMap.put(js.getJogadorId(), js.getRating());
+            }
+        }
+
+        // --- POSITION AWAY TEAM (TOP HALF) ---
+        List<Jogador> grAway = new ArrayList<>();
+        List<Jogador> dfAway = new ArrayList<>();
+        List<Jogador> mdAway = new ArrayList<>();
+        List<Jogador> avAway = new ArrayList<>();
+        List<Jogador> resAway = new ArrayList<>();
+
+        List<Jogador> startersAway = new ArrayList<>();
+        Jogador gkAway = null;
+        for (Jogador p : awayEq.getJogadores()) {
+            if ("Guarda-Redes".equalsIgnoreCase(p.getPosicao()) || "Guarda-redes".equalsIgnoreCase(p.getPosicao())) {
+                gkAway = p;
+                break;
+            }
+        }
+        if (gkAway != null) startersAway.add(gkAway);
+        for (Jogador p : awayEq.getJogadores()) {
+            if (p.isStarter() && p != gkAway) {
+                startersAway.add(p);
+                if (startersAway.size() == 11) break;
+            }
+        }
+        if (startersAway.size() < 11) {
+            for (Jogador p : awayEq.getJogadores()) {
+                if (!startersAway.contains(p)) {
+                    startersAway.add(p);
+                    if (startersAway.size() == 11) break;
+                }
+            }
+        }
+
+        for (Jogador p : awayEq.getJogadores()) {
+            if (!startersAway.contains(p)) {
+                resAway.add(p);
+            }
+        }
+
+        for (Jogador p : startersAway) {
+            if (p == gkAway) {
+                grAway.add(p);
+            } else if ("Defesa".equalsIgnoreCase(p.getPosicao())) {
+                dfAway.add(p);
+            } else if ("Médio".equalsIgnoreCase(p.getPosicao()) || "Medio".equalsIgnoreCase(p.getPosicao())) {
+                mdAway.add(p);
+            } else {
+                avAway.add(p);
+            }
+        }
+
+        // Goalkeeper Top
+        if (!grAway.isEmpty()) {
+            field.getChildren().add(createPlayerTacticalBadge(grAway.get(0), 170, 35, ratingMap.getOrDefault(grAway.get(0).getId(), 6.0), "#EF4444"));
+        }
+        // Defenders Top
+        int dfCountA = dfAway.size();
+        for (int i = 0; i < dfCountA; i++) {
+            double x = 340.0 / (dfCountA + 1) * (i + 1);
+            field.getChildren().add(createPlayerTacticalBadge(dfAway.get(i), x, 90, ratingMap.getOrDefault(dfAway.get(i).getId(), 6.0), "#3B82F6"));
+        }
+        // Midfielders Top
+        int mdCountA = mdAway.size();
+        for (int i = 0; i < mdCountA; i++) {
+            double x = 340.0 / (mdCountA + 1) * (i + 1);
+            field.getChildren().add(createPlayerTacticalBadge(mdAway.get(i), x, 140, ratingMap.getOrDefault(mdAway.get(i).getId(), 6.0), "#3B82F6"));
+        }
+        // Forwards Top
+        int avCountA = avAway.size();
+        for (int i = 0; i < avCountA; i++) {
+            double x = 340.0 / (avCountA + 1) * (i + 1);
+            field.getChildren().add(createPlayerTacticalBadge(avAway.get(i), x, 180, ratingMap.getOrDefault(avAway.get(i).getId(), 6.0), "#3B82F6"));
+        }
+
+        // --- POSITION HOME TEAM (BOTTOM HALF) ---
+        List<Jogador> grHome = new ArrayList<>();
+        List<Jogador> dfHome = new ArrayList<>();
+        List<Jogador> mdHome = new ArrayList<>();
+        List<Jogador> avHome = new ArrayList<>();
+        List<Jogador> resHome = new ArrayList<>();
+
+        List<Jogador> startersHome = new ArrayList<>();
+        Jogador gkHome = null;
+        for (Jogador p : homeEq.getJogadores()) {
+            if ("Guarda-Redes".equalsIgnoreCase(p.getPosicao()) || "Guarda-redes".equalsIgnoreCase(p.getPosicao())) {
+                gkHome = p;
+                break;
+            }
+        }
+        if (gkHome != null) startersHome.add(gkHome);
+        for (Jogador p : homeEq.getJogadores()) {
+            if (p.isStarter() && p != gkHome) {
+                startersHome.add(p);
+                if (startersHome.size() == 11) break;
+            }
+        }
+        if (startersHome.size() < 11) {
+            for (Jogador p : homeEq.getJogadores()) {
+                if (!startersHome.contains(p)) {
+                    startersHome.add(p);
+                    if (startersHome.size() == 11) break;
+                }
+            }
+        }
+
+        for (Jogador p : homeEq.getJogadores()) {
+            if (!startersHome.contains(p)) {
+                resHome.add(p);
+            }
+        }
+
+        for (Jogador p : startersHome) {
+            if (p == gkHome) {
+                grHome.add(p);
+            } else if ("Defesa".equalsIgnoreCase(p.getPosicao())) {
+                dfHome.add(p);
+            } else if ("Médio".equalsIgnoreCase(p.getPosicao()) || "Medio".equalsIgnoreCase(p.getPosicao())) {
+                mdHome.add(p);
+            } else {
+                avHome.add(p);
+            }
+        }
+
+        // Goalkeeper Bottom
+        if (!grHome.isEmpty()) {
+            field.getChildren().add(createPlayerTacticalBadge(grHome.get(0), 170, 365, ratingMap.getOrDefault(grHome.get(0).getId(), 6.0), "#F59E0B"));
+        }
+        // Defenders Bottom
+        int dfCountH = dfHome.size();
+        for (int i = 0; i < dfCountH; i++) {
+            double x = 340.0 / (dfCountH + 1) * (i + 1);
+            field.getChildren().add(createPlayerTacticalBadge(dfHome.get(i), x, 310, ratingMap.getOrDefault(dfHome.get(i).getId(), 6.0), "#10B981"));
+        }
+        // Midfielders Bottom
+        int mdCountH = mdHome.size();
+        for (int i = 0; i < mdCountH; i++) {
+            double x = 340.0 / (mdCountH + 1) * (i + 1);
+            field.getChildren().add(createPlayerTacticalBadge(mdHome.get(i), x, 260, ratingMap.getOrDefault(mdHome.get(i).getId(), 6.0), "#10B981"));
+        }
+        // Forwards Bottom
+        int avCountH = avHome.size();
+        for (int i = 0; i < avCountH; i++) {
+            double x = 340.0 / (avCountH + 1) * (i + 1);
+            field.getChildren().add(createPlayerTacticalBadge(avHome.get(i), x, 220, ratingMap.getOrDefault(avHome.get(i).getId(), 6.0), "#10B981"));
+        }
+
+        rootBox.getChildren().add(field);
+
+        // --- DRAW BENCH / RESERVES (BANCO) ---
+        Label lblBenchTitle = new Label("Banco de Suplentes");
+        lblBenchTitle.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px;");
+        rootBox.getChildren().add(lblBenchTitle);
+
+        HBox benchContainer = new HBox(15);
+        benchContainer.setAlignment(Pos.CENTER);
+        benchContainer.setPadding(new Insets(8));
+        benchContainer.setStyle("-fx-background-color: #1e293b; -fx-background-radius: 8px;");
+
+        // Home Bench Column
+        VBox homeBenchCol = new VBox(5);
+        homeBenchCol.setPrefWidth(310);
+        String formationStrHome = dfHome.size() + "-" + mdHome.size() + "-" + avHome.size();
+        Label lblHomeB = new Label(homeEq.getNome() + "  (" + formationStrHome + ")");
+        lblHomeB.setStyle("-fx-text-fill: #10B981; -fx-font-weight: bold; -fx-font-size: 11px;");
+        homeBenchCol.getChildren().add(lblHomeB);
+
+        for (Jogador p : resHome) {
+            double rating = ratingMap.getOrDefault(p.getId(), 0.0);
+            String ratingStr = rating > 0 ? String.format("%.1f", rating) : "-";
+            Label lblP = new Label("#" + p.getNumeroCamisola() + " " + p.getNome() + "  (" + ratingStr + ")");
+            lblP.setStyle("-fx-text-fill: #cbd5e1; -fx-font-size: 10px;");
+            homeBenchCol.getChildren().add(lblP);
+        }
+
+        // Away Bench Column
+        VBox awayBenchCol = new VBox(5);
+        awayBenchCol.setPrefWidth(310);
+        String formationStrAway = dfAway.size() + "-" + mdAway.size() + "-" + avAway.size();
+        Label lblAwayB = new Label(awayEq.getNome() + "  (" + formationStrAway + ")");
+        lblAwayB.setStyle("-fx-text-fill: #3B82F6; -fx-font-weight: bold; -fx-font-size: 11px;");
+        awayBenchCol.getChildren().add(lblAwayB);
+
+        for (Jogador p : resAway) {
+            double rating = ratingMap.getOrDefault(p.getId(), 0.0);
+            String ratingStr = rating > 0 ? String.format("%.1f", rating) : "-";
+            Label lblP = new Label("#" + p.getNumeroCamisola() + " " + p.getNome() + "  (" + ratingStr + ")");
+            lblP.setStyle("-fx-text-fill: #cbd5e1; -fx-font-size: 10px;");
+            awayBenchCol.getChildren().add(lblP);
+        }
+
+        benchContainer.getChildren().addAll(homeBenchCol, awayBenchCol);
+        rootBox.getChildren().add(benchContainer);
+
+        ScrollPane scrollRoot = new ScrollPane(rootBox);
+        scrollRoot.setFitToWidth(true);
+        scrollRoot.setPrefHeight(420);
+        scrollRoot.setStyle("-fx-background-color: transparent; -fx-control-inner-background: transparent; -fx-background: transparent; -fx-border-color: transparent;");
+
+        return scrollRoot;
+    }
+
+    private Pane createPlayerTacticalBadge(Jogador p, double centerX, double centerY, double rating, String jerseyColor) {
+        Pane badge = new Pane();
+        badge.setLayoutX(centerX - 20);
+        badge.setLayoutY(centerY - 25);
+        badge.setPrefSize(40, 50);
+
+        javafx.scene.shape.Circle circle = new javafx.scene.shape.Circle(20, 20, 11.5);
+        circle.setFill(javafx.scene.paint.Color.web(jerseyColor));
+        circle.setStroke(javafx.scene.paint.Color.WHITE);
+        circle.setStrokeWidth(1.2);
+
+        Label lblNum = new Label(String.valueOf(p.getNumeroCamisola()));
+        lblNum.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 9px;");
+        lblNum.setPrefSize(40, 40);
+        lblNum.setAlignment(Pos.CENTER);
+
+        Label lblRating = new Label(String.format("%.1f", rating));
+        String ratingBgColor = rating >= 7.5 ? "#10B981" : (rating >= 6.0 ? "#F59E0B" : "#EF4444");
+        lblRating.setStyle("-fx-background-color: " + ratingBgColor + "; -fx-text-fill: white; -fx-font-size: 7px; -fx-font-weight: bold; -fx-padding: 0px 2px; -fx-background-radius: 2px;");
+        lblRating.setLayoutX(24);
+        lblRating.setLayoutY(2);
+
+        String[] nameParts = p.getNome().split(" ");
+        String dispName = nameParts[nameParts.length - 1];
+        if (dispName.length() > 8) dispName = dispName.substring(0, 7) + ".";
+        Label lblName = new Label(dispName);
+        lblName.setStyle("-fx-text-fill: white; -fx-font-size: 8px; -fx-font-weight: bold; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.8), 2, 0, 0, 1);");
+        lblName.setPrefWidth(50);
+        lblName.setLayoutX(-5);
+        lblName.setLayoutY(35);
+        lblName.setAlignment(Pos.CENTER);
+
+        badge.getChildren().addAll(circle, lblNum, lblRating, lblName);
+        return badge;
+    }
+
+    private List<String> generatePenaltyShootoutDetails(Jogo j, Equipa homeEq, Equipa awayEq) {
+        List<String> seq = new ArrayList<>();
+        int ph = j.getPenaltiesHome();
+        int pa = j.getPenaltiesAway();
+        if (ph < 0 || pa < 0) return seq;
+
+        seq.add("\n=================================");
+        seq.add("⚽ DECISÃO POR GRANDES PENALIDADES ⚽");
+        seq.add("=================================");
+
+        // Get goalkeepers
+        Jogador gkHome = null;
+        for (Jogador p : homeEq.getJogadores()) {
+            if ("Guarda-Redes".equalsIgnoreCase(p.getPosicao()) || "Guarda-redes".equalsIgnoreCase(p.getPosicao())) {
+                gkHome = p;
+                break;
+            }
+        }
+        String gkHomeName = gkHome != null ? gkHome.getNome() : "Guarda-Redes";
+
+        Jogador gkAway = null;
+        for (Jogador p : awayEq.getJogadores()) {
+            if ("Guarda-Redes".equalsIgnoreCase(p.getPosicao()) || "Guarda-redes".equalsIgnoreCase(p.getPosicao())) {
+                gkAway = p;
+                break;
+            }
+        }
+        String gkAwayName = gkAway != null ? gkAway.getNome() : "Guarda-Redes";
+
+        // Get kickers (starters first, then others)
+        List<Jogador> kickersHome = new ArrayList<>();
+        for (Jogador p : homeEq.getJogadores()) if (p.isStarter()) kickersHome.add(p);
+        for (Jogador p : homeEq.getJogadores()) if (!kickersHome.contains(p)) kickersHome.add(p);
+
+        List<Jogador> kickersAway = new ArrayList<>();
+        for (Jogador p : awayEq.getJogadores()) if (p.isStarter()) kickersAway.add(p);
+        for (Jogador p : awayEq.getJogadores()) if (!kickersAway.contains(p)) kickersAway.add(p);
+
+        int homeScored = 0;
+        int awayScored = 0;
+        int round = 1;
+        int homeKickerIdx = 0;
+        int awayKickerIdx = 0;
+
+        java.util.Random rand = new java.util.Random(j.getId() + 100); // stable seed per match
+
+        // We run rounds until we reach the final penalty score
+        while (homeScored < ph || awayScored < pa) {
+            seq.add(String.format("\n--- %dª Série de Penaltis ---", round));
+
+            // Home kicker
+            if (homeScored < ph || (homeScored + (5 - round) >= ph && rand.nextBoolean())) {
+                // Determine if this kick scores
+                boolean scores = false;
+                if (homeScored < ph) {
+                    // if they haven't reached ph, and we need to score to match the score
+                    int remainingRounds = 10 - round; // arbitrary large
+                    if (ph - homeScored >= remainingRounds || rand.nextBoolean()) {
+                        scores = true;
+                    }
+                }
+                
+                Jogador kicker = kickersHome.get(homeKickerIdx % kickersHome.size());
+                homeKickerIdx++;
+
+                if (scores) {
+                    homeScored++;
+                    seq.add(String.format("🟢 [%s] #%d %s: GOLO! ⚽ (%d - %d)", homeEq.getNome(), kicker.getNumeroCamisola(), kicker.getNome(), homeScored, awayScored));
+                } else {
+                    boolean defended = rand.nextBoolean();
+                    if (defended) {
+                        seq.add(String.format("🔴 [%s] #%d %s: DEFENDIDO por %s! 🧤 (%d - %d)", homeEq.getNome(), kicker.getNumeroCamisola(), kicker.getNome(), gkAwayName, homeScored, awayScored));
+                    } else {
+                        seq.add(String.format("🔴 [%s] #%d %s: FALHOU (Ao lado/Por cima) ❌ (%d - %d)", homeEq.getNome(), kicker.getNumeroCamisola(), kicker.getNome(), homeScored, awayScored));
+                    }
+                }
+            }
+
+            // Away kicker
+            if (awayScored < pa || (awayScored + (5 - round) >= pa && rand.nextBoolean())) {
+                boolean scores = false;
+                if (awayScored < pa) {
+                    int remainingRounds = 10 - round;
+                    if (pa - awayScored >= remainingRounds || rand.nextBoolean()) {
+                        scores = true;
+                    }
+                }
+
+                Jogador kicker = kickersAway.get(awayKickerIdx % kickersAway.size());
+                awayKickerIdx++;
+
+                if (scores) {
+                    awayScored++;
+                    seq.add(String.format("🟢 [%s] #%d %s: GOLO! ⚽ (%d - %d)", awayEq.getNome(), kicker.getNumeroCamisola(), kicker.getNome(), homeScored, awayScored));
+                } else {
+                    boolean defended = rand.nextBoolean();
+                    if (defended) {
+                        seq.add(String.format("🔴 [%s] #%d %s: DEFENDIDO por %s! 🧤 (%d - %d)", awayEq.getNome(), kicker.getNumeroCamisola(), kicker.getNome(), gkHomeName, homeScored, awayScored));
+                    } else {
+                        seq.add(String.format("🔴 [%s] #%d %s: FALHOU (Ao lado/Por cima) ❌ (%d - %d)", awayEq.getNome(), kicker.getNumeroCamisola(), kicker.getNome(), homeScored, awayScored));
+                    }
+                }
+            }
+
+            round++;
+            if (round > 25) break; // safety breakout
+        }
+
+        seq.add(String.format("\n🏆 Vencedor nos Penaltis: %s (%d - %d)", (ph > pa ? homeEq.getNome() : awayEq.getNome()), ph, pa));
+        return seq;
+    }
+
+    private void showPostMatchStatsDialog(Jogo j) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Pós-Jogo: " + j.getHomeTeam().getNome() + " vs " + j.getAwayTeam().getNome());
+        dialog.setHeaderText("Fase: " + j.getPhase() + " | Estádio: " + (j.getEstadio() != null ? j.getEstadio().getNome() : "N/A"));
+        
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.CLOSE);
+        
+        VBox root = new VBox(15);
+        root.setPrefWidth(720);
+        root.setPadding(new Insets(10));
+        
+        Equipa hEq = campManager.procurarEquipaPorNome(j.getHomeTeam().getNome());
+        Equipa aEq = campManager.procurarEquipaPorNome(j.getAwayTeam().getNome());
+        
+        // 1. Scoreboard
+        HBox placar = new HBox(20);
+        placar.setAlignment(Pos.CENTER);
+        placar.setStyle("-fx-background-color: #1E293B; -fx-background-radius: 12px; -fx-padding: 15px;");
+        
+        Label lblHome = new Label(j.getHomeTeam().getNome());
+        lblHome.setStyle("-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;");
+        
+        Label lblScore = new Label(j.getGoalsHome() + " - " + j.getGoalsAway());
+        lblScore.setStyle("-fx-text-fill: #10B981; -fx-font-size: 24px; -fx-font-weight: 900; -fx-padding: 0 15px;");
+        
+        Label lblAway = new Label(j.getAwayTeam().getNome());
+        lblAway.setStyle("-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;");
+        
+        placar.getChildren().addAll(lblHome, lblScore, lblAway);
+        root.getChildren().add(placar);
+        
+        if (j.getPenaltiesHome() >= 0) {
+            Label lblPens = new Label("Decidido nos penaltis: " + j.getPenaltiesHome() + " - " + j.getPenaltiesAway());
+            lblPens.setStyle("-fx-font-size: 11px; -fx-text-fill: #94A3B8;");
+            HBox penBox = new HBox(lblPens);
+            penBox.setAlignment(Pos.CENTER);
+            root.getChildren().add(penBox);
+        }
+        
+        TabPane tabPane = new TabPane();
+        tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
+        
+        // Tab 1: Collective Stats
+        Tab tabStats = new Tab("Estatísticas");
+        VBox statsBox = new VBox(10);
+        statsBox.setPadding(new Insets(15));
+        GridPane grid = new GridPane();
+        grid.setHgap(30);
+        grid.setVgap(8);
+        grid.setAlignment(Pos.CENTER);
+        
+        EstatisticaJogo s = j.getEstatisticas();
+        if (s == null) {
+            s = EstatisticaJogo.gerarEstatisticasAleatorias(j.getGoalsHome(), j.getGoalsAway());
+            j.setEstatisticas(s);
+            campManager.saveAll();
+        }
+        
+        Label hHome = new Label(j.getHomeTeam().getNome());
+        hHome.setStyle("-fx-font-weight: bold;");
+        Label hMetric = new Label("Métrica");
+        hMetric.setStyle("-fx-font-weight: bold; -fx-text-fill: #6B7280;");
+        Label hAway = new Label(j.getAwayTeam().getNome());
+        hAway.setStyle("-fx-font-weight: bold;");
+        grid.add(hHome, 0, 0);
+        grid.add(hMetric, 1, 0);
+        grid.add(hAway, 2, 0);
+        
+        addComparisonRow(grid, 1, String.valueOf(j.getGoalsHome()), "Golos (Resultado)", String.valueOf(j.getGoalsAway()));
+        addComparisonRow(grid, 2, s.getPosseBolaHome() + "%", "Posse de Bola", s.getPosseBolaAway() + "%");
+        addComparisonRow(grid, 3, String.valueOf(s.getRematesHome()), "Remates Totais", String.valueOf(s.getRematesAway()));
+        addComparisonRow(grid, 4, String.valueOf(s.getRematesBalizaHome()), "Remates à Baliza", String.valueOf(s.getRematesBalizaAway()));
+        addComparisonRow(grid, 5, String.valueOf(s.getCantosHome()), "Cantos", String.valueOf(s.getCantosAway()));
+        addComparisonRow(grid, 6, String.valueOf(s.getForasJogoHome()), "Foras de Jogo", String.valueOf(s.getForasJogoAway()));
+        addComparisonRow(grid, 7, String.valueOf(s.getFaltasHome()), "Faltas Cometidas", String.valueOf(s.getFaltasAway()));
+        addComparisonRow(grid, 8, String.valueOf(s.getAmarelosHome()), "Cartões Amarelos", String.valueOf(s.getAmarelosAway()));
+        addComparisonRow(grid, 9, String.valueOf(s.getVermelhosHome()), "Cartões Vermelhos", String.valueOf(s.getVermelhosAway()));
+        addComparisonRow(grid, 10, String.valueOf(s.getDefesasHome()), "Defesas Guarda-Redes", String.valueOf(s.getDefesasAway()));
+        addComparisonRow(grid, 11, String.valueOf(s.getPassesHome()), "Passes Realizados", String.valueOf(s.getPassesAway()));
+        addComparisonRow(grid, 12, s.getPrecisaoPasseHome() + "%", "Precisão de Passes", s.getPrecisaoPasseAway() + "%");
+        
+        statsBox.getChildren().add(grid);
+        tabStats.setContent(statsBox);
+        
+        // Tab 2: Cronologia
+        Tab tabEvents = new Tab("Cronologia");
+        VBox eventsBox = new VBox(8);
+        eventsBox.setPadding(new Insets(15));
+        if (j.getEventos() == null || j.getEventos().isEmpty()) {
+            eventsBox.getChildren().add(new Label("Nenhum evento registado nesta partida."));
+        } else {
+            for (EventoJogo ev : j.getEventos()) {
+                String icon = "⚽";
+                if (ev.getTipo() == TipoEvento.CARTAO_AMARELO) icon = "🟨";
+                else if (ev.getTipo() == TipoEvento.CARTAO_VERMELHO) icon = "🟥";
+                else if (ev.getTipo() == TipoEvento.SUBSTITUICAO) icon = "🔄";
+                
+                String pName = ev.getJogador() != null ? ev.getJogador().getNome() : "?";
+                String tName = ev.getEquipa() != null ? ev.getEquipa().getNome() : "";
+                
+                Label lblEv = new Label(ev.getMinuto() + "' " + icon + " " + pName + " (" + tName + ")");
+                lblEv.setStyle("-fx-font-weight: bold; -fx-font-size: 12px;");
+                eventsBox.getChildren().add(lblEv);
+            }
+        }
+
+        if (j.getPenaltiesHome() >= 0 && j.getPenaltiesAway() >= 0) {
+            List<String> penSeq = generatePenaltyShootoutDetails(j, hEq, aEq);
+            for (String line : penSeq) {
+                Label lblPenLine = new Label(line);
+                if (line.contains("🟢")) {
+                    lblPenLine.setStyle("-fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #10B981;");
+                } else if (line.contains("🔴")) {
+                    lblPenLine.setStyle("-fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #EF4444;");
+                } else if (line.contains("⚽") || line.contains("🏆") || line.contains("===")) {
+                    lblPenLine.setStyle("-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #F59E0B;");
+                } else {
+                    lblPenLine.setStyle("-fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #cbd5e1;");
+                }
+                eventsBox.getChildren().add(lblPenLine);
+            }
+        }
+
+        ScrollPane scrollEvents = new ScrollPane(eventsBox);
+        scrollEvents.setPrefHeight(250);
+        scrollEvents.setFitToWidth(true);
+        tabEvents.setContent(scrollEvents);
+        
+        // Tab 3: Ratings
+        Tab tabRatings = new Tab("Pontuações");
+        
+        if (hEq != null && aEq != null) {
+            tabRatings.setContent(createTacticalFieldView(j, hEq, aEq));
+        } else {
+            tabRatings.setContent(new Label("Equipas não definidas para este jogo."));
+        }
+        
+        tabPane.getTabs().addAll(tabStats, tabEvents, tabRatings);
+        root.getChildren().add(tabPane);
+        
+        dialog.getDialogPane().setContent(root);
+        dialog.showAndWait();
     }
 
     private boolean isTeamInGroup(String teamName, String groupName) {
@@ -4262,7 +5194,9 @@ public class DashboardController {
 
             box.setCursor(javafx.scene.Cursor.HAND);
             box.setOnMouseClicked(event -> {
-                if (utilizadorLogado.getCargo() == TipoUtilizador.ADMIN || utilizadorLogado.getCargo() == TipoUtilizador.GESTOR_ARBITRAGEM) {
+                if (StatusJogo.FINALIZADO.equals(j.getStatus())) {
+                    showPostMatchStatsDialog(j);
+                } else if (utilizadorLogado.getCargo() == TipoUtilizador.ADMIN || utilizadorLogado.getCargo() == TipoUtilizador.GESTOR_ARBITRAGEM) {
                     showBracketMatchActions(j);
                 } else {
                     showRosterDialog(j);
@@ -4495,16 +5429,9 @@ public class DashboardController {
                     }
 
                     EstatisticaJogo stats = new EstatisticaJogo(50, 50, 8, 8, 4, 4);
-                    if (gh == 0 && ga == 0) {
-                        campManager.finalizarJogoECorrerBracket(selected.getId(), null, gh, ga, ph, pa, stats);
-                        Alert okAlert = new Alert(Alert.AlertType.INFORMATION, "Jogo finalizado com sucesso!");
-                        okAlert.showAndWait();
+                    showRegisterScorersAndAssistantsDialog(selected, gh, ga, ph, pa, stats, () -> {
                         showStandingsAndBracket();
-                    } else {
-                        showRegisterScorersAndAssistantsDialog(selected, gh, ga, ph, pa, stats, () -> {
-                            showStandingsAndBracket();
-                        });
-                    }
+                    });
                 } catch (Exception ex) {
                     Alert err = new Alert(Alert.AlertType.ERROR, "Dados de resultado inválidos!");
                     err.showAndWait();
@@ -4530,7 +5457,7 @@ public class DashboardController {
         title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1A202C;");
         
         HBox rostersBox = new HBox(20);
-        rostersBox.setAlignment(Pos.CENTER);
+        rostersBox.setAlignment(Pos.TOP_CENTER);
         
         VBox homeCol = createRosterColumn(j.getHomeTeam());
         VBox awayCol = createRosterColumn(j.getAwayTeam());
@@ -4539,12 +5466,17 @@ public class DashboardController {
         
         rostersBox.getChildren().addAll(homeCol, awayCol);
         
+        ScrollPane scrollRosters = new ScrollPane(rostersBox);
+        scrollRosters.setFitToWidth(true);
+        scrollRosters.setStyle("-fx-background-color: transparent; -fx-control-inner-background: transparent; -fx-background: transparent; -fx-border-color: transparent;");
+        VBox.setVgrow(scrollRosters, Priority.ALWAYS);
+        
         Button btnClose = new Button("Fechar");
         btnClose.getStyleClass().add("btn-secondary");
         btnClose.setOnAction(e -> dialog.close());
         
-        root.getChildren().addAll(title, rostersBox, btnClose);
-        Scene scene = new Scene(root, 700, 500);
+        root.getChildren().addAll(title, scrollRosters, btnClose);
+        Scene scene = new Scene(root, 720, 600);
         
         try {
             URL cssUrl = getClass().getResource("/ui/styles.css");
@@ -4558,7 +5490,7 @@ public class DashboardController {
     private VBox createRosterColumn(Equipa eq) {
         VBox col = new VBox(10);
         col.getStyleClass().add("card");
-        col.setStyle("-fx-padding: 15px; -fx-min-width: 300px;");
+        col.setStyle("-fx-padding: 15px; -fx-min-width: 310px;");
         
         String teamName = eq != null ? eq.getNome() : "A definir";
         Label lblTeam = new Label("⚽ " + teamName);
@@ -4571,30 +5503,61 @@ public class DashboardController {
             empty.setStyle("-fx-text-fill: #6B7280; -fx-font-style: italic;");
             list.getChildren().add(empty);
         } else {
+            List<Jogador> titulares = new ArrayList<>();
+            List<Jogador> suplentes = new ArrayList<>();
             for (Jogador p : eq.getJogadores()) {
-                HBox pRow = new HBox(10);
-                pRow.setStyle("-fx-padding: 6px; -fx-background-color: #F9FAFB; -fx-border-color: #E5E7EB; -fx-border-radius: 6px; -fx-background-radius: 6px;");
-                pRow.setAlignment(Pos.CENTER_LEFT);
-                
-                Label lblNum = new Label("#" + p.getNumeroCamisola());
-                lblNum.setStyle("-fx-font-weight: bold; -fx-text-fill: #00D26A; -fx-min-width: 25px;");
-                
-                Label lblName = new Label(p.getNome());
-                lblName.setStyle("-fx-font-weight: bold; -fx-text-fill: #1A202C;");
-                
-                Region sp = new Region();
-                HBox.setHgrow(sp, Priority.ALWAYS);
-                
-                Label lblPos = new Label(p.getPosicao());
-                lblPos.setStyle("-fx-text-fill: #6B7280; -fx-font-size: 11px;");
-                
-                pRow.getChildren().addAll(lblNum, lblName, sp, lblPos);
-                list.getChildren().add(pRow);
+                if (p.isStarter()) {
+                    titulares.add(p);
+                } else {
+                    suplentes.add(p);
+                }
+            }
+            
+            titulares.sort((a, b) -> Integer.compare(a.getNumeroCamisola(), b.getNumeroCamisola()));
+            suplentes.sort((a, b) -> Integer.compare(a.getNumeroCamisola(), b.getNumeroCamisola()));
+            
+            if (!titulares.isEmpty()) {
+                Label lblTit = new Label("Titulares (Onze Inicial)");
+                lblTit.setStyle("-fx-font-weight: bold; -fx-font-size: 11px; -fx-text-fill: #059669; -fx-padding: 6px 0 2px 0;");
+                list.getChildren().add(lblTit);
+                for (Jogador p : titulares) {
+                    list.getChildren().add(createPlayerRowNode(p));
+                }
+            }
+            
+            if (!suplentes.isEmpty()) {
+                Label lblSupl = new Label("Suplentes / Reservas");
+                lblSupl.setStyle("-fx-font-weight: bold; -fx-font-size: 11px; -fx-text-fill: #4B5563; -fx-padding: 12px 0 2px 0;");
+                list.getChildren().add(lblSupl);
+                for (Jogador p : suplentes) {
+                    list.getChildren().add(createPlayerRowNode(p));
+                }
             }
         }
         
         col.getChildren().add(list);
         return col;
+    }
+
+    private HBox createPlayerRowNode(Jogador p) {
+        HBox pRow = new HBox(10);
+        pRow.setStyle("-fx-padding: 6px; -fx-background-color: #F9FAFB; -fx-border-color: #E5E7EB; -fx-border-radius: 6px; -fx-background-radius: 6px;");
+        pRow.setAlignment(Pos.CENTER_LEFT);
+        
+        Label lblNum = new Label("#" + p.getNumeroCamisola());
+        lblNum.setStyle("-fx-font-weight: bold; -fx-text-fill: #00D26A; -fx-min-width: 25px;");
+        
+        Label lblName = new Label(p.getNome());
+        lblName.setStyle("-fx-font-weight: bold; -fx-text-fill: #1A202C;");
+        
+        Region sp = new Region();
+        HBox.setHgrow(sp, Priority.ALWAYS);
+        
+        Label lblPos = new Label(p.getPosicao());
+        lblPos.setStyle("-fx-text-fill: #6B7280; -fx-font-size: 11px;");
+        
+        pRow.getChildren().addAll(lblNum, lblName, sp, lblPos);
+        return pRow;
     }
 
     private void showAssignTeamDialog(Hotel h) {
@@ -5027,8 +5990,8 @@ public class DashboardController {
 
     private void showRegisterScorersAndAssistantsDialog(Jogo jogo, int goalsHome, int goalsAway, int penaltiesHome, int penaltiesAway, EstatisticaJogo stats, Runnable postFinalizeAction) {
         Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("Registrar Marcadores, Assistentes e Cartões");
-        dialog.setHeaderText("Introduza quem marcou os golos, fez as assistências e quem recebeu cartões.");
+        dialog.setTitle("Registrar Marcadores, Assistentes, Cartões e Substituições");
+        dialog.setHeaderText("Introduza quem marcou os golos (com minutos), cartões e substituições efetuadas.");
 
         ButtonType btnConfirmar = new ButtonType("Confirmar e Finalizar", ButtonBar.ButtonData.OK_DONE);
         ButtonType btnCancelar = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
@@ -5036,7 +5999,7 @@ public class DashboardController {
 
         VBox content = new VBox(15);
         content.setPadding(new Insets(20));
-        content.setMinWidth(600);
+        content.setMinWidth(650);
 
         List<Jogador> homePlayers = jogo.getHomeTeam().getJogadores();
         List<Jogador> awayPlayers = jogo.getAwayTeam().getJogadores();
@@ -5045,10 +6008,12 @@ public class DashboardController {
             ComboBox<String> cmbType;
             ComboBox<Jogador> cmbScorer;
             ComboBox<Jogador> cmbAssistant;
-            GoalRow(ComboBox<String> t, ComboBox<Jogador> s, ComboBox<Jogador> a) {
+            TextField txtMinute;
+            GoalRow(ComboBox<String> t, ComboBox<Jogador> s, ComboBox<Jogador> a, TextField m) {
                 this.cmbType = t;
                 this.cmbScorer = s;
                 this.cmbAssistant = a;
+                this.txtMinute = m;
             }
         }
 
@@ -5067,9 +6032,25 @@ public class DashboardController {
             }
         }
 
+        class SubRow {
+            ComboBox<Equipa> cmbTeam;
+            ComboBox<Jogador> cmbPlayerOut;
+            ComboBox<Jogador> cmbPlayerIn;
+            TextField txtMinute;
+            HBox layoutRow;
+            SubRow(ComboBox<Equipa> t, ComboBox<Jogador> po, ComboBox<Jogador> pi, TextField m, HBox layout) {
+                this.cmbTeam = t;
+                this.cmbPlayerOut = po;
+                this.cmbPlayerIn = pi;
+                this.txtMinute = m;
+                this.layoutRow = layout;
+            }
+        }
+
         List<GoalRow> homeGoalRows = new ArrayList<>();
         List<GoalRow> awayGoalRows = new ArrayList<>();
         List<CardRow> cardRows = new ArrayList<>();
+        List<SubRow> subRows = new ArrayList<>();
 
         if (goalsHome > 0) {
             Label lblHome = new Label("Golos de " + jogo.getHomeTeam().getNome() + ":");
@@ -5081,25 +6062,29 @@ public class DashboardController {
                 row.setAlignment(Pos.CENTER_LEFT);
 
                 Label lblGolo = new Label("Golo " + i + ":");
-                lblGolo.setMinWidth(50);
+                lblGolo.setMinWidth(45);
 
                 ComboBox<String> cmbType = new ComboBox<>();
                 cmbType.getItems().addAll("Normal", "Auto-Golo");
                 cmbType.setValue("Normal");
-                cmbType.setPrefWidth(100);
+                cmbType.setPrefWidth(90);
 
                 ComboBox<Jogador> cmbScorer = new ComboBox<>();
                 cmbScorer.getItems().addAll(homePlayers);
-                cmbScorer.setPromptText("Selecione o Marcador");
-                cmbScorer.setPrefWidth(180);
+                cmbScorer.setPromptText("Marcador");
+                cmbScorer.setPrefWidth(160);
                 setupJogadorCellFactory(cmbScorer);
 
                 ComboBox<Jogador> cmbAssistant = new ComboBox<>();
                 cmbAssistant.getItems().add(null);
                 cmbAssistant.getItems().addAll(homePlayers);
                 cmbAssistant.setPromptText("Sem Assistência");
-                cmbAssistant.setPrefWidth(180);
+                cmbAssistant.setPrefWidth(160);
                 setupJogadorCellFactory(cmbAssistant);
+
+                TextField txtMinute = new TextField(String.valueOf(10 + i * 15));
+                txtMinute.setPromptText("Min");
+                txtMinute.setPrefWidth(45);
 
                 cmbType.valueProperty().addListener((obs, oldVal, newVal) -> {
                     if ("Auto-Golo".equals(newVal)) {
@@ -5114,9 +6099,9 @@ public class DashboardController {
                     }
                 });
 
-                row.getChildren().addAll(lblGolo, cmbType, cmbScorer, new Label("Assis:"), cmbAssistant);
+                row.getChildren().addAll(lblGolo, cmbType, cmbScorer, new Label("Assis:"), cmbAssistant, txtMinute);
                 content.getChildren().add(row);
-                homeGoalRows.add(new GoalRow(cmbType, cmbScorer, cmbAssistant));
+                homeGoalRows.add(new GoalRow(cmbType, cmbScorer, cmbAssistant, txtMinute));
             }
         }
 
@@ -5130,25 +6115,29 @@ public class DashboardController {
                 row.setAlignment(Pos.CENTER_LEFT);
 
                 Label lblGolo = new Label("Golo " + i + ":");
-                lblGolo.setMinWidth(50);
+                lblGolo.setMinWidth(45);
 
                 ComboBox<String> cmbType = new ComboBox<>();
                 cmbType.getItems().addAll("Normal", "Auto-Golo");
                 cmbType.setValue("Normal");
-                cmbType.setPrefWidth(100);
+                cmbType.setPrefWidth(90);
 
                 ComboBox<Jogador> cmbScorer = new ComboBox<>();
                 cmbScorer.getItems().addAll(awayPlayers);
-                cmbScorer.setPromptText("Selecione o Marcador");
-                cmbScorer.setPrefWidth(180);
+                cmbScorer.setPromptText("Marcador");
+                cmbScorer.setPrefWidth(160);
                 setupJogadorCellFactory(cmbScorer);
 
                 ComboBox<Jogador> cmbAssistant = new ComboBox<>();
                 cmbAssistant.getItems().add(null);
                 cmbAssistant.getItems().addAll(awayPlayers);
                 cmbAssistant.setPromptText("Sem Assistência");
-                cmbAssistant.setPrefWidth(180);
+                cmbAssistant.setPrefWidth(160);
                 setupJogadorCellFactory(cmbAssistant);
+
+                TextField txtMinute = new TextField(String.valueOf(15 + i * 15));
+                txtMinute.setPromptText("Min");
+                txtMinute.setPrefWidth(45);
 
                 cmbType.valueProperty().addListener((obs, oldVal, newVal) -> {
                     if ("Auto-Golo".equals(newVal)) {
@@ -5163,9 +6152,9 @@ public class DashboardController {
                     }
                 });
 
-                row.getChildren().addAll(lblGolo, cmbType, cmbScorer, new Label("Assis:"), cmbAssistant);
+                row.getChildren().addAll(lblGolo, cmbType, cmbScorer, new Label("Assis:"), cmbAssistant, txtMinute);
                 content.getChildren().add(row);
-                awayGoalRows.add(new GoalRow(cmbType, cmbScorer, cmbAssistant));
+                awayGoalRows.add(new GoalRow(cmbType, cmbScorer, cmbAssistant, txtMinute));
             }
         }
 
@@ -5228,6 +6217,76 @@ public class DashboardController {
 
         content.getChildren().addAll(sep, lblCardsTitle, cardsContainer, btnAddCard);
 
+        // --- Secção Substituições ---
+        Separator sepSubs = new Separator();
+        Label lblSubsTitle = new Label("Substituições Realizadas:");
+        lblSubsTitle.setStyle("-fx-font-weight: bold; -fx-text-fill: #0F172A; -fx-font-size: 14px;");
+
+        VBox subsContainer = new VBox(8);
+        Button btnAddSub = new Button("+ Adicionar Substituição");
+        btnAddSub.getStyleClass().add("btn-secondary");
+        btnAddSub.setStyle("-fx-padding: 8px 16px; -fx-font-size: 12px;");
+
+        btnAddSub.setOnAction(event -> {
+            HBox row = new HBox(10);
+            row.setAlignment(Pos.CENTER_LEFT);
+
+            ComboBox<Equipa> cmbTeam = new ComboBox<>();
+            cmbTeam.getItems().addAll(jogo.getHomeTeam(), jogo.getAwayTeam());
+            cmbTeam.setPromptText("Equipa");
+            cmbTeam.setPrefWidth(100);
+
+            ComboBox<Jogador> cmbPlayerOut = new ComboBox<>();
+            cmbPlayerOut.setPromptText("Sai (Titular)");
+            cmbPlayerOut.setPrefWidth(150);
+            setupJogadorCellFactory(cmbPlayerOut);
+
+            ComboBox<Jogador> cmbPlayerIn = new ComboBox<>();
+            cmbPlayerIn.setPromptText("Entra (Suplente)");
+            cmbPlayerIn.setPrefWidth(150);
+            setupJogadorCellFactory(cmbPlayerIn);
+
+            cmbTeam.valueProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal != null) {
+                    cmbPlayerOut.getItems().clear();
+                    cmbPlayerIn.getItems().clear();
+                    Equipa realTeam = campManager.procurarEquipaPorNome(newVal.getNome());
+                    if (realTeam != null) {
+                        for (Jogador p : realTeam.getJogadores()) {
+                            if (p.isStarter()) {
+                                cmbPlayerOut.getItems().add(p);
+                            } else {
+                                cmbPlayerIn.getItems().add(p);
+                            }
+                        }
+                    }
+                } else {
+                    cmbPlayerOut.getItems().clear();
+                    cmbPlayerIn.getItems().clear();
+                }
+            });
+
+            TextField txtMinute = new TextField("60");
+            txtMinute.setPromptText("Min");
+            txtMinute.setPrefWidth(50);
+
+            Button btnRemove = new Button("✕");
+            btnRemove.setStyle("-fx-background-color: #EF4444; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6px;");
+
+            row.getChildren().addAll(cmbTeam, cmbPlayerOut, cmbPlayerIn, txtMinute, btnRemove);
+            subsContainer.getChildren().add(row);
+
+            SubRow subRowObj = new SubRow(cmbTeam, cmbPlayerOut, cmbPlayerIn, txtMinute, row);
+            subRows.add(subRowObj);
+
+            btnRemove.setOnAction(e -> {
+                subsContainer.getChildren().remove(row);
+                subRows.remove(subRowObj);
+            });
+        });
+
+        content.getChildren().addAll(sepSubs, lblSubsTitle, subsContainer, btnAddSub);
+
         ScrollPane scroll = new ScrollPane(content);
         scroll.setFitToWidth(true);
         scroll.setPrefHeight(450);
@@ -5247,8 +6306,13 @@ public class DashboardController {
                     valid = false;
                 }
             }
+            for (SubRow sr : subRows) {
+                if (sr.cmbTeam.getValue() == null || sr.cmbPlayerOut.getValue() == null || sr.cmbPlayerIn.getValue() == null) {
+                    valid = false;
+                }
+            }
             if (!valid) {
-                Alert error = new Alert(Alert.AlertType.ERROR, "Por favor, preencha todos os marcadores e cartões adicionados.");
+                Alert error = new Alert(Alert.AlertType.ERROR, "Por favor, preencha todos os campos adicionados.");
                 error.showAndWait();
                 event.consume();
             }
@@ -5257,18 +6321,20 @@ public class DashboardController {
         dialog.showAndWait().ifPresent(res -> {
             if (res == btnConfirmar) {
                 jogo.getEventos().clear();
-                
-                int homeGoalCount = 1;
+
                 for (GoalRow r : homeGoalRows) {
                     Jogador scorer = r.cmbScorer.getValue();
                     Jogador assistant = r.cmbAssistant.getValue();
                     String type = r.cmbType.getValue();
-                    
+                    String minStr = r.txtMinute.getText().trim();
+                    int min = 15;
+                    try { min = Integer.parseInt(minStr); } catch (Exception e) {}
+
                     if ("Auto-Golo".equals(type)) {
-                        EventoJogo ev = new EventoJogo(15 * homeGoalCount, TipoEvento.AUTO_GOLO, scorer, jogo.getAwayTeam());
+                        EventoJogo ev = new EventoJogo(min, TipoEvento.AUTO_GOLO, scorer, jogo.getAwayTeam());
                         jogo.adicionarEvento(ev);
                     } else {
-                        EventoJogo ev = new EventoJogo(15 * homeGoalCount, TipoEvento.GOLO, scorer, jogo.getHomeTeam());
+                        EventoJogo ev = new EventoJogo(min, TipoEvento.GOLO, scorer, jogo.getHomeTeam());
                         jogo.adicionarEvento(ev);
                         if (assistant != null) {
                             Jogador assistantReal = null;
@@ -5288,20 +6354,21 @@ public class DashboardController {
                             }
                         }
                     }
-                    homeGoalCount++;
                 }
 
-                int awayGoalCount = 1;
                 for (GoalRow r : awayGoalRows) {
                     Jogador scorer = r.cmbScorer.getValue();
                     Jogador assistant = r.cmbAssistant.getValue();
                     String type = r.cmbType.getValue();
-                    
+                    String minStr = r.txtMinute.getText().trim();
+                    int min = 15;
+                    try { min = Integer.parseInt(minStr); } catch (Exception e) {}
+
                     if ("Auto-Golo".equals(type)) {
-                        EventoJogo ev = new EventoJogo(15 * awayGoalCount, TipoEvento.AUTO_GOLO, scorer, jogo.getHomeTeam());
+                        EventoJogo ev = new EventoJogo(min, TipoEvento.AUTO_GOLO, scorer, jogo.getHomeTeam());
                         jogo.adicionarEvento(ev);
                     } else {
-                        EventoJogo ev = new EventoJogo(15 * awayGoalCount, TipoEvento.GOLO, scorer, jogo.getAwayTeam());
+                        EventoJogo ev = new EventoJogo(min, TipoEvento.GOLO, scorer, jogo.getAwayTeam());
                         jogo.adicionarEvento(ev);
                         if (assistant != null) {
                             Jogador assistantReal = null;
@@ -5321,30 +6388,73 @@ public class DashboardController {
                             }
                         }
                     }
-                    awayGoalCount++;
                 }
 
-                // Processar os Cartões Adicionados
+                // Processar os Cartões Adicionados e contar amarelos/vermelhos exatos
+                int yHome = 0;
+                int yAway = 0;
+                int rHome = 0;
+                int rAway = 0;
+
                 for (CardRow cr : cardRows) {
                     Equipa team = cr.cmbTeam.getValue();
                     Jogador player = cr.cmbPlayer.getValue();
                     String cardType = cr.cmbCardType.getValue();
                     String minStr = cr.txtMinute.getText().trim();
-                    
+
                     if (team != null && player != null) {
                         int min = 45;
-                        try {
-                            min = Integer.parseInt(minStr);
-                        } catch(Exception e) {}
-                        
-                        TipoEvento te = "Vermelho 🟥".equals(cardType) ? TipoEvento.CARTAO_VERMELHO : TipoEvento.CARTAO_AMARELO;
+                        try { min = Integer.parseInt(minStr); } catch (Exception e) {}
+
+                        boolean isRed = "Vermelho 🟥".equals(cardType);
+                        TipoEvento te = isRed ? TipoEvento.CARTAO_VERMELHO : TipoEvento.CARTAO_AMARELO;
                         EventoJogo ev = new EventoJogo(min, te, player, team);
+                        jogo.adicionarEvento(ev);
+
+                        if (team.getNome().equals(jogo.getHomeTeam().getNome())) {
+                            if (isRed) rHome++; else yHome++;
+                        } else {
+                            if (isRed) rAway++; else yAway++;
+                        }
+                    }
+                }
+
+                // Processar as Substituições Adicionadas
+                for (SubRow sr : subRows) {
+                    Equipa team = sr.cmbTeam.getValue();
+                    Jogador outPlayer = sr.cmbPlayerOut.getValue();
+                    Jogador inPlayer = sr.cmbPlayerIn.getValue();
+                    String minStr = sr.txtMinute.getText().trim();
+
+                    if (team != null && outPlayer != null && inPlayer != null) {
+                        int min = 60;
+                        try { min = Integer.parseInt(minStr); } catch (Exception e) {}
+
+                        Jogador dummySub = new Jogador(0, outPlayer.getNumeroCamisola(), "[Entra] " + inPlayer.getNome() + " / [Sai] " + outPlayer.getNome(), outPlayer.getPosicao(), EstadoJogador.APTO);
+                        EventoJogo ev = new EventoJogo(min, TipoEvento.SUBSTITUICAO, dummySub, team);
                         jogo.adicionarEvento(ev);
                     }
                 }
 
-                campManager.finalizarJogoECorrerBracket(jogo.getId(), null, goalsHome, goalsAway, penaltiesHome, penaltiesAway, stats);
-                
+
+
+                // Criar customStats mantendo outras métricas mas aplicando cartões corretos
+                EstatisticaJogo customStats = new EstatisticaJogo(
+                    stats.getPosseBolaHome(), stats.getPosseBolaAway(),
+                    stats.getRematesHome(), stats.getRematesAway(),
+                    stats.getCantosHome(), stats.getCantosAway(),
+                    stats.getRematesBalizaHome(), stats.getRematesBalizaAway(),
+                    stats.getForasJogoHome(), stats.getForasJogoAway(),
+                    stats.getFaltasHome(), stats.getFaltasAway(),
+                    yHome, yAway, // cartões amarelos introduzidos
+                    rHome, rAway, // cartões vermelhos introduzidos
+                    stats.getDefesasHome(), stats.getDefesasAway(),
+                    stats.getPassesHome(), stats.getPassesAway(),
+                    stats.getPrecisaoPasseHome(), stats.getPrecisaoPasseAway()
+                );
+
+                campManager.finalizarJogoECorrerBracket(jogo.getId(), null, goalsHome, goalsAway, penaltiesHome, penaltiesAway, customStats);
+
                 if (postFinalizeAction != null) {
                     postFinalizeAction.run();
                 }

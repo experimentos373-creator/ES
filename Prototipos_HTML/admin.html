@@ -1297,15 +1297,44 @@
             function matchEl(m, slotHeight) {
                 const home = m ? m.homeTeam : '';
                 const away = m ? m.awayTeam : '';
+                const isFinished = m && m.status === 'Finalizado';
                 const div = document.createElement('div');
                 div.style.cssText = `height:${slotHeight}px; display:flex; flex-direction:column; justify-content:center; padding:0 8px; box-sizing:border-box;`;
-                div.innerHTML = `
-            <div style="border:1px solid #E2E8F0; border-bottom:none; border-radius:6px 6px 0 0; padding:6px 10px; font-size:11px; font-weight:${home ? '600' : '400'}; color:${home ? '#1A202C' : '#A0AEC0'}; background:white; display:flex; align-items:center; gap:6px; white-space:nowrap; overflow:hidden;">
-                <span>${BRACKET_FLAGS[home] || ''}</span>${home || 'A definir'}
+                
+                const card = document.createElement('div');
+                card.style.cssText = `border-radius:6px; border:1px solid #E2E8F0; overflow:hidden; transition: all 0.2s ease; cursor: ${isFinished ? 'pointer' : 'default'};`;
+                if (isFinished) {
+                    card.onmouseenter = () => {
+                        card.style.transform = 'translateY(-2px)';
+                        card.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
+                        card.style.borderColor = '#10B981';
+                    };
+                    card.onmouseleave = () => {
+                        card.style.transform = 'none';
+                        card.style.boxShadow = 'none';
+                        card.style.borderColor = '#E2E8F0';
+                    };
+                    card.onclick = () => openPostMatchModal(m.id);
+                }
+                
+                const homeScore = isFinished ? m.goalsHome : '';
+                const awayScore = isFinished ? m.goalsAway : '';
+                const penText = (isFinished && m.penaltiesHome !== null) ? ` (${m.penaltiesHome}-${m.penaltiesAway})` : '';
+                
+                card.innerHTML = `
+            <div style="padding:6px 10px; font-size:11px; font-weight:${home ? '600' : '400'}; color:${home ? '#1A202C' : '#A0AEC0'}; background:white; display:flex; align-items:center; justify-content:space-between; border-bottom: 1px solid #F1F5F9;">
+                <div style="display:flex; align-items:center; gap:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    <span>${BRACKET_FLAGS[home] || ''}</span>${home || 'A definir'}
+                </div>
+                <span style="font-weight:700; color:var(--dark);">${homeScore}</span>
             </div>
-            <div style="border:1px solid #E2E8F0; border-radius:0 0 6px 6px; padding:6px 10px; font-size:11px; font-weight:${away ? '600' : '400'}; color:${away ? '#1A202C' : '#A0AEC0'}; background:white; display:flex; align-items:center; gap:6px; white-space:nowrap; overflow:hidden;">
-                <span>${BRACKET_FLAGS[away] || ''}</span>${away || 'A definir'}
+            <div style="padding:6px 10px; font-size:11px; font-weight:${away ? '600' : '400'}; color:${away ? '#1A202C' : '#A0AEC0'}; background:white; display:flex; align-items:center; justify-content:space-between;">
+                <div style="display:flex; align-items:center; gap:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    <span>${BRACKET_FLAGS[away] || ''}</span>${away || 'A definir'}
+                </div>
+                <span style="font-weight:700; color:var(--dark);">${awayScore}${penText}</span>
             </div>`;
+                div.appendChild(card);
                 return div;
             }
 
@@ -1390,7 +1419,154 @@
             renderBracketAdmin();
         });
 
+        function openPostMatchModal(matchId) {
+            const data = getData();
+            const match = data.matches.find(m => m.id === matchId);
+            if (!match || match.status !== 'Finalizado') return;
+
+            const modal = document.getElementById('post-match-modal');
+            const content = document.getElementById('post-match-detail-content');
+            
+            const stats = match.stats || {};
+            const events = match.events || [];
+            
+            let eventsHtml = '';
+            if (events.length === 0) {
+                eventsHtml = '<p style="color:var(--text-muted); text-align:center; font-style:italic;">Nenhum evento registado nesta partida.</p>';
+            } else {
+                events.sort((a,b) => a.minute - b.minute).forEach(e => {
+                    let icon = '⚽';
+                    if (e.type === 'Cartão Amarelo') icon = '🟨';
+                    else if (e.type === 'Cartão Vermelho') icon = '🟥';
+                    else if (e.type === 'Lesão') icon = '🚑';
+                    
+                    eventsHtml += `
+                        <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px; font-size:0.9rem;">
+                            <span style="font-weight:800; color:var(--primary); min-width:40px;">${e.minute}'</span>
+                            <span style="font-size:1.1rem;">${icon}</span>
+                            <span style="font-weight:700;">${e.player}</span>
+                            <span style="color:var(--text-muted); font-size:0.8rem;">(${e.team || ''})</span>
+                        </div>
+                    `;
+                });
+            }
+
+            let playersHtml = '';
+            if (match.playersSnapshot && (match.playersSnapshot.home || match.playersSnapshot.away)) {
+                let homeList = '';
+                let awayList = '';
+                
+                (match.playersSnapshot.home || []).forEach(p => {
+                    homeList += `
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #F3F4F6;">
+                            <span style="font-weight:600; text-align:left;">#${p.number} ${p.name}</span>
+                            <span class="badge" style="background:#DCFCE7; color:#166534; font-weight:800; font-size:0.8rem; padding:4px 8px;">⭐ ${p.rating}</span>
+                        </div>
+                    `;
+                });
+                
+                (match.playersSnapshot.away || []).forEach(p => {
+                    awayList += `
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #F3F4F6;">
+                            <span style="font-weight:600; text-align:left;">#${p.number} ${p.name}</span>
+                            <span class="badge" style="background:#DCFCE7; color:#166534; font-weight:800; font-size:0.8rem; padding:4px 8px;">⭐ ${p.rating}</span>
+                        </div>
+                    `;
+                });
+                
+                playersHtml = `
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem; margin-top:1.5rem;">
+                        <div>
+                            <h4 style="margin:0 0 10px 0; color:var(--dark); border-bottom:2px solid var(--primary); padding-bottom:4px;">${match.homeTeam}</h4>
+                            ${homeList || '<p style="color:var(--text-muted); font-style:italic;">Sem escalação registada.</p>'}
+                        </div>
+                        <div>
+                            <h4 style="margin:0 0 10px 0; color:var(--dark); border-bottom:2px solid var(--primary); padding-bottom:4px;">${match.awayTeam}</h4>
+                            ${awayList || '<p style="color:var(--text-muted); font-style:italic;">Sem escalação registada.</p>'}
+                        </div>
+                    </div>
+                `;
+            }
+
+            const penaltyText = (match.penaltiesHome !== null && match.penaltiesAway !== null) ? `<div style="font-size:1rem; color:var(--text-muted); margin-top:5px;">(${match.penaltiesHome} - ${match.penaltiesAway} g.p.)</div>` : '';
+
+            content.innerHTML = `
+                <div style="text-align:center; margin-bottom:2rem; border-bottom:1px solid #F1F5F9; padding-bottom:1.5rem;">
+                    <div style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:800; letter-spacing:0.1em; margin-bottom:10px;">
+                        ${match.phase} • ${match.date} • ${match.time} • ${match.stadium}
+                    </div>
+                    <div style="display:flex; justify-content:center; align-items:center; gap:2rem;">
+                        <div style="text-align:right; width:200px;">
+                            <span style="font-size:1.8rem; font-weight:900; color:var(--dark);">${match.homeTeam}</span>
+                        </div>
+                        <div style="background:#0F172A; color:white; border-radius:12px; font-size:2rem; font-weight:900; padding:10px 24px; min-width:110px;">
+                            ${match.goalsHome} - ${match.goalsAway}
+                        </div>
+                        <div style="text-align:left; width:200px;">
+                            <span style="font-size:1.8rem; font-weight:900; color:var(--dark);">${match.awayTeam}</span>
+                        </div>
+                    </div>
+                    ${penaltyText}
+                </div>
+                
+                <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:2rem;">
+                    <div>
+                        <h3 style="margin-top:0; margin-bottom:1.5rem; border-bottom:1px solid var(--border); padding-bottom:0.5rem; display:flex; align-items:center; gap:8px;">📊 Estatísticas do Jogo</h3>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-weight:bold; color:var(--text-muted); font-size:0.8rem;">
+                            <span style="text-align:left; width:80px;">${match.homeTeam}</span>
+                            <span style="text-align:center;">Métrica</span>
+                            <span style="text-align:right; width:80px;">${match.awayTeam}</span>
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:10px; font-size:0.85rem;">
+                            <div style="display:flex; justify-content:space-between;"><b>${stats.posHome || 50}%</b><span style="color:#718096;">Posse de Bola</span><b>${stats.posAway || 50}%</b></div>
+                            <div style="display:flex; justify-content:space-between;"><b>${stats.shotsHome || 10}</b><span style="color:#718096;">Remates Totais</span><b>${stats.shotsAway || 10}</b></div>
+                            <div style="display:flex; justify-content:space-between;"><b>${stats.targetHome || 4}</b><span style="color:#718096;">Remates à Baliza</span><b>${stats.targetAway || 4}</b></div>
+                            <div style="display:flex; justify-content:space-between;"><b>${stats.cornersHome || 4}</b><span style="color:#718096;">Pontapés de Canto</span><b>${stats.cornersAway || 4}</b></div>
+                            <div style="display:flex; justify-content:space-between;"><b>${stats.offsidesHome || 1}</b><span style="color:#718096;">Foras de Jogo</span><b>${stats.offsidesAway || 1}</b></div>
+                            <div style="display:flex; justify-content:space-between;"><b>${stats.foulsHome || 10}</b><span style="color:#718096;">Faltas Cometidas</span><b>${stats.foulsAway || 10}</b></div>
+                            <div style="display:flex; justify-content:space-between;"><b>${stats.yellowsHome || 1}</b><span style="color:#718096;">Cartões Amarelos</span><b>${stats.yellowsAway || 1}</b></div>
+                            <div style="display:flex; justify-content:space-between;"><b>${stats.redsHome || 0}</b><span style="color:#718096;">Cartões Vermelhos</span><b>${stats.redsAway || 0}</b></div>
+                            <div style="display:flex; justify-content:space-between;"><b>${stats.savesHome || 3}</b><span style="color:#718096;">Defesas Guarda-Redes</span><b>${stats.savesAway || 3}</b></div>
+                            <div style="display:flex; justify-content:space-between;"><b>${stats.passesHome || 400}</b><span style="color:#718096;">Passes Realizados</span><b>${stats.passesAway || 400}</b></div>
+                            <div style="display:flex; justify-content:space-between;"><b>${stats.passaccHome || 80}%</b><span style="color:#718096;">Precisão de Passes</span><b>${stats.passaccAway || 80}%</b></div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 style="margin-top:0; margin-bottom:1.5rem; border-bottom:1px solid var(--border); padding-bottom:0.5rem; display:flex; align-items:center; gap:8px;">⏱️ Eventos de Jogo</h3>
+                        <div style="max-height:300px; overflow-y:auto; padding-right:8px;">
+                            ${eventsHtml}
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top:2.5rem; border-top:1px solid #F1F5F9; padding-top:2rem;">
+                    <h3 style="margin-top:0; margin-bottom:1rem; display:flex; align-items:center; gap:8px;">⭐ Classificações de Jogadores</h3>
+                    ${playersHtml || '<p style="color:var(--text-muted); text-align:center; font-style:italic;">Nenhuma classificação registada.</p>'}
+                </div>
+
+                <div style="margin-top: 2rem; display:flex; justify-content:flex-end; color:var(--text-muted); font-size:0.75rem;">
+                    Equipa de Arbitragem: Principal: <b>${match.refPrincipal || 'N/A'}</b> | VAR: <b>${match.refVAR || 'N/A'}</b>
+                </div>
+            `;
+
+            modal.style.display = 'flex';
+        }
+
+        function closePostMatchModal() {
+            document.getElementById('post-match-modal').style.display = 'none';
+        }
     </script>
+
+    <!-- Modal: Post-Match Details (Pós-Jogo) -->
+    <div id="post-match-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.6); z-index:9999; align-items:center; justify-content:center; padding:1rem; backdrop-filter:blur(4px);">
+        <div style="background:white; border-radius:16px; width:100%; max-width:800px; max-height:90vh; overflow-y:auto; padding:2rem; position:relative; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
+            <button onclick="closePostMatchModal()" style="position:absolute; top:1.5rem; right:1.5rem; background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--text-muted);">&times;</button>
+            <div id="post-match-detail-content">
+                <!-- Dynamic -->
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

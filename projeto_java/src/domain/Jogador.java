@@ -25,6 +25,7 @@ public class Jogador implements Serializable {
     private int redCards;
     private int energy;
     private List<String> injuryHistory;
+    private List<JogadorJogoStats> matchStatsList;
 
     public Jogador(int id, int numeroCamisola, String nome, String posicao, EstadoJogador estado) {
         this.id = id;
@@ -39,6 +40,7 @@ public class Jogador implements Serializable {
         this.redCards = 0;
         this.energy = 100;
         this.injuryHistory = new ArrayList<>();
+        this.matchStatsList = new ArrayList<>();
     }
 
     public int getId() {
@@ -130,6 +132,29 @@ public class Jogador implements Serializable {
 
     public void addInjury(String injury) {
         getInjuryHistory().add(injury);
+    }
+
+    public List<JogadorJogoStats> getMatchStatsList() {
+        if (matchStatsList == null) {
+            matchStatsList = new ArrayList<>();
+        }
+        return matchStatsList;
+    }
+
+    public void setMatchStatsList(List<JogadorJogoStats> matchStatsList) {
+        this.matchStatsList = matchStatsList;
+    }
+
+    public double getAverageRating() {
+        List<JogadorJogoStats> stats = getMatchStatsList();
+        if (stats.isEmpty()) {
+            return 0.0;
+        }
+        double sum = 0.0;
+        for (JogadorJogoStats s : stats) {
+            sum += s.getRating();
+        }
+        return sum / stats.size();
     }
 
     @Override

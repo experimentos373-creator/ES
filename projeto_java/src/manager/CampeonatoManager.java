@@ -398,6 +398,65 @@ public class CampeonatoManager {
             checkAndAdvanceGroupsToOitavos();
         }
 
+        // --- 6. Gerar estatísticas e ratings individuais dos jogadores e guardar no snapshot ---
+        List<JogadorJogoStats> snapshot = new ArrayList<>();
+        java.util.Random rand = new java.util.Random();
+        
+        for (Equipa eq : java.util.Arrays.asList(home, away)) {
+            if (eq == null) continue;
+            boolean isHome = eq.equals(home);
+            int saves = isHome ? stats.getDefesasHome() : stats.getDefesasAway();
+            
+            for (Jogador p : eq.getJogadores()) {
+                boolean participou = p.isStarter();
+                for (EventoJogo ev : jogo.getEventos()) {
+                    if (ev.getJogador() != null && ev.getJogador().getId() == p.getId()) {
+                        participou = true;
+                        break;
+                    }
+                }
+                
+                if (!participou) continue;
+                
+                // Pontuação base 6.0 + variação aleatória de -1.5 a +1.5
+                double rating = 6.0 + (-1.5 + (rand.nextDouble() * 3.0));
+                int minutes = 90;
+                int pGoals = 0;
+                int pAssists = 0;
+                int pYellows = 0;
+                int pReds = 0;
+                
+                for (EventoJogo ev : jogo.getEventos()) {
+                    if (ev.getJogador() != null && ev.getJogador().getId() == p.getId()) {
+                        if (ev.getTipo() == TipoEvento.GOLO) {
+                            pGoals++;
+                            rating += 1.5;
+                        } else if (ev.getTipo() == TipoEvento.CARTAO_AMARELO) {
+                            pYellows++;
+                            rating -= 0.5;
+                        } else if (ev.getTipo() == TipoEvento.CARTAO_VERMELHO) {
+                            pReds++;
+                            rating -= 1.5;
+                        }
+                    }
+                }
+                
+                if ("Guarda-Redes".equalsIgnoreCase(p.getPosicao())) {
+                    rating += saves * 0.3;
+                }
+                
+                rating = Math.max(3.0, Math.min(10.0, rating));
+                rating = Math.round(rating * 10.0) / 10.0;
+                
+                JogadorJogoStats js = new JogadorJogoStats(p.getId(), p.getNome(), jogo.getId(), rating, minutes, pGoals, pAssists, pYellows, pReds);
+                snapshot.add(js);
+                
+                // Adicionar ao histórico do jogador
+                p.getMatchStatsList().add(js);
+            }
+        }
+        jogo.setPlayersSnapshot(snapshot);
+
         saveAll();
     }
 
@@ -561,18 +620,16 @@ public class CampeonatoManager {
                 if (aptos.isEmpty()) continue;
                 Jogador jogador = aptos.get(rand.nextInt(aptos.size()));
 
-                // Decidir o tipo de evento
+                // Decidir o tipo de evento (Golo ou Cartão)
                 int roll = rand.nextInt(100);
                 TipoEvento tipo;
                 if (roll < 45) {
                     tipo = TipoEvento.GOLO;
                     if (isHome) scoreHome++; else scoreAway++;
-                } else if (roll < 80) {
+                } else if (roll < 85) {
                     tipo = TipoEvento.CARTAO_AMARELO;
-                } else if (roll < 90) {
-                    tipo = TipoEvento.CARTAO_VERMELHO;
                 } else {
-                    tipo = TipoEvento.SUBSTITUICAO;
+                    tipo = TipoEvento.CARTAO_VERMELHO;
                 }
 
                 EventoJogo ev = new EventoJogo(min, tipo, jogador, activeTeam);
@@ -580,26 +637,140 @@ public class CampeonatoManager {
             }
         }
 
+        // Simular substituições explicitamente para ambas as equipas (entre 1 e 5)
+        int numSubsHome = 1 + rand.nextInt(3); // 1, 2 ou 3
+        if (rand.nextInt(100) < 30) numSubsHome += rand.nextInt(3); // chance de chegar a 4 ou 5
+        numSubsHome = Math.max(1, Math.min(5, numSubsHome));
+
+        int numSubsAway = 1 + rand.nextInt(3);
+        if (rand.nextInt(100) < 30) numSubsAway += rand.nextInt(3);
+        numSubsAway = Math.max(1, Math.min(5, numSubsAway));
+
+        simulateTeamSubs(rand, homeEq, numSubsHome, jogo);
+        simulateTeamSubs(rand, awayEq, numSubsAway, jogo);
+
         // Se for jogo de eliminatória e estiver empatado ao minuto 90, simular penaltis
         int penHome = -1;
         int penAway = -1;
         boolean isEliminatoria = !"Grupos".equalsIgnoreCase(jogo.getPhase());
         if (isEliminatoria && scoreHome == scoreAway) {
-            penHome = 5;
-            penAway = 4; // Um vencedor garantido por 5-4
+            penHome = 3 + rand.nextInt(3); // 3 a 5
+            penAway = penHome;
+            if (rand.nextBoolean()) {
+                penHome++;
+            } else {
+                penAway++;
+            }
         }
 
+        int yHome = 0, yAway = 0;
+        int rHome = 0, rAway = 0;
+        for (EventoJogo ev : jogo.getEventos()) {
+            if (ev.getTipo() == TipoEvento.CARTAO_AMARELO) {
+                if (ev.getEquipa().getNome().equals(homeEq.getNome())) yHome++; else yAway++;
+            } else if (ev.getTipo() == TipoEvento.CARTAO_VERMELHO) {
+                if (ev.getEquipa().getNome().equals(homeEq.getNome())) rHome++; else rAway++;
+            }
+        }
+
+        int posseHome;
+        int posseAway;
+        int remHome;
+        int remAway;
+        int remBalHome;
+        int remBalAway;
+        int passHome;
+        int passAway;
+
+        boolean homeWon = scoreHome > scoreAway;
+        boolean awayWon = scoreAway > scoreHome;
+        boolean statsFavorHome = false;
+
+        if (homeWon) {
+            statsFavorHome = (rand.nextInt(100) < 70); // 70% chance to favor winner
+        } else if (awayWon) {
+            statsFavorHome = (rand.nextInt(100) >= 70); // 30% chance to favor home (i.e. 70% to favor away)
+        } else {
+            statsFavorHome = rand.nextBoolean(); // 50/50 for draws
+        }
+
+        if (statsFavorHome) {
+            posseHome = 52 + rand.nextInt(14); // 52% to 65%
+            posseAway = 100 - posseHome;
+            remHome = 12 + rand.nextInt(10); // 12 to 21 shots
+            remAway = 6 + rand.nextInt(7);  // 6 to 12 shots
+            remBalHome = Math.max(scoreHome, remHome / 3 + rand.nextInt(3));
+            remBalAway = Math.max(scoreAway, remAway / 4 + rand.nextInt(2));
+            passHome = posseHome * 9 + rand.nextInt(30);
+            passAway = posseAway * 8 + rand.nextInt(30);
+        } else {
+            posseAway = 52 + rand.nextInt(14); // 52% to 65%
+            posseHome = 100 - posseAway;
+            remAway = 12 + rand.nextInt(10); // 12 to 21 shots
+            remHome = 6 + rand.nextInt(7);  // 6 to 12 shots
+            remBalAway = Math.max(scoreAway, remAway / 3 + rand.nextInt(3));
+            remBalHome = Math.max(scoreHome, remHome / 4 + rand.nextInt(2));
+            passAway = posseAway * 9 + rand.nextInt(30);
+            passHome = posseHome * 8 + rand.nextInt(30);
+        }
+
+        int cantHome = 3 + rand.nextInt(7);
+        int cantAway = 2 + rand.nextInt(7);
+        int forasHome = rand.nextInt(4);
+        int forasAway = rand.nextInt(4);
+        int faltasHome = 8 + rand.nextInt(10);
+        int faltasAway = 8 + rand.nextInt(10);
+        int savesHome = Math.max(0, remBalAway - scoreAway);
+        int savesAway = Math.max(0, remBalHome - scoreHome);
+        int accHome = 70 + rand.nextInt(20);
+        int accAway = 70 + rand.nextInt(20);
+
         EstatisticaJogo stats = new EstatisticaJogo(
-            50 + rand.nextInt(11) - 5, // posse bola home
-            50,                        // posse bola away (será recalculado ou mantido equilibrado)
-            10 + rand.nextInt(6),      // remates home
-            8 + rand.nextInt(6),       // remates away
-            5 + rand.nextInt(4),       // cantos home
-            4 + rand.nextInt(4)        // cantos away
+            posseHome, posseAway, remHome, remAway, cantHome, cantAway,
+            remBalHome, remBalAway, forasHome, forasAway,
+            faltasHome, faltasAway, yHome, yAway,
+            rHome, rAway, savesHome, savesAway,
+            passHome, passAway, accHome, accAway
         );
 
         finalizarJogoECorrerBracket(jogoId, null, scoreHome, scoreAway, penHome, penAway, stats);
         return true;
+    }
+
+    private void simulateTeamSubs(java.util.Random rand, Equipa team, int count, Jogo jogo) {
+        List<Jogador> starters = new ArrayList<>();
+        List<Jogador> reserves = new ArrayList<>();
+        for (Jogador p : team.getJogadores()) {
+            if (p.isStarter()) starters.add(p);
+            else reserves.add(p);
+        }
+
+        if (starters.isEmpty() || reserves.isEmpty()) return;
+
+        List<Jogador> alreadyOut = new ArrayList<>();
+        List<Jogador> alreadyIn = new ArrayList<>();
+
+        for (int i = 0; i < count; i++) {
+            if (alreadyOut.size() >= starters.size() || alreadyIn.size() >= reserves.size()) break;
+            
+            Jogador outPlayer = starters.get(rand.nextInt(starters.size()));
+            while (alreadyOut.contains(outPlayer)) {
+                outPlayer = starters.get(rand.nextInt(starters.size()));
+            }
+
+            Jogador inPlayer = reserves.get(rand.nextInt(reserves.size()));
+            while (alreadyIn.contains(inPlayer)) {
+                inPlayer = reserves.get(rand.nextInt(reserves.size()));
+            }
+
+            alreadyOut.add(outPlayer);
+            alreadyIn.add(inPlayer);
+
+            int min = 46 + rand.nextInt(45); // Substitutions in 2nd half
+            Jogador dummySub = new Jogador(0, outPlayer.getNumeroCamisola(), "[Entra] " + inPlayer.getNome() + " / [Sai] " + outPlayer.getNome(), outPlayer.getPosicao(), EstadoJogador.APTO);
+            EventoJogo subEvent = new EventoJogo(min, TipoEvento.SUBSTITUICAO, dummySub, team);
+            jogo.adicionarEvento(subEvent);
+        }
     }
 
     // --- Persistencia Auxiliar ---

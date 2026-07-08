@@ -241,6 +241,7 @@
                 <li><a href="#" class="active" onclick="switchView('dashboard', this)"><span>📊</span> Dashboard</a></li>
                 <li><a href="#" onclick="switchView('calendar', this)"><span>📅</span> Calendário de Jogos</a></li>
                 <li><a href="#" onclick="switchView('team', this)"><span>👥</span> Equipas & Jogadores</a></li>
+                <li><a href="#" onclick="switchView('stats', this)"><span>📈</span> Estatísticas</a></li>
             </ul>
         </nav>
 
@@ -438,6 +439,42 @@
                 </div>
             </div>
         </div>
+
+        <!-- View: Stats -->
+        <div id="view-stats" class="content-view">
+            <header class="header">
+                <div class="welcome-text">
+                    <h2 style="font-size: 2rem; margin: 0;">Estatísticas & Pontuações</h2>
+                    <p>Classificação individual e histórico detalhado das comitivas em jogo</p>
+                </div>
+            </header>
+            <div class="view-split">
+                <div class="card-container">
+                    <h3 style="margin-top: 0; margin-bottom: 1.5rem;">Desempenho Geral do Plantel</h3>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Jogador</th>
+                                    <th>Posição</th>
+                                    <th>Média (10)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stats-player-list-body">
+                                <!-- Dynamic -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-container" id="stats-player-details" style="display: flex; align-items: center; justify-content: center; text-align: center; color: var(--text-muted);">
+                    <div>
+                        <div style="font-size: 4rem; margin-bottom: 1rem;">📈</div>
+                        <p>Selecione um jogador para analisar o histórico de pontuações e estatísticas das partidas.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
     <!-- Modal: Add Player -->
@@ -480,6 +517,207 @@
             
             document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
             if (link) link.classList.add('active');
+            
+            if (viewId === 'stats') {
+                renderStats();
+            }
+        }
+
+        function renderStats() {
+            const body = document.getElementById('stats-player-list-body');
+            body.innerHTML = '';
+            
+            const data = getData();
+            const team = data.teams.find(t => t.name === currentTeam);
+            const teamPlayers = team ? team.players : [];
+            
+            if (teamPlayers.length === 0) {
+                body.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:2rem; color:var(--text-muted);">Sem jogadores no plantel.</td></tr>`;
+                return;
+            }
+
+            teamPlayers.forEach(p => {
+                const perfs = p.performances || [];
+                let avgRating = "-";
+                if (perfs.length > 0) {
+                    const total = perfs.reduce((acc, curr) => acc + curr.rating, 0);
+                    avgRating = (total / perfs.length).toFixed(1);
+                }
+
+                let badgeStyle = "background: #E5E7EB; color: #4B5563;";
+                if (avgRating !== "-") {
+                    const r = parseFloat(avgRating);
+                    if (r >= 7.5) {
+                        badgeStyle = "background: #DCFCE7; color: #166534;";
+                    } else if (r >= 6.0) {
+                        badgeStyle = "background: #FEF3C7; color: #92400E;";
+                    } else {
+                        badgeStyle = "background: #FEE2E2; color: #991B1B;";
+                    }
+                }
+
+                const tr = document.createElement('tr');
+                tr.style.cursor = 'pointer';
+                tr.onclick = () => showPlayerStatsDetails(p);
+                tr.innerHTML = `
+                    <td style="font-weight:700; color:var(--text-muted);">${p.number}</td>
+                    <td style="font-weight:700;">${p.name}</td>
+                    <td>${p.position || p.pos || 'Avançado'}</td>
+                    <td><span class="badge" style="${badgeStyle}">${avgRating}</span></td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        function showPlayerStatsDetails(p) {
+            const container = document.getElementById('stats-player-details');
+            const data = getData();
+            const perfs = p.performances || [];
+            
+            let avgRating = "-";
+            if (perfs.length > 0) {
+                const total = perfs.reduce((acc, curr) => acc + curr.rating, 0);
+                avgRating = (total / perfs.length).toFixed(1);
+            }
+
+            let historyHtml = '<div style="margin-top: 1.5rem; display:flex; flex-direction:column; gap:10px;">';
+            if (perfs.length === 0) {
+                historyHtml += '<p style="color:var(--text-muted); font-style:italic;">Sem histórico de jogos disputados.</p>';
+            } else {
+                perfs.forEach((perf, idx) => {
+                    const match = data.matches.find(m => m.id === perf.matchId);
+                    if (!match) return;
+                    
+                    const opponent = match.homeTeam === currentTeam ? match.awayTeam : match.homeTeam;
+                    const finalScore = `${match.goalsHome} - ${match.goalsAway}`;
+                    const penaltyText = (match.penaltiesHome !== null && match.penaltiesAway !== null) ? ` (${match.penaltiesHome}-${match.penaltiesAway} g.p.)` : '';
+                    
+                    const isCurrentTeamHome = match.homeTeam === currentTeam;
+                    const teamStats = match.stats || {};
+                    
+                    const tPoss = isCurrentTeamHome ? (teamStats.posHome || 50) : (teamStats.posAway || 50);
+                    const oPoss = isCurrentTeamHome ? (teamStats.posAway || 50) : (teamStats.posHome || 50);
+                    
+                    const tShots = isCurrentTeamHome ? (teamStats.shotsHome || 0) : (teamStats.shotsAway || 0);
+                    const oShots = isCurrentTeamHome ? (teamStats.shotsAway || 0) : (teamStats.shotsHome || 0);
+                    
+                    const tTarget = isCurrentTeamHome ? (teamStats.targetHome || 0) : (teamStats.targetAway || 0);
+                    const oTarget = isCurrentTeamHome ? (teamStats.targetAway || 0) : (teamStats.targetHome || 0);
+                    
+                    const tCorners = isCurrentTeamHome ? (teamStats.cornersHome || 0) : (teamStats.cornersAway || 0);
+                    const oCorners = isCurrentTeamHome ? (teamStats.cornersAway || 0) : (teamStats.cornersHome || 0);
+                    
+                    const tOffsides = isCurrentTeamHome ? (teamStats.offsidesHome || 0) : (teamStats.offsidesAway || 0);
+                    const oOffsides = isCurrentTeamHome ? (teamStats.offsidesAway || 0) : (teamStats.offsidesHome || 0);
+                    
+                    const tFouls = isCurrentTeamHome ? (teamStats.foulsHome || 0) : (teamStats.foulsAway || 0);
+                    const oFouls = isCurrentTeamHome ? (teamStats.foulsAway || 0) : (teamStats.foulsHome || 0);
+                    
+                    const tYellows = isCurrentTeamHome ? (teamStats.yellowsHome || 0) : (teamStats.yellowsAway || 0);
+                    const oYellows = isCurrentTeamHome ? (teamStats.yellowsAway || 0) : (teamStats.yellowsHome || 0);
+                    
+                    const tReds = isCurrentTeamHome ? (teamStats.redsHome || 0) : (teamStats.redsAway || 0);
+                    const oReds = isCurrentTeamHome ? (teamStats.redsAway || 0) : (teamStats.redsHome || 0);
+                    
+                    const tSaves = isCurrentTeamHome ? (teamStats.savesHome || 0) : (teamStats.savesAway || 0);
+                    const oSaves = isCurrentTeamHome ? (teamStats.savesAway || 0) : (teamStats.savesHome || 0);
+                    
+                    const tPasses = isCurrentTeamHome ? (teamStats.passesHome || 0) : (teamStats.passesAway || 0);
+                    const oPasses = isCurrentTeamHome ? (teamStats.passesAway || 0) : (teamStats.passesHome || 0);
+                    
+                    const tPassAcc = isCurrentTeamHome ? (teamStats.passaccHome || 0) : (teamStats.passaccAway || 0);
+                    const oPassAcc = isCurrentTeamHome ? (teamStats.passaccAway || 0) : (teamStats.passaccHome || 0);
+
+                    historyHtml += `
+                        <div style="background: #F9FAFB; border: 1px solid var(--border); border-radius: 12px; overflow:hidden;">
+                            <div onclick="toggleStatsAccordion('stats-match-${idx}')" style="display:flex; justify-content:space-between; align-items:center; padding:1rem; cursor:pointer; font-weight:700;">
+                                <div style="text-align:left;">
+                                    <span style="font-size:0.75rem; color:var(--text-muted);">${match.date} • ${match.phase}</span>
+                                    <div style="font-size:0.95rem; margin-top:2px;">vs ${opponent}</div>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    <span style="font-size:1.1rem; color:var(--dark);">${finalScore}${penaltyText}</span>
+                                    <span class="badge" style="background:#EFF6FF; color:#2563EB; font-size:0.85rem; font-weight:800; padding:6px 12px;">⭐ ${perf.rating}</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Expandable Stats Comparison Table -->
+                            <div id="stats-match-${idx}" style="display:none; padding:1.2rem; border-top:1px solid var(--border); background:white; font-size:0.85rem;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-weight:bold; color:var(--text-muted);">
+                                    <span style="text-align:left; width:80px;">${currentTeam}</span>
+                                    <span style="text-align:center;">Métrica da Partida</span>
+                                    <span style="text-align:right; width:80px;">${opponent}</span>
+                                </div>
+                                <div style="display:flex; flex-direction:column; gap:8px;">
+                                    <div style="display:flex; justify-content:space-between;"><b style="color:var(--primary); width:50px; text-align:left;">${tPoss}%</b><span style="color:#718096;">Posse de Bola</span><b style="width:50px; text-align:right;">${oPoss}%</b></div>
+                                    <div style="display:flex; justify-content:space-between;"><b style="color:var(--primary); width:50px; text-align:left;">${tShots}</b><span style="color:#718096;">Remates Totais</span><b style="width:50px; text-align:right;">${oShots}</b></div>
+                                    <div style="display:flex; justify-content:space-between;"><b style="color:var(--primary); width:50px; text-align:left;">${tTarget}</b><span style="color:#718096;">Remates à Baliza</span><b style="width:50px; text-align:right;">${oTarget}</b></div>
+                                    <div style="display:flex; justify-content:space-between;"><b style="color:var(--primary); width:50px; text-align:left;">${tCorners}</b><span style="color:#718096;">Pontapés de Canto</span><b style="width:50px; text-align:right;">${oCorners}</b></div>
+                                    <div style="display:flex; justify-content:space-between;"><b style="color:var(--primary); width:50px; text-align:left;">${tOffsides}</b><span style="color:#718096;">Foras de Jogo</span><b style="width:50px; text-align:right;">${oOffsides}</b></div>
+                                    <div style="display:flex; justify-content:space-between;"><b style="color:var(--primary); width:50px; text-align:left;">${tFouls}</b><span style="color:#718096;">Faltas Cometidas</span><b style="width:50px; text-align:right;">${oFouls}</b></div>
+                                    <div style="display:flex; justify-content:space-between;"><b style="color:var(--primary); width:50px; text-align:left;">${tYellows}</b><span style="color:#718096;">Cartões Amarelos</span><b style="width:50px; text-align:right;">${oYellows}</b></div>
+                                    <div style="display:flex; justify-content:space-between;"><b style="color:var(--primary); width:50px; text-align:left;">${tReds}</b><span style="color:#718096;">Cartões Vermelhos</span><b style="width:50px; text-align:right;">${oReds}</b></div>
+                                    <div style="display:flex; justify-content:space-between;"><b style="color:var(--primary); width:50px; text-align:left;">${tSaves}</b><span style="color:#718096;">Defesas Guarda-Redes</span><b style="width:50px; text-align:right;">${oSaves}</b></div>
+                                    <div style="display:flex; justify-content:space-between;"><b style="color:var(--primary); width:50px; text-align:left;">${tPasses}</b><span style="color:#718096;">Passes Realizados</span><b style="width:50px; text-align:right;">${oPasses}</b></div>
+                                    <div style="display:flex; justify-content:space-between;"><b style="color:var(--primary); width:50px; text-align:left;">${tPassAcc}%</b><span style="color:#718096;">Precisão de Passes</span><b style="width:50px; text-align:right;">${oPassAcc}%</b></div>
+                                </div>
+                                <div style="margin-top:12px; padding-top:8px; border-top:1px solid #F3F4F6; display:flex; justify-content:space-between; color:var(--text-muted); font-size:0.8rem;">
+                                    <span>Minutos em Campo: <b>${perf.minutes}'</b></span>
+                                    <span>Golos: <b>${perf.goals}</b> | Amarelos: <b>${perf.yellow}</b></span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            historyHtml += '</div>';
+
+            container.innerHTML = `
+                <div style="width: 100%; text-align: left;">
+                    <div style="display: flex; gap: 1.5rem; align-items: center; margin-bottom: 2rem;">
+                        <div style="width: 80px; height: 80px; background: #F3F4F6; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 2rem;">👤</div>
+                        <div>
+                            <h2 style="margin: 0;">${p.name}</h2>
+                            <p style="color: var(--text-muted); margin: 0;">#${p.number} • ${p.pos || p.position || 'Desconhecido'}</p>
+                            <span class="badge" style="margin-top: 8px; background: #DCFCE7; color: #166534; font-weight: 800;">
+                                Média Geral: ${avgRating} / 10
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <h3 style="margin-top: 0; margin-bottom: 1rem; border-bottom:1px solid var(--border); padding-bottom:0.5rem;">Estatísticas do Torneio</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+                        <div style="background: #F9FAFB; padding: 1rem; border-radius: 12px;">
+                            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">⚽ Golos Totais</p>
+                            <h4 style="font-size: 1.25rem; margin: 4px 0;">${p.goals || 0}</h4>
+                        </div>
+                        <div style="background: #F9FAFB; padding: 1rem; border-radius: 12px;">
+                            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">🎯 Assistências</p>
+                            <h4 style="font-size: 1.25rem; margin: 4px 0;">${p.assists || 0}</h4>
+                        </div>
+                        <div style="background: #F9FAFB; padding: 1rem; border-radius: 12px;">
+                            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">🟨 Amarelos</p>
+                            <h4 style="font-size: 1.25rem; margin: 4px 0;">${p.yellow || 0}</h4>
+                        </div>
+                        <div style="background: #F9FAFB; padding: 1rem; border-radius: 12px;">
+                            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">🟥 Vermelhos</p>
+                            <h4 style="font-size: 1.25rem; margin: 4px 0;">${p.red || 0}</h4>
+                        </div>
+                    </div>
+                    
+                    <h3 style="margin-top: 0; margin-bottom: 1rem; border-bottom:1px solid var(--border); padding-bottom:0.5rem;">Historial de Partidas</h3>
+                    ${historyHtml}
+                </div>
+            `;
+        }
+
+        function toggleStatsAccordion(id) {
+            const el = document.getElementById(id);
+            if (el.style.display === 'none') {
+                el.style.display = 'block';
+            } else {
+                el.style.display = 'none';
+            }
         }
 
         function initTeam() {

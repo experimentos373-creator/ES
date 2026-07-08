@@ -29,6 +29,7 @@ public class Jogo implements Serializable {
     private EscalaoArbitral escalaArbitros;
     private List<EventoJogo> eventos;
     private EstatisticaJogo estatisticas;
+    private List<JogadorJogoStats> playersSnapshot;
 
     // Atributos de navegação de bracket (Auto-associação OO)
     private Jogo proximoJogo; // null se for a Final
@@ -51,6 +52,7 @@ public class Jogo implements Serializable {
         this.escalaArbitros = null;
         this.eventos = new ArrayList<>();
         this.estatisticas = null;
+        this.playersSnapshot = new ArrayList<>();
         this.proximoJogo = proximoJogo;
         this.posicaoNoProximoJogo = posicaoNoProximoJogo;
     }
@@ -177,6 +179,21 @@ public class Jogo implements Serializable {
         this.penaltiesHome = penaltiesHome;
         this.penaltiesAway = penaltiesAway;
         this.estatisticas = stats;
+    }
+
+    public void setEstatisticas(EstatisticaJogo stats) {
+        this.estatisticas = stats;
+    }
+
+    public List<JogadorJogoStats> getPlayersSnapshot() {
+        if (playersSnapshot == null) {
+            playersSnapshot = new ArrayList<>();
+        }
+        return playersSnapshot;
+    }
+
+    public void setPlayersSnapshot(List<JogadorJogoStats> playersSnapshot) {
+        this.playersSnapshot = playersSnapshot;
     }
 
     @Override
